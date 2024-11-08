@@ -17,8 +17,14 @@ export const handlerFcn = async (event: any): Promise<any> => {
   try {
     logger.info("event", event);
 
-    const secret = await getSecret(`${serviceName}-${environmentName}`);
+    const secretString = await getSecret(`${serviceName}-${environmentName}`);
+    if (!secretString) {
+      throw new Error("Secret not found");
+    }
+
+    const secret = JSON.parse(`${secretString}`);
     logger.info("secret", { secret });
+
     metrics.addDimension("environment", environmentName);
     metrics.addMetric("handlerInvoked", MetricUnit.Count, 1);
 
