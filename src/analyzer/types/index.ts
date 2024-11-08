@@ -2,6 +2,17 @@ import { z } from "zod";
 
 export type Signal = "BUY" | "SELL" | "HOLD";
 
+export interface AppSecret {
+  KRAKEN_API_KEY: string;
+  KRAKEN_SECRET_KEY: string;
+  OPENAI_API_KEY: string;
+  SERVICE_NAME: string;
+  STRIPE_PRODUCT_PRICE_ID_LG: string;
+  STRIPE_PRODUCT_PRICE_ID_MD: string;
+  STRIPE_PRODUCT_PRICE_ID_SM: string;
+  STRIPE_SECRET_KEY: string;
+  STRIPE_WEBHOOK_SECRET: string;
+}
 // Zod schema for runtime validation
 export const PriceDataSchema = z
   .object({
@@ -106,4 +117,11 @@ export class AnalysisError extends Error {
     super(message);
     this.name = "AnalysisError";
   }
+}
+
+// Configuration for fetching price data
+export interface PriceDataConfig {
+  pair: string;
+  interval: number;
+  lookbackPeriods: number;
 }
