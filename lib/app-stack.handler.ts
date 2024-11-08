@@ -21,9 +21,8 @@ export const handlerFcn = async (event: any): Promise<any> => {
     if (!secretString) {
       throw new Error("Secret not found");
     }
-    logger.info("secretString", { secretString });
     const secret = JSON.parse(`${secretString}`);
-    logger.info("secret", { secret });
+    logger.info("secret", { secret: secret.OPENAI_API_KEY });
 
     metrics.addDimension("environment", environmentName);
     metrics.addMetric("handlerInvoked", MetricUnit.Count, 1);
