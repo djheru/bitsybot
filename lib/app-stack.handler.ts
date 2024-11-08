@@ -21,7 +21,7 @@ export const handlerFcn = async (event: any): Promise<any> => {
     if (!secretString) {
       throw new Error("Secret not found");
     }
-
+    logger.info("secretString", { secretString });
     const secret = JSON.parse(`${secretString}`);
     logger.info("secret", { secret });
 
