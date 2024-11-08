@@ -67,7 +67,7 @@ export class AppStack extends Stack {
   }
 
   buildHandlerFunction() {
-    this.handlerFunction = new NodejsFunction(this, "handler", {
+    this.handlerFunction = new NodejsFunction(this, "analyzer", {
       environment: {
         DB_TABLE: this.dbTable.tableName,
         LOG_LEVEL: "INFO",
@@ -79,7 +79,7 @@ export class AppStack extends Stack {
         SECRET_ARN: this.appSecret.secretArn,
         SERVICE_NAME: this.props.serviceName,
       },
-      functionName: `${this.props.serviceName}-${this.props.environmentName}-handler`,
+      functionName: `${this.props.serviceName}-${this.props.environmentName}-analyzer`,
     });
 
     this.appSecret.grantRead(this.handlerFunction);
