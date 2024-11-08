@@ -1,0 +1,13 @@
+[
+  {
+    "Time": "2016-01-14T01:02:03Z",
+    "Source": "bitsybot",
+    "Resources": [
+      "resource1",
+      "resource2"
+    ],
+    "DetailType": "invokeHandler",
+    "Detail": "{ \"key1\": \"value1\", \"key2\": \"value2\" }",
+    "EventBusName": "bitsybot-prod-event-bus"
+  }
+]
