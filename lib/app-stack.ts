@@ -1,4 +1,4 @@
-import { RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
+import { Duration, RemovalPolicy, Stack, StackProps } from "aws-cdk-lib";
 import {
   AttributeType,
   Billing,
@@ -8,6 +8,7 @@ import {
 import { EventBus, Rule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Architecture, Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { ISecret, Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
@@ -68,6 +69,9 @@ export class AppStack extends Stack {
 
   buildHandlerFunction() {
     this.handlerFunction = new NodejsFunction(this, "analyzer", {
+      architecture: Architecture.ARM_64,
+      runtime: Runtime.NODEJS_20_X,
+      description: "Analyze market data",
       environment: {
         DB_TABLE: this.dbTable.tableName,
         LOG_LEVEL: "INFO",
@@ -80,6 +84,8 @@ export class AppStack extends Stack {
         SERVICE_NAME: this.props.serviceName,
       },
       functionName: `${this.props.serviceName}-${this.props.environmentName}-analyzer`,
+      timeout: Duration.minutes(15),
+      tracing: Tracing.ACTIVE,
     });
 
     this.appSecret.grantRead(this.handlerFunction);
