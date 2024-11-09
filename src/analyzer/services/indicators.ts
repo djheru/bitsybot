@@ -144,7 +144,6 @@ export class TechnicalIndicatorService {
 
   // Helper methods remain the same
   private calculateSMA(data: number[]): number {
-    this.logger.info("Calculating SMA", { data });
     const sum = data.reduce((a, b) => a + b, 0);
     return sum / data.length;
   }
