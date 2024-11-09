@@ -2,8 +2,7 @@ import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
-import { IndicatorAnalysis } from "../types";
-import { IndicatorResult, TimeSeriesPoint } from "./indicators";
+import { IndicatorAnalysis, IndicatorResult, TimeSeriesPoint } from "../types";
 
 // Base formatter for time series data
 function formatTimeSeries(series: TimeSeriesPoint[]): string {

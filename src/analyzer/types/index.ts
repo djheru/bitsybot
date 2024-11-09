@@ -133,3 +133,16 @@ export interface IndicatorAnalysis {
   confidence: number;
   rationale: string;
 }
+export interface TimeSeriesPoint {
+  timestamp: number;
+  value: number;
+}
+
+export interface IndicatorResult {
+  name: string;
+  current: Record<string, number>;
+  history: {
+    [key: string]: TimeSeriesPoint[];
+  };
+  metadata?: Record<string, any>;
+}

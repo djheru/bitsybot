@@ -3,6 +3,7 @@ import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { PriceData } from "../types";
 
 export class KrakenService {
+  public ANALYSIS_WINDOW = 50;
   constructor(
     private readonly logger: Logger,
     private readonly metrics: Metrics
@@ -44,15 +45,17 @@ export class KrakenService {
         [number, string, string, string, string, string, string]
       > = data.result[dataKey];
 
-      const priceData: PriceData[] = ohlcData.map((item) => ({
-        timestamp: item[0],
-        open: parseFloat(item[1]),
-        high: parseFloat(item[2]),
-        low: parseFloat(item[3]),
-        close: parseFloat(item[4]),
-        vwap: parseFloat(item[5]),
-        volume: parseFloat(item[6]),
-      }));
+      const priceData: PriceData[] = ohlcData
+        .slice(-this.ANALYSIS_WINDOW)
+        .map((item) => ({
+          timestamp: item[0],
+          open: parseFloat(item[1]),
+          high: parseFloat(item[2]),
+          low: parseFloat(item[3]),
+          close: parseFloat(item[4]),
+          vwap: parseFloat(item[5]),
+          volume: parseFloat(item[6]),
+        }));
 
       return priceData;
     } catch (error) {

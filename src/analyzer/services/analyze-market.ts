@@ -5,8 +5,7 @@ import {
   RSIAgent,
   VWAPAgent,
 } from "../services/agents";
-import { IndicatorResult } from "../services/indicators";
-import { IndicatorAnalysis } from "../types";
+import { IndicatorAnalysis, IndicatorResult } from "../types";
 
 export async function analyzeMarket(
   technicalData: IndicatorResult[],
