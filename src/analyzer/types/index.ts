@@ -26,6 +26,7 @@ export const PriceDataSchema = z
     low: z.number().positive(),
     close: z.number().positive(),
     volume: z.number().positive(),
+    vwap: z.number().positive(),
   })
   .refine(
     (data) => data.high >= data.low,
@@ -124,4 +125,11 @@ export interface PriceDataConfig {
   pair: string;
   interval: number;
   lookbackPeriods: number;
+}
+
+// Types for agent outputs
+export interface IndicatorAnalysis {
+  recommendation: "BUY" | "SELL" | "HOLD";
+  confidence: number;
+  rationale: string;
 }

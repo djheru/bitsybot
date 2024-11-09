@@ -1,6 +1,10 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
+import { ChatOpenAI } from "@langchain/openai";
+import { analyzeMarket } from "../services/analyze-market";
+import { TechnicalIndicatorService } from "../services/indicators";
+import { fetchPriceData } from "../services/kraken";
 import { AppSecret } from "../types";
 
 const {
@@ -19,26 +23,43 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
     try {
       logger.info("event", event);
 
-      const secretString = await getSecret<AppSecret>(
+      const secret = await getSecret<AppSecret>(
         `${serviceName}-${environmentName}`,
         { transform: "json" }
       );
 
-      logger.info("secretString", { secretString });
+      logger.info("secretString", { secret });
 
-      if (!secretString) {
+      if (!secret) {
         throw new Error("Secret not found");
       }
-      const secret = JSON.parse(`${secretString}`);
-      logger.info("secret", { secret: secret.OPENAI_API_KEY });
 
       metrics.addDimension("environment", environmentName);
       metrics.addMetric("handlerInvoked", MetricUnit.Count, 1);
 
-      metrics.publishStoredMetrics();
+      const model = new ChatOpenAI({
+        modelName: "gpt-4o",
+        apiKey: secret.OPENAI_API_KEY,
+        temperature: 0.3,
+      });
+
+      logger.info("Getting price data");
+      const priceData = await fetchPriceData();
+      logger.info("priceData", { priceData });
+
+      logger.info("Calculating technical indicators");
+      const indicatorService = new TechnicalIndicatorService();
+      const indicatorResult =
+        indicatorService.calculateAllIndicators(priceData);
+      logger.info("indicatorResult", { indicatorResult });
+
+      logger.info("Analyzing indicator results");
+      const analysis = await analyzeMarket(indicatorResult, model);
+      logger.info("analysis", { analysis });
+
       return {
         statusCode: 200,
-        body: JSON.stringify(event),
+        body: JSON.stringify({ event, analysis }),
       };
     } catch (error) {
       const err = error as Error;
@@ -50,97 +71,3 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
     }
   };
 };
-
-// export const fetchPriceData = (state: AnalysisState) => {
-//   try {
-//     logger.info("Fetching price data");
-//     metrics.addMetric("fetchPriceDataAttempts", MetricUnit.Count, 1);
-
-//     const krakenService = createKrakenService(
-//       secret.KRAKEN_API_KEY,
-//       secret.KRAKEN_SECRET_KEY
-//     );
-
-//     const priceData = await krakenService.getOHLCData(
-//       DEFAULT_CONFIG.pair,
-//       DEFAULT_CONFIG.interval
-//     );
-
-//     // Validate the data
-//     const validatedData = validatePriceData(priceData);
-
-//     metrics.addMetric("fetchPriceDataSuccess", MetricUnit.Count, 1);
-//     return {
-//       ...state,
-//       price_data: validatedData,
-//     };
-//   } catch (error) {
-//     if (error instanceof z.ZodError) {
-//       logger.error("Invalid price data format:", error.errors);
-//       metrics.addMetric("fetchPriceDataValidationErrors", MetricUnit.Count, 1);
-//       throw new ValidationError("Invalid price data format", error.errors);
-//     }
-//     logger.error("Error fetching price data:", error);
-//     metrics.addMetric("fetchPriceDataErrors", MetricUnit.Count, 1);
-//     throw error;
-//   }
-// };
-
-// export const createAnalysisFunction = (
-//   analysisType: AnalysisType,
-//   prompt: string,
-//   model: ChatOpenAI
-// ) => {
-//   return async (state: AnalysisState) => {
-//     try {
-//       logger.info(`Starting ${analysisType} analysis`);
-//       metrics.addMetric(`${analysisType}AnalysisAttempts`, MetricUnit.Count, 1);
-
-//       const promptTemplate = ChatPromptTemplate.fromTemplate(prompt);
-//       const chain = promptTemplate.pipe(model);
-
-//       const response = await chain.invoke({
-//         price_data: JSON.stringify(state.price_data, null, 2),
-//       });
-
-//       // Parse and validate the analysis summary
-//       const analysis = validateAnalysisSummary({
-//         signal: "HOLD", // TODO: Parse from response
-//         confidence: 0.7,
-//         reasoning: response.content,
-//       });
-
-//       metrics.addMetric(`${analysisType}AnalysisSuccess`, MetricUnit.Count, 1);
-
-//       return {
-//         ...state,
-//         analyses: {
-//           ...state.analyses,
-//           [analysisType]: analysis,
-//         },
-//       };
-//     } catch (error) {
-//       if (error instanceof z.ZodError) {
-//         logger.error(`Invalid ${analysisType} analysis format:`, {
-//           error: error.errors,
-//         });
-//         metrics.addMetric(
-//           `${analysisType}AnalysisValidationErrors`,
-//           MetricUnit.Count,
-//           1
-//         );
-//         throw new ValidationError(
-//           `Invalid ${analysisType} analysis format`,
-//           error.errors
-//         );
-//       }
-//       logger.error(`Error in ${analysisType} analysis:`, { error });
-//       metrics.addMetric(`${analysisType}AnalysisErrors`, MetricUnit.Count, 1);
-//       throw new AnalysisError(
-//         `Error in ${analysisType} analysis`,
-//         analysisType,
-//         error
-//       );
-//     }
-//   };
-// };
