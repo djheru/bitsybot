@@ -4,7 +4,7 @@ import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { ChatOpenAI } from "@langchain/openai";
 import { analyzeMarket } from "../services/analyze-market";
 import { TechnicalIndicatorService } from "../services/indicators";
-import { fetchPriceData } from "../services/kraken";
+import { KrakenService } from "../services/kraken";
 import { AppSecret } from "../types";
 
 const {
@@ -28,8 +28,6 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         { transform: "json" }
       );
 
-      logger.info("secretString", { secret });
-
       if (!secret) {
         throw new Error("Secret not found");
       }
@@ -44,7 +42,8 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       });
 
       logger.info("Getting price data");
-      const priceData = await fetchPriceData();
+      const krakenService = new KrakenService(logger, metrics);
+      const priceData = await krakenService.fetchPriceData();
       logger.info("priceData", { priceData });
 
       logger.info("Calculating technical indicators");
