@@ -44,10 +44,12 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       logger.info("Getting price data");
       const krakenService = new KrakenService(logger, metrics);
       const priceData = await krakenService.fetchPriceData();
-      logger.info("priceData", { priceData });
+      logger.info("priceData", {
+        priceData: `${priceData.length} records returned`,
+      });
 
       logger.info("Calculating technical indicators");
-      const indicatorService = new TechnicalIndicatorService();
+      const indicatorService = new TechnicalIndicatorService(logger, metrics);
       const indicatorResult =
         indicatorService.calculateAllIndicators(priceData);
       logger.info("indicatorResult", { indicatorResult });

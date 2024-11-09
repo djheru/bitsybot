@@ -1,3 +1,5 @@
+import { Logger } from "@aws-lambda-powertools/logger";
+import { Metrics } from "@aws-lambda-powertools/metrics";
 import { PriceData } from "../types";
 
 export interface TimeSeriesPoint {
@@ -15,12 +17,18 @@ export interface IndicatorResult {
 }
 
 export class TechnicalIndicatorService {
+  constructor(
+    private readonly logger: Logger,
+    private readonly metrics: Metrics
+  ) {}
+
   // Calculate Bollinger Bands with history
   calculateBollingerBands(
     data: PriceData[],
     period: number = 20,
     stdDev: number = 2
   ): IndicatorResult {
+    this.logger.info("Calculating Bollinger Bands", { period, stdDev });
     const result: IndicatorResult = {
       name: "BollingerBands",
       current: {},
@@ -78,6 +86,7 @@ export class TechnicalIndicatorService {
 
   // Calculate RSI with history
   calculateRSI(data: PriceData[], period: number = 14): IndicatorResult {
+    this.logger.info("Calculating RSI", { period });
     const result: IndicatorResult = {
       name: "RSI",
       current: {},
@@ -135,6 +144,7 @@ export class TechnicalIndicatorService {
 
   // Helper methods remain the same
   private calculateSMA(data: number[]): number {
+    this.logger.info("Calculating SMA", { data });
     const sum = data.reduce((a, b) => a + b, 0);
     return sum / data.length;
   }
@@ -191,6 +201,7 @@ export class TechnicalIndicatorService {
 
   // Get all indicators
   calculateAllIndicators(data: PriceData[]): IndicatorResult[] {
+    this.logger.info("Calculating all indicators");
     return [
       this.calculateBollingerBands(data),
       this.calculateRSI(data),
