@@ -258,9 +258,7 @@ export class TechnicalIndicatorService {
     );
 
     // Calculate MACD line (fast EMA - slow EMA)
-    // We can only start from where we have both EMAs
     const macdLine: number[] = [];
-    // Start from the point where we have both EMAs
     for (
       let i = TechnicalIndicatorService.MACD_SLOW_PERIOD - 1;
       i < fastEMA.length;
@@ -275,52 +273,67 @@ export class TechnicalIndicatorService {
       TechnicalIndicatorService.MACD_SIGNAL_PERIOD
     );
 
-    // For each point where we have all three values (MACD, Signal, and Price)
-    // We start counting from where we have the first signal line value
-    this.logger.info("Calculating MACD history");
-    this.logger.info(`Signal line length: ${signalLine.length}`);
-    this.logger.info(`Data length: ${data.length}`);
+    // Calculate the valid range we can process
+    const maxIndex = Math.min(
+      signalLine.length,
+      data.length -
+        (TechnicalIndicatorService.MACD_SLOW_PERIOD +
+          TechnicalIndicatorService.MACD_SIGNAL_PERIOD -
+          1)
+    );
 
-    for (let i = 0; i < signalLine.length; i++) {
+    // Process all valid points
+    for (let i = 0; i < maxIndex; i++) {
       const dataIndex =
         i +
         TechnicalIndicatorService.MACD_SLOW_PERIOD +
         TechnicalIndicatorService.MACD_SIGNAL_PERIOD -
         1;
-
-      // Ensure we don't exceed data array bounds
-      if (dataIndex >= data.length) {
-        this.logger.info("Data index exceeds bounds", { i, dataIndex });
-        break;
-      }
-
-      const timestamp = data[dataIndex].timestamp;
       const macdValue =
         macdLine[i + TechnicalIndicatorService.MACD_SIGNAL_PERIOD - 1];
       const signalValue = signalLine[i];
       const histogram = macdValue - signalValue;
 
-      result.history.macdLine.push({ timestamp, value: macdValue });
-      result.history.signalLine.push({ timestamp, value: signalValue });
-      result.history.histogram.push({ timestamp, value: histogram });
-      result.history.price.push({ timestamp, value: data[dataIndex].close });
+      result.history.macdLine.push({
+        timestamp: data[dataIndex].timestamp,
+        value: macdValue,
+      });
+      result.history.signalLine.push({
+        timestamp: data[dataIndex].timestamp,
+        value: signalValue,
+      });
+      result.history.histogram.push({
+        timestamp: data[dataIndex].timestamp,
+        value: histogram,
+      });
+      result.history.price.push({
+        timestamp: data[dataIndex].timestamp,
+        value: data[dataIndex].close,
+      });
+    }
 
-      let currentSet = false;
+    // Set current values using the last valid point
+    if (maxIndex > 0) {
+      const lastIndex = maxIndex - 1;
+      const dataIndex =
+        lastIndex +
+        TechnicalIndicatorService.MACD_SLOW_PERIOD +
+        TechnicalIndicatorService.MACD_SIGNAL_PERIOD -
+        1;
+      const macdValue =
+        macdLine[lastIndex + TechnicalIndicatorService.MACD_SIGNAL_PERIOD - 1];
+      const signalValue = signalLine[lastIndex];
 
-      // Set current values for the last point
-      if (i === signalLine.length - 1) {
-        this.logger.info("Setting current MACD values", { i });
-        currentSet = true;
-        result.current = {
-          macdLine: macdValue,
-          signalLine: signalValue,
-          histogram: histogram,
-          price: data[dataIndex].close,
-        };
-      }
-      if (!currentSet) {
-        this.logger.info("Current values not set", { i });
-      }
+      result.current = {
+        macdLine: macdValue,
+        signalLine: signalValue,
+        histogram: macdValue - signalValue,
+        price: data[dataIndex].close,
+      };
+    } else {
+      throw new Error(
+        "Unable to calculate MACD: insufficient data points after calculations"
+      );
     }
 
     return result;

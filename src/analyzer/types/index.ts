@@ -146,3 +146,16 @@ export interface IndicatorResult {
   };
   metadata?: Record<string, any>;
 }
+export interface AnalysisRecord {
+  symbol: string; // Partition Key
+  timestamp: number; // Sort Key
+  recommendationTimestamp: string; // LSI (recommendation-timestamp)
+  price: number;
+  indicators: {
+    bollinger: IndicatorAnalysis;
+    rsi: IndicatorAnalysis;
+    macd: IndicatorAnalysis;
+    vwap: IndicatorAnalysis;
+  };
+  finalRecommendation: IndicatorAnalysis;
+}
