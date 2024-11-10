@@ -245,6 +245,89 @@ Respond in the following JSON format:
   }
 }
 
+export class MACDAgent {
+  private model: ChatOpenAI;
+  private parser: JsonOutputParser<IndicatorAnalysis>;
+  private chain: RunnableSequence;
+
+  constructor(
+    model: ChatOpenAI,
+    private readonly logger: Logger,
+    private readonly metrics: Metrics
+  ) {
+    this.model = model;
+    this.parser = new JsonOutputParser<IndicatorAnalysis>();
+
+    const template = `You are an expert cryptocurrency technical analyst specializing in MACD analysis.
+Analyze the provided MACD data and provide a trading recommendation.
+
+Current Values:
+MACD Line: {current_macd}
+Signal Line: {current_signal}
+Histogram: {current_histogram}
+Current Price: {current_price}
+
+Recent History (Last 10 points):
+MACD Line Values:
+{macd_history}
+Signal Line Values:
+{signal_history}
+Histogram Values:
+{histogram_history}
+Price Values:
+{price_history}
+
+Based on this data, provide:
+1. A trading recommendation (BUY, SELL, or HOLD)
+2. A confidence score (0.0 to 1.0)
+3. A brief rationale explaining your recommendation
+
+Consider:
+- MACD line crossovers with the signal line
+- Histogram changes and momentum
+- Divergence between MACD and price
+- Centerline crossovers (MACD crossing zero)
+- Trend strength indicated by histogram size
+- Hidden and regular bullish/bearish divergence patterns
+
+Respond with a JSON object. Here's an example of the required format:
+
+{{
+  "recommendation": "HOLD",
+  "confidence": 0.75,
+  "rationale": "MACD remains above signal line but histogram is contracting, suggesting weakening bullish momentum. No significant divergence patterns present."
+}}
+
+Your response must be valid JSON with exactly these three fields. The recommendation must be one of: BUY, SELL, or HOLD. The confidence must be a number between 0 and 1.`;
+
+    const prompt = PromptTemplate.fromTemplate(template);
+
+    this.chain = RunnableSequence.from([prompt, this.model, this.parser]);
+  }
+
+  async analyze(data: IndicatorResult): Promise<IndicatorAnalysis> {
+    this.logger.info("Analyzing MACD data", { data });
+    const input = {
+      current_macd: data.current.macdLine.toFixed(2),
+      current_signal: data.current.signalLine.toFixed(2),
+      current_histogram: data.current.histogram.toFixed(2),
+      current_price: data.current.price.toFixed(2),
+      macd_history: formatTimeSeries(data.history.macdLine, "macd_history"),
+      signal_history: formatTimeSeries(
+        data.history.signalLine,
+        "signal_history"
+      ),
+      histogram_history: formatTimeSeries(
+        data.history.histogram,
+        "histogram_history"
+      ),
+      price_history: formatTimeSeries(data.history.price, "price_history"),
+    };
+
+    return await this.chain.invoke(input);
+  }
+}
+
 // Final Analysis Agent
 export class FinalAnalysisAgent {
   private model: ChatOpenAI;
@@ -272,6 +355,11 @@ Recommendation: {rsi_recommendation}
 Confidence: {rsi_confidence}
 Rationale: {rsi_rationale}
 
+MACD Analysis:
+Recommendation: {macd_recommendation}
+Confidence: {macd_confidence}
+Rationale: {macd_rationale}
+
 VWAP Analysis:
 Recommendation: {vwap_recommendation}
 Confidence: {vwap_confidence}
@@ -286,16 +374,26 @@ Based on these analyses, provide:
 
 Consider:
 - Agreement/disagreement between indicators
+- The relative importance of each indicator:
+  * MACD and RSI for momentum and trend confirmation
+  * Bollinger Bands for volatility and price channels
+  * VWAP for institutional interest and volume confirmation
 - Relative confidence levels of each analysis
-- Current market context
+- The combination of signals that typically indicates stronger setups:
+  * RSI oversold/overbought with MACD crossover
+  * Price at Bollinger Band extremes with confirming MACD/RSI
+  * VWAP crossovers confirmed by other indicators
 - Risk management principles
 
-Respond in the following JSON format:
+Respond with a JSON object. Here's an example of the required format:
+
 {{
-  "recommendation": "BUY" | "SELL" | "HOLD",
-  "confidence": number between 0 and 1,
-  "rationale": "string explaining the final decision"
-}}`;
+  "recommendation": "BUY",
+  "confidence": 0.85,
+  "rationale": "Strong confluence of signals: RSI showing oversold conditions, MACD showing bullish crossover, price at lower Bollinger Band with increasing volume. VWAP suggests institutional support."
+}}
+
+Your response must be valid JSON with exactly these three fields. The recommendation must be one of: BUY, SELL, or HOLD. The confidence must be a number between 0 and 1.`;
 
     const prompt = PromptTemplate.fromTemplate(template);
 
@@ -305,10 +403,18 @@ Respond in the following JSON format:
   async analyze(
     bbAnalysis: IndicatorAnalysis,
     rsiAnalysis: IndicatorAnalysis,
+    macdAnalysis: IndicatorAnalysis,
     vwapAnalysis: IndicatorAnalysis,
     currentPrice: number
   ): Promise<IndicatorAnalysis> {
-    this.logger.info("Analyzing final decision");
+    this.logger.info("Performing final analysis", {
+      bbAnalysis,
+      rsiAnalysis,
+      macdAnalysis,
+      vwapAnalysis,
+      currentPrice,
+    });
+
     const input = {
       bb_recommendation: bbAnalysis.recommendation,
       bb_confidence: bbAnalysis.confidence,
@@ -316,6 +422,9 @@ Respond in the following JSON format:
       rsi_recommendation: rsiAnalysis.recommendation,
       rsi_confidence: rsiAnalysis.confidence,
       rsi_rationale: rsiAnalysis.rationale,
+      macd_recommendation: macdAnalysis.recommendation,
+      macd_confidence: macdAnalysis.confidence,
+      macd_rationale: macdAnalysis.rationale,
       vwap_recommendation: vwapAnalysis.recommendation,
       vwap_confidence: vwapAnalysis.confidence,
       vwap_rationale: vwapAnalysis.rationale,

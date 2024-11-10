@@ -9,6 +9,9 @@ export class TechnicalIndicatorService {
   private static readonly RSI_PERIOD = 14;
   private static readonly VOLUME_AVG_PERIOD = 20;
   private static readonly BB_STD_DEV = 2;
+  private static readonly MACD_FAST_PERIOD = 12;
+  private static readonly MACD_SLOW_PERIOD = 26;
+  private static readonly MACD_SIGNAL_PERIOD = 9;
 
   constructor(
     private readonly logger: Logger,
@@ -218,8 +221,127 @@ export class TechnicalIndicatorService {
     return result;
   }
 
+  calculateMACD(data: PriceData[]): IndicatorResult {
+    this.validateDataSize(
+      data,
+      TechnicalIndicatorService.MACD_SLOW_PERIOD +
+        TechnicalIndicatorService.MACD_SIGNAL_PERIOD,
+      "MACD"
+    );
+
+    const result: IndicatorResult = {
+      name: "MACD",
+      current: {},
+      history: {
+        macdLine: [],
+        signalLine: [],
+        histogram: [],
+        price: [],
+      },
+      metadata: {
+        fastPeriod: TechnicalIndicatorService.MACD_FAST_PERIOD,
+        slowPeriod: TechnicalIndicatorService.MACD_SLOW_PERIOD,
+        signalPeriod: TechnicalIndicatorService.MACD_SIGNAL_PERIOD,
+      },
+    };
+
+    const prices = data.map((d) => d.close);
+
+    // Calculate fast and slow EMAs
+    const fastEMA = this.calculateEMA(
+      prices,
+      TechnicalIndicatorService.MACD_FAST_PERIOD
+    );
+    const slowEMA = this.calculateEMA(
+      prices,
+      TechnicalIndicatorService.MACD_SLOW_PERIOD
+    );
+
+    // Calculate MACD line (fast EMA - slow EMA)
+    // We can only start from where we have both EMAs
+    const macdLine: number[] = [];
+    // Start from the point where we have both EMAs
+    for (
+      let i = TechnicalIndicatorService.MACD_SLOW_PERIOD - 1;
+      i < fastEMA.length;
+      i++
+    ) {
+      macdLine.push(fastEMA[i] - slowEMA[i]);
+    }
+
+    // Calculate signal line (EMA of MACD line)
+    const signalLine = this.calculateEMA(
+      macdLine,
+      TechnicalIndicatorService.MACD_SIGNAL_PERIOD
+    );
+
+    // For each point where we have all three values (MACD, Signal, and Price)
+    // We start counting from where we have the first signal line value
+    this.logger.info("Calculating MACD history");
+    this.logger.info(`Signal line length: ${signalLine.length}`);
+    this.logger.info(`Data length: ${data.length}`);
+
+    for (let i = 0; i < signalLine.length; i++) {
+      const dataIndex =
+        i +
+        TechnicalIndicatorService.MACD_SLOW_PERIOD +
+        TechnicalIndicatorService.MACD_SIGNAL_PERIOD -
+        1;
+
+      // Ensure we don't exceed data array bounds
+      if (dataIndex >= data.length) {
+        this.logger.info("Data index exceeds bounds", { i, dataIndex });
+        break;
+      }
+
+      const timestamp = data[dataIndex].timestamp;
+      const macdValue =
+        macdLine[i + TechnicalIndicatorService.MACD_SIGNAL_PERIOD - 1];
+      const signalValue = signalLine[i];
+      const histogram = macdValue - signalValue;
+
+      result.history.macdLine.push({ timestamp, value: macdValue });
+      result.history.signalLine.push({ timestamp, value: signalValue });
+      result.history.histogram.push({ timestamp, value: histogram });
+      result.history.price.push({ timestamp, value: data[dataIndex].close });
+
+      let currentSet = false;
+
+      // Set current values for the last point
+      if (i === signalLine.length - 1) {
+        this.logger.info("Setting current MACD values", { i });
+        currentSet = true;
+        result.current = {
+          macdLine: macdValue,
+          signalLine: signalValue,
+          histogram: histogram,
+          price: data[dataIndex].close,
+        };
+      }
+      if (!currentSet) {
+        this.logger.info("Current values not set", { i });
+      }
+    }
+
+    return result;
+  }
+
   private calculateSMA(data: number[]): number {
     return data.reduce((sum, val) => sum + val, 0) / data.length;
+  }
+
+  private calculateEMA(
+    data: number[],
+    period: number,
+    smoothing: number = 2
+  ): number[] {
+    const ema = [data[0]]; // First value is same as SMA
+    const multiplier = smoothing / (period + 1);
+
+    for (let i = 1; i < data.length; i++) {
+      ema.push((data[i] - ema[i - 1]) * multiplier + ema[i - 1]);
+    }
+    return ema;
   }
 
   private calculateStandardDeviation(data: number[], mean: number): number {
@@ -241,6 +363,7 @@ export class TechnicalIndicatorService {
       this.calculateBollingerBands(data),
       this.calculateRSI(data),
       this.calculateVWAP(data),
+      this.calculateMACD(data),
     ];
   }
 }
