@@ -21,7 +21,10 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
   metrics = _metrics;
   return async (event: any): Promise<any> => {
     try {
-      logger.info("event", event);
+      logger.info("event", { event });
+
+      const { detail: { symbol = "BTCUSD" } = {} } = event;
+      logger.info("Analyzing symbol", { symbol });
 
       const secret = await getSecret<AppSecret>(
         `${serviceName}-${environmentName}`,
@@ -42,14 +45,18 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       });
 
       logger.info("Getting price data");
-      const krakenService = new KrakenService(logger, metrics);
+      const krakenService = new KrakenService(symbol, logger, metrics);
       const priceData = await krakenService.fetchPriceData();
       logger.info("priceData", {
         priceData: `${priceData.length} records returned`,
       });
 
       logger.info("Calculating technical indicators");
-      const indicatorService = new TechnicalIndicatorService(logger, metrics);
+      const indicatorService = new TechnicalIndicatorService(
+        symbol,
+        logger,
+        metrics
+      );
       const indicatorResult =
         indicatorService.calculateAllIndicators(priceData);
       logger.info("indicatorResult", { indicatorResult });

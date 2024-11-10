@@ -5,6 +5,7 @@ import { PriceData } from "../types";
 export class KrakenService {
   public ANALYSIS_WINDOW = 50;
   constructor(
+    private readonly symbol: string,
     private readonly logger: Logger,
     private readonly metrics: Metrics
   ) {}
@@ -12,7 +13,7 @@ export class KrakenService {
     try {
       const url = "https://api.kraken.com/0/public/OHLC";
       const params = new URLSearchParams({
-        pair: "BTCUSDT",
+        pair: this.symbol,
         interval: "15", // Interval in minutes (e.g., 5 for 5-minute intervals)
         since: `${Date.now() - 86400000}`, // Fetch data from the last 24 hours
       });

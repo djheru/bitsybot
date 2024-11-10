@@ -10,7 +10,7 @@
     "test": "jest",
     "cdk": "cdk",
     "put-event": "aws events put-events --entries file://events/example.json",
-    "local": "cdk synth && clear && sam local invoke -t ./cdk.out/assembly-bitsybot-prod-Application/bitsybotprodApplicationbitsybotprodCF6A3396.template.json analyzer"
+    "local": "cdk synth && clear && sam local invoke -t ./cdk.out/assembly-bitsybot-prod-Application/bitsybotprodApplicationbitsybotprodCF6A3396.template.json analyzer -e events/example.json"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

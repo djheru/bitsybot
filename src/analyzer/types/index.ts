@@ -140,6 +140,7 @@ export interface TimeSeriesPoint {
 
 export interface IndicatorResult {
   name: string;
+  symbol: string;
   current: Record<string, number>;
   history: {
     [key: string]: TimeSeriesPoint[];

@@ -14,6 +14,7 @@ export class TechnicalIndicatorService {
   private static readonly MACD_SIGNAL_PERIOD = 9;
 
   constructor(
+    private readonly symbol: string,
     private readonly logger: Logger,
     private readonly metrics: Metrics
   ) {}
@@ -41,6 +42,7 @@ export class TechnicalIndicatorService {
 
     const result: IndicatorResult = {
       name: "BollingerBands",
+      symbol: this.symbol,
       current: {},
       history: {
         middle: [],
@@ -107,6 +109,7 @@ export class TechnicalIndicatorService {
 
     const result: IndicatorResult = {
       name: "RSI",
+      symbol: this.symbol,
       current: {},
       history: {
         rsi: [],
@@ -175,6 +178,7 @@ export class TechnicalIndicatorService {
 
     const result: IndicatorResult = {
       name: "VWAP",
+      symbol: this.symbol,
       current: {},
       history: {
         vwap: [],
@@ -231,6 +235,7 @@ export class TechnicalIndicatorService {
 
     const result: IndicatorResult = {
       name: "MACD",
+      symbol: this.symbol,
       current: {},
       history: {
         macdLine: [],

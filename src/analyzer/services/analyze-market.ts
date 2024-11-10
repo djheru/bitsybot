@@ -50,7 +50,8 @@ export class AnalysisService {
       rsiAnalysis,
       macdAnalysis,
       vwapAnalysis,
-      technicalData[0].current.price
+      technicalData[0].current.price,
+      technicalData[0].symbol
     );
 
     return {
