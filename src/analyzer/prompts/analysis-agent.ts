@@ -64,11 +64,25 @@ Risk Management Requirements:
 - Weight recent signals more heavily
 - Factor in current market volatility
 
+Provide your rationale in the following structure:
+1. Primary Drivers: Which indicators are most compelling and why
+2. Key Metrics:
+   - Strongest signals (quantify with values)
+   - Conflicting signals (explain weight given)
+3. Risk Assessment:
+   - Key levels to watch
+   - Potential invalidation points
+4. Trading Context:
+   - Volume confirmation
+   - Market structure context
+
+Keep the final rationale under 150 words, focusing on actionable insights.
+
 Respond with a JSON object using exactly this format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
   "confidence": number between 0 and 1,
-  "rationale": "Detailed explanation including specific indicator values and signal confluence"
+  "rationale": "Detailed rationale as described above"
 }}`,
   system: `You are a senior cryptocurrency technical analyst responsible for synthesizing multiple technical indicators into actionable trading decisions.
 

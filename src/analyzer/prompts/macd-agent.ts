@@ -76,18 +76,20 @@ Low Confidence (<0.5):
 - Choppy price action
 - Failed pattern development
 
+Provide your rationale in a clear, concise format focusing on:
+1. Primary Signal: The most important pattern/signal you've identified
+2. Supporting Evidence: Key metrics supporting your recommendation
+3. Risk Factors: What could invalidate your analysis
+4. Next Levels: Key price levels to watch
+
+Keep the explanation clear and actionable, focusing on what matters most for the trading decision."
+
 Response Format:
 ---------------
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
   "confidence": number between 0 and 1,
-  "rationale": "Detailed analysis including:
-    - Primary signal identification
-    - Histogram momentum analysis
-    - Zero line context
-    - Pattern recognition
-    - Confidence justification
-    - Risk considerations"
+  "rationale": "Analysis rationale summary, including factors discussed above"
 }}
 
 Note: MACD is a trend-following momentum indicator. Consider:
