@@ -9,7 +9,8 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
-    "put-event": "aws events put-events --entries file://events/example.json"
+    "put-event": "aws events put-events --entries file://events/example.json",
+    "local": "cdk synth && clear && sam local invoke -t ./cdk.out/assembly-bitsybot-prod-Application/bitsybotprodApplicationbitsybotprodCF6A3396.template.json analyzer"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

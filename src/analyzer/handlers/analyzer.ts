@@ -2,7 +2,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { ChatOpenAI } from "@langchain/openai";
-import { analyzeMarket } from "../services/analyze-market";
+import { AnalysisService } from "../services/analyze-market";
 import { TechnicalIndicatorService } from "../services/indicators";
 import { KrakenService } from "../services/kraken";
 import { AppSecret } from "../types";
@@ -55,7 +55,8 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       logger.info("indicatorResult", { indicatorResult });
 
       logger.info("Analyzing indicator results");
-      const analysis = await analyzeMarket(indicatorResult, model);
+      const analysisService = new AnalysisService(model, logger, metrics);
+      const analysis = await analysisService.analyzeMarket(indicatorResult);
       logger.info("analysis", { analysis });
 
       return {

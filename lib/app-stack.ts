@@ -70,10 +70,18 @@ export class AppStack extends Stack {
   buildHandlerFunction() {
     this.handlerFunction = new NodejsFunction(this, "analyzer", {
       architecture: Architecture.ARM_64,
+      bundling: {
+        sourceMap: true, // Enable source maps
+        minify: false, // Disable minification for better debugging
+        keepNames: true, // Preserve original function names
+        metafile: true, // Generate metadata about the build
+        sourcesContent: true, // Include source contents in source maps
+      },
       runtime: Runtime.NODEJS_20_X,
       description: "Analyze market data",
       environment: {
         DB_TABLE: this.dbTable.tableName,
+        NODE_OPTIONS: "--enable-source-maps",
         LOG_LEVEL: "INFO",
         ENVIRONMENT_NAME: this.props.environmentName,
         NODE_ENV:

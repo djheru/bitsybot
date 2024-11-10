@@ -104,11 +104,11 @@ Required Analysis Points:
    - Recent price behavior
 
 Return your analysis as JSON:
-{
+{{
   "signal": "BUY" | "SELL" | "HOLD",
   "confidence": <number 0-1>,
   "reasoning": "detailed explanation of analysis"
-}`,
+}}`,
   },
 
   rsi: {
@@ -138,11 +138,11 @@ Required Analysis Points:
    - Pattern completion
 
 Return your analysis as JSON:
-{
+{{
   "signal": "BUY" | "SELL" | "HOLD",
   "confidence": <number 0-1>,
   "reasoning": "detailed explanation of analysis"
-}`,
+}}`,
   },
 
   trend: {
@@ -172,11 +172,11 @@ Required Analysis Points:
    - Pattern completion
 
 Return your analysis as JSON:
-{
+{{
   "signal": "BUY" | "SELL" | "HOLD",
   "confidence": <number 0-1>,
   "reasoning": "detailed explanation of analysis"
-}`,
+}}`,
   },
 
   meta: {
@@ -206,11 +206,11 @@ Required Synthesis Points:
    - Risk considerations
 
 Return your analysis as JSON:
-{
+{{
   "signal": "BUY" | "SELL" | "HOLD",
   "confidence": <number 0-1>,
   "reasoning": "detailed explanation of synthesis and recommendation"
-}`,
+}}`,
   },
 };
 
