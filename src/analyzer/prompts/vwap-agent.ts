@@ -63,32 +63,11 @@ Low (<0.5):
 - Contradicting signals
 - No clear direction
 
-You must respond with a JSON object in exactly this format:
+You must respond with a properly-escaped JSON object in exactly this format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
   "confidence": <number between 0 and 1>,
-  "rationale": "Structure your rationale exactly as follows:
-
-Primary Signal: One sentence describing the main signal
-- Price relation to VWAP
-- Volume context
-
-Key Metrics:
-- VWAP Distance: [value]% ([above/below])
-- Volume Strength: [value]x average
-- Price: [current] vs VWAP: [value]
-- Volume Trend: [increasing/decreasing]
-
-Risk Factors:
-- List 2-3 key risks
-- Include specific values
-- Note invalidation points
-
-Key Levels:
-- VWAP: [value]
-- Price: [current]
-- Volume Threshold: [value]x average
-- Support/Resistance: [values]"
+  "rationale": "Primary Signal: One sentence describing the main signal\\n- Price relation to VWAP\\n- Volume context\\n\\nKey Metrics:\\n- VWAP Distance: [value]% ([above/below])\\n- Volume Strength: [value]x average\\n- Price: [current] vs VWAP: [value]\\n- Volume Trend: [increasing/decreasing]\\n\\nRisk Factors:\\n- List 2-3 key risks\\n- Include specific values\\n- Note invalidation points\\n\\nKey Levels:\\n- VWAP: [value]\\n- Price: [current]\\n- Volume Threshold: [value]x average\\n- Support/Resistance: [values]"
 }}`,
   system: `You are an expert cryptocurrency technical analyst specializing in Volume-Weighted Average Price (VWAP) analysis.
 

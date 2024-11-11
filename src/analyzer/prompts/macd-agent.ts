@@ -62,31 +62,11 @@ Low (<0.5):
 - Contradicting signals
 - Choppy price action
 
-You must respond with a JSON object in exactly this format:
+You must respond with a properly-escaped JSON object in exactly this format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
   "confidence": <number between 0 and 1>,
-  "rationale": "Structure your rationale exactly as follows:
-
-Primary Signal: One sentence describing the main signal
-- Current MACD setup
-- Key crossover or trend status
-
-Key Metrics:
-- MACD Line: [value] ([above/below] signal)
-- Signal Line: [value]
-- Histogram: [value] ([increasing/decreasing])
-- Trend Status: [above/below] zero line
-
-Risk Factors:
-- List 2-3 key risks
-- Include specific values
-- Note invalidation points
-
-Key Levels:
-- MACD: [value] (signal line)
-- Zero Line: [distance]
-- Price: [current] / [target]"
+  "rationale": "Primary Signal: One sentence describing the main signal\\n- Current MACD setup\\n- Key crossover or trend status\\n\\nKey Metrics:\\n- MACD Line: [value] ([above/below] signal)\\n- Signal Line: [value]\\n- Histogram: [value] ([increasing/decreasing])\\n- Trend Status: [above/below] zero line\\n\\nRisk Factors:\\n- List 2-3 key risks\\n- Include specific values\\n- Note invalidation points\\n\\nKey Levels:\\n- MACD: [value] (signal line)\\n- Zero Line: [distance]\\n- Price: [current] / [target]"
 }}`,
   system: `You are an expert cryptocurrency technical analyst specializing in Moving Average Convergence Divergence (MACD) analysis.
 

@@ -65,32 +65,11 @@ Low (<0.5):
 - Extreme conditions
 - Pattern failures
 
-You must respond with a JSON object in exactly this format:
+You must respond with a properly-escaped JSON object in exactly this format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
   "confidence": <number between 0 and 1>,
-  "rationale": "Structure your rationale exactly as follows:
-
-Primary Signal: One sentence describing the main signal
-- Price position relative to bands
-- Key pattern or trend status
-
-Key Metrics:
-- Price: [value] ([above/between/below] bands)
-- %B: [value] ([overbought/neutral/oversold])
-- Bandwidth: [value] ([expanding/contracting])
-- Band Position: [upper/middle/lower] band at [value]
-
-Risk Factors:
-- List 2-3 key risks
-- Include specific values
-- Note invalidation points
-
-Key Levels:
-- Upper Band: [value]
-- Middle Band: [value]
-- Lower Band: [value]
-- Critical Price: [current] / [target]"
+  "rationale": "Primary Signal: One sentence describing the main signal\\n- Price position relative to bands\\n- Key pattern or trend status\\n\\nKey Metrics:\\n- Price: [value] ([above/between/below] bands)\\n- %B: [value] ([overbought/neutral/oversold])\\n- Bandwidth: [value] ([expanding/contracting])\\n- Band Position: [upper/middle/lower] band at [value]\\n\\nRisk Factors:\\n- List 2-3 key risks\\n- Include specific values\\n- Note invalidation points\\n\\nKey Levels:\\n- Upper Band: [value]\\n- Middle Band: [value]\\n- Lower Band: [value]\\n- Critical Price: [current] / [target]"
 }}`,
 
   system: `You are a senior technical analyst with 15+ years of experience specializing in Bollinger Bands analysis for cryptocurrency markets.

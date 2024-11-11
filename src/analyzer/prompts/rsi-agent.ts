@@ -62,32 +62,11 @@ Low (<0.5):
 - Weak or no divergence
 - Contradicting signals
 
-You must respond with a JSON object in exactly this format:
+You must respond with a properly-escaped JSON object in exactly this format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
   "confidence": <number between 0 and 1>,
-  "rationale": "Structure your rationale exactly as follows:
-
-Primary Signal: One sentence describing the main signal
-- Current RSI condition
-- Key trend or reversal status
-
-Key Metrics:
-- RSI Value: [value] ([overbought/oversold/neutral])
-- Trend Position: [above/below] centerline
-- Recent Extreme: [value] ([high/low])
-- Momentum State: [increasing/decreasing]
-
-Risk Factors:
-- List 2-3 key risks
-- Include specific values
-- Note invalidation points
-
-Key Levels:
-- Overbought: 70
-- Oversold: 30
-- Centerline: 50
-- Price: [current] / [target]"
+  "rationale": "Primary Signal: <main signal>\\nKey Metrics:\\n- RSI Value: [value] ([condition])\\n- Trend Position: [position]\\n- Recent Extreme: [value] ([type])\\n- Momentum State: [state]\\n\\nRisk Factors:\\n- [risk 1]\\n- [risk 2]\\n- [risk 3]\\n\\nKey Levels:\\n- Overbought: 70\\n- Oversold: 30\\n- Centerline: 50\\n- Price: [current] / [target]"
 }}`,
   system: `You are a senior technical analyst with deep expertise in Relative Strength Index (RSI) analysis for cryptocurrency markets, with particular focus on momentum dynamics and reversal identification.
 

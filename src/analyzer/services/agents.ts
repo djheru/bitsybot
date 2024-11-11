@@ -116,8 +116,10 @@ export class RSIAgent {
         "avg_loss_history"
       ),
     };
-
-    return await this.chain.invoke(input);
+    console.log(JSON.stringify(input));
+    const response = await this.chain.invoke(input);
+    console.log(response);
+    return response;
   }
 }
 
@@ -255,6 +257,7 @@ export class FinalAnalysisAgent {
 
     const input = {
       symbol,
+      timeframe: interval,
       bb_recommendation: bbAnalysis.recommendation,
       bb_confidence: bbAnalysis.confidence,
       bb_rationale: bbAnalysis.rationale,

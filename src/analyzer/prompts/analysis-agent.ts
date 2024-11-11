@@ -70,37 +70,11 @@ Analysis Requirements:
 3. Volume/Volatility Analysis (20% weight)
 4. Risk Assessment (10% weight)
 
-You must respond with a JSON object in exactly this format:
+You must respond with a properly-escaped JSON object in exactly this format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
  "confidence": <number between 0 and 1>,
- "rationale": "Structure your rationale exactly as follows:
-
-Primary Driver: One sentence describing the dominant signal
-- Main indicator alignment
-- Key market context
-
-Indicator Alignment:
-- BB: [value] %B, [bandwidth] width, [recommendation] ([confidence])
-- RSI: [value] ([state]), [recommendation] ([confidence])
-- MACD: [line]/[signal], [histogram] histogram, [recommendation] ([confidence])
-- VWAP: [value]% distance, [volume]x vol, [recommendation] ([confidence])
-
-Key Levels:
-- Resistance: [level] (source: [indicator])
-- Support: [level] (source: [indicator])
-- Volume Threshold: [level]x average
-- Current Price: [price]
-
-Risk Assessment:
-- List 2-3 primary risks
-- Include specific values
-- Note key invalidation points
-
-Action Items:
-- List 2-3 specific things to monitor
-- Include exact levels or values
-- Note confirmation signals needed"
+ "rationale": "Primary Driver: One sentence describing the dominant signal\\n- Main indicator alignment\\n- Key market context\\n\\nIndicator Alignment:\\n- BB: [value] %B, [bandwidth] width, [recommendation] ([confidence])\\n- RSI: [value] ([state]), [recommendation] ([confidence])\\n- MACD: [line]/[signal], [histogram] histogram, [recommendation] ([confidence])\\n- VWAP: [value]% distance, [volume]x vol, [recommendation] ([confidence])\\n\\nKey Levels:\\n- Resistance: [level] (source: [indicator])\\n- Support: [level] (source: [indicator])\\n- Volume Threshold: [level]x average\\n- Current Price: [price]\\n\\nRisk Assessment:\\n- List 2-3 primary risks\\n- Include specific values\\n- Note key invalidation points\\n\\nAction Items:\\n- List 2-3 specific things to monitor\\n- Include exact levels or values\\n- Note confirmation signals needed"
 }}`,
   system: `You are a senior cryptocurrency technical analyst responsible for synthesizing multiple technical indicators into actionable trading decisions.
 
