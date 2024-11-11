@@ -5,9 +5,9 @@ import {
   StreamViewType,
   TableV2,
 } from "aws-cdk-lib/aws-dynamodb";
-import { EventBus, Rule } from "aws-cdk-lib/aws-events";
+import { EventBus, Rule, Schedule } from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
-import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Effect, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Architecture, Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { ISecret, Secret } from "aws-cdk-lib/aws-secretsmanager";
@@ -123,6 +123,7 @@ export class AppStack extends Stack {
     this.eventBus = new EventBus(this, eventBusId, {
       eventBusName: `${this.props.serviceName}-${this.props.environmentName}-event-bus`,
     });
+
     this.invokeHandlerRule = new Rule(this, `${this.id}-invoke-handler-rule`, {
       description: "Rule to invoke Handler lambda",
       eventPattern: {
@@ -132,5 +133,21 @@ export class AppStack extends Stack {
       eventBus: this.eventBus,
     });
     this.invokeHandlerRule.addTarget(new LambdaFunction(this.handlerFunction));
+
+    const scheduleRule = new Rule(this, `${this.id}-schedule-rule`, {
+      schedule: Schedule.rate(Duration.minutes(15)),
+      description: "Rule to invoke Handler lambda every 15 minutes",
+      enabled: true, // Can be controlled by environment
+      targets: [new LambdaFunction(this.handlerFunction)],
+      eventPattern: {
+        source: [this.props.serviceName],
+        detailType: ["invokeHandler"],
+      },
+    });
+    // Add Event permissions to Lambda
+    this.handlerFunction.addPermission("AllowEventBridgeInvoke", {
+      principal: new ServicePrincipal("events.amazonaws.com"),
+      sourceArn: scheduleRule.ruleArn,
+    });
   }
 }
