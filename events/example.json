@@ -1,6 +1,13 @@
-{
-  "detail": {
-    "symbol": "BTCUSDT",
-    "key2": "value2"
+[
+  {
+    "Time": "2016-01-14T01:02:03Z",
+    "Source": "bitsybot",
+    "Resources": [
+      "resource1",
+      "resource2"
+    ],
+    "DetailType": "invokeHandler",
+    "Detail": "{ \"symbol\": \"BTCUSDT\", \"interval\": 15 }",
+    "EventBusName": "bitsybot-prod-event-bus"
   }
-}
+]
