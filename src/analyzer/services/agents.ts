@@ -5,7 +5,12 @@ import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
 import { Prompts } from "../prompts";
-import { IndicatorAnalysis, IndicatorResult, TimeSeriesPoint } from "../types";
+import {
+  IndicatorAnalysis,
+  IndicatorResult,
+  OHLCDataInterval,
+  TimeSeriesPoint,
+} from "../types";
 
 // Base formatter for time series data
 function formatTimeSeries(series: TimeSeriesPoint[], label: string): string {
@@ -48,6 +53,7 @@ export class BollingerBandsAgent {
     this.logger.info("Analyzing Bollinger Bands data", { data });
     const input = {
       symbol: data.symbol,
+      timeframe: data.interval,
       current_middle: data.current.middle.toFixed(2),
       current_upper: data.current.upper.toFixed(2),
       current_lower: data.current.lower.toFixed(2),
@@ -58,6 +64,10 @@ export class BollingerBandsAgent {
       upper_history: formatTimeSeries(data.history.upper, "upper_history"),
       middle_history: formatTimeSeries(data.history.middle, "middle_history"),
       lower_history: formatTimeSeries(data.history.lower, "lower_history"),
+      bandwidth_history: formatTimeSeries(
+        data.history.bandwidth,
+        "bandwidth_history"
+      ),
     };
 
     return await this.chain.invoke(input);
@@ -90,10 +100,21 @@ export class RSIAgent {
     this.logger.info("Analyzing RSI data", { data });
     const input = {
       symbol: data.symbol,
+      timeframe: data.interval,
       current_rsi: data.current.rsi.toFixed(2),
       current_price: data.current.price.toFixed(2),
+      current_avg_gain: data.current.avgGain.toFixed(2),
+      current_avg_loss: data.current.avgLoss.toFixed(2),
       rsi_history: formatTimeSeries(data.history.rsi, "rsi_history"),
       price_history: formatTimeSeries(data.history.price, "price_history"),
+      avg_gain_history: formatTimeSeries(
+        data.history.avgGain,
+        "avg_gain_history"
+      ),
+      avg_loss_history: formatTimeSeries(
+        data.history.avgLoss,
+        "avg_loss_history"
+      ),
     };
 
     return await this.chain.invoke(input);
@@ -125,8 +146,10 @@ export class VWAPAgent {
     this.logger.info("Analyzing VWAP data", { data });
     const input = {
       symbol: data.symbol,
+      timeframe: data.interval,
       current_vwap: data.current.vwap.toFixed(2),
       current_price: data.current.price.toFixed(2),
+      current_volume: data.current.volume.toFixed(2),
       price_to_vwap: data.current.priceToVWAP.toFixed(2),
       relative_volume: data.current.relativeVolume.toFixed(2),
       vwap_history: formatTimeSeries(data.history.vwap, "vwap_history"),
@@ -134,6 +157,10 @@ export class VWAPAgent {
       volume_history: formatTimeSeries(
         data.history.relativeVolume,
         "volume_history"
+      ),
+      relative_volume_history: formatTimeSeries(
+        data.history.relativeVolume,
+        "relative_volume_history"
       ),
     };
 
@@ -166,6 +193,7 @@ export class MACDAgent {
     this.logger.info("Analyzing MACD data", { data });
     const input = {
       symbol: data.symbol,
+      timeframe: data.interval,
       current_macd: data.current.macdLine.toFixed(2),
       current_signal: data.current.signalLine.toFixed(2),
       current_histogram: data.current.histogram.toFixed(2),
@@ -214,7 +242,8 @@ export class FinalAnalysisAgent {
     macdAnalysis: IndicatorAnalysis,
     vwapAnalysis: IndicatorAnalysis,
     currentPrice: number,
-    symbol: string
+    symbol: string,
+    interval: OHLCDataInterval
   ): Promise<IndicatorAnalysis> {
     this.logger.info("Performing final analysis", {
       bbAnalysis,

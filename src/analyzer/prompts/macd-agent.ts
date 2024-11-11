@@ -1,11 +1,8 @@
 export const MACD = {
-  human: `Analyze the provided MACD (Moving Average Convergence Divergence) data to generate a trading recommendation.
+  human: `Analyze the provided MACD data to generate a trading recommendation for {symbol} on {timeframe} timeframe.
 
-Market Context:
-Symbol: {symbol}
-
-Current MACD Metrics:
---------------------
+Current Market Data:
+-------------------
 Price: {current_price}
 MACD Line: {current_macd}
 Signal Line: {current_signal}
@@ -13,91 +10,68 @@ Histogram: {current_histogram}
 
 Historical Data (Last 10 periods):
 ---------------------------------
-Price Movement:
-{price_history}
-
-MACD Components:
 MACD Line: {macd_history}
 Signal Line: {signal_history}
 Histogram: {histogram_history}
+Price: {price_history}
 
 Analysis Requirements:
 ---------------------
-1. Signal Line Crossovers (40% weight)
-   - MACD crossing above signal line (bullish)
-   - MACD crossing below signal line (bearish)
-   - Distance from zero line during crossover
-   - Crossover angle/momentum
-   - Historical reliability of recent crossovers
+1. Signal Line Analysis (40% weight)
+   - MACD/Signal crossovers
+   - Distance from zero line
+   - Crossover momentum
+   - Historical reliability
 
-2. Histogram Analysis (25% weight)
-   - Current histogram trend (increasing/decreasing)
-   - Histogram size relative to recent average
-   - Rate of change in histogram
-   - Histogram divergence from price
-   - Zero-line rejections
+2. Pattern Recognition (30% weight)
+   - Histogram patterns
+   - Divergence setups
+   - Zero-line tests
+   - Trend strength
 
-3. Centerline Analysis (20% weight)
-   - Position relative to zero line
-   - Recent centerline crossovers
-   - Time spent above/below zero
-   - Strength of moves from centerline
-   - Failed centerline tests
+3. Momentum Analysis (20% weight)
+   - Histogram size changes
+   - MACD slope
+   - Signal line slope
+   - Rate of change
 
-4. Divergence Patterns (15% weight)
-   Regular Divergence:
-   - Bearish: Higher highs in price, lower highs in MACD
-   - Bullish: Lower lows in price, higher lows in MACD
-   
-   Hidden Divergence:
-   - Bearish: Lower highs in price, higher highs in MACD
-   - Bullish: Higher lows in price, lower lows in MACD
+4. Context Analysis (10% weight)
+   - Current trend phase
+   - Volume confirmation
+   - Market structure
+   - Nearby key levels
 
 Signal Confidence Guidelines:
 ---------------------------
-High Confidence (0.8-1.0):
-- Clear signal line crossover with volume confirmation
+High (0.8-1.0):
+- Clear signal line crossover
 - Strong histogram momentum
 - Multiple confirming factors
-- Clear trend direction from zero line
-- Divergence with strong price action
+- Clear trend direction
 
-Medium Confidence (0.5-0.7):
-- Signal line crossover without full confirmation
-- Moderate histogram momentum
-- Mixed signals between components
-- Unclear zero line direction
-- Developing but incomplete patterns
+Medium (0.5-0.7):
+- Developing crossover
+- Moderate momentum
+- Mixed signals
+- Unclear trend
 
-Low Confidence (<0.5):
-- Weak or unclear crossovers
+Low (<0.5):
+- Weak/unclear crossovers
+- Minimal momentum
 - Contradicting signals
-- Minimal histogram momentum
 - Choppy price action
-- Failed pattern development
-
-Provide your rationale in a clear, concise format focusing on:
-1. Primary Signal: The most important pattern/signal you've identified
-2. Supporting Evidence: Key metrics supporting your recommendation
-3. Risk Factors: What could invalidate your analysis
-4. Next Levels: Key price levels to watch
-
-Keep the explanation clear and actionable, focusing on what matters most for the trading decision."
 
 Response Format:
 ---------------
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
   "confidence": number between 0 and 1,
-  "rationale": "Analysis rationale summary, including factors discussed above"
-}}
-
-Note: MACD is a trend-following momentum indicator. Consider:
-- False signals are common in ranging markets
-- Strong trends can override typical reversal signals
-- Histogram changes often precede price moves
-- Zero-line rejections can be powerful signals
-- Volume confirmation increases signal reliability`,
+  "rationale": "Format your rationale as follows:
+    Primary Signal: Current MACD setup and main signal
+    Key Metrics: MACD, Signal, and Histogram values with context
+    Risk Factors: Potential signal invalidation points
+    Key Levels: Critical MACD and price levels to monitor"
+}}`,
   system: `You are an expert cryptocurrency technical analyst specializing in Moving Average Convergence Divergence (MACD) analysis.
 
 Key MACD Analysis Principles:

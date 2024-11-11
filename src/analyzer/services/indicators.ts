@@ -1,6 +1,6 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { IndicatorResult, PriceData } from "../types";
+import { IndicatorResult, OHLCDataInterval, PriceData } from "../types";
 
 export class TechnicalIndicatorService {
   // Configuration constants
@@ -15,6 +15,7 @@ export class TechnicalIndicatorService {
 
   constructor(
     private readonly symbol: string,
+    private readonly interval: OHLCDataInterval,
     private readonly logger: Logger,
     private readonly metrics: Metrics
   ) {}
@@ -43,6 +44,7 @@ export class TechnicalIndicatorService {
     const result: IndicatorResult = {
       name: "BollingerBands",
       symbol: this.symbol,
+      interval: this.interval,
       current: {},
       history: {
         middle: [],
@@ -110,6 +112,7 @@ export class TechnicalIndicatorService {
     const result: IndicatorResult = {
       name: "RSI",
       symbol: this.symbol,
+      interval: this.interval,
       current: {},
       history: {
         rsi: [],
@@ -179,6 +182,7 @@ export class TechnicalIndicatorService {
     const result: IndicatorResult = {
       name: "VWAP",
       symbol: this.symbol,
+      interval: this.interval,
       current: {},
       history: {
         vwap: [],
@@ -236,6 +240,7 @@ export class TechnicalIndicatorService {
     const result: IndicatorResult = {
       name: "MACD",
       symbol: this.symbol,
+      interval: this.interval,
       current: {},
       history: {
         macdLine: [],

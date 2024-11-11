@@ -1,64 +1,77 @@
 export const RSI = {
-  human: `You are an expert cryptocurrency technical analyst specializing in RSI analysis.
-Analyze the provided RSI data and provide a trading recommendation.
+  human: `Analyze the provided RSI data to generate a trading recommendation for {symbol} on {timeframe} timeframe.
 
-Market Context:
-Symbol: {symbol}
+Current Market Data:
+-------------------
+Price: {current_price}
+RSI Value: {current_rsi}
+Average Gain: {current_avg_gain}
+Average Loss: {current_avg_loss}
 
-Current Values:
-RSI: {current_rsi}
-Current Price: {current_price}
+Historical Data (Last 10 periods):
+---------------------------------
+RSI Values: {rsi_history}
+Price Movement: {price_history}
+Average Gains: {avg_gain_history}
+Average Losses: {avg_loss_history}
 
-Recent History (Last 10 points):
-RSI Values:
-{rsi_history}
-Price Values:
-{price_history}
+Analysis Requirements:
+---------------------
+1. Momentum Analysis (40% weight)
+   - Overbought/Oversold conditions
+   - Distance from centerline
+   - Speed of RSI changes
+   - Historical extremes
 
-Required Analysis Points:
-1. Momentum Assessment
-   - Current RSI value
-   - Recent RSI trends
-   - Centerline relationship
-
-2. Condition Analysis
-   - Overbought/oversold status
-   - Duration of condition
-   - Historical context
-
-3. Divergence Check
+2. Pattern Recognition (30% weight)
    - Regular divergences
    - Hidden divergences
-   - Failed swings
+   - Failure swings
+   - Trendline breaks
 
-4. Signal Context
-   - Trend alignment
-   - Support/resistance levels
-   - Pattern completion
+3. Trend Analysis (20% weight)
+   - Centerline relationship
+   - Higher highs/lower lows
+   - Support/resistance tests
+   - Momentum strength
 
-Based on this data, provide:
-1. A trading recommendation (BUY, SELL, or HOLD)
-2. A confidence score (0.0 to 1.0)
-3. A brief rationale explaining your recommendation
+4. Context Analysis (10% weight)
+   - Current market phase
+   - Volume confirmation
+   - Market structure
+   - Historical pattern context
 
-Consider:
-- Traditional overbought (>70) and oversold (<30) levels
-- RSI divergence with price
-- Trend in RSI values
-- Failed swings
-- Regular vs hidden divergence patterns
+Signal Confidence Guidelines:
+---------------------------
+High (0.8-1.0):
+- Clear extreme reading with confirmation
+- Multiple pattern alignment
+- Strong divergence setup
+- Clear trend context
 
-Respond with a JSON object. Here's an example of the required format:
+Medium (0.5-0.7):
+- Moderate RSI reading
+- Single pattern present
+- Developing divergence
+- Mixed signals
 
+Low (<0.5):
+- Neutral RSI zone
+- No clear patterns
+- Weak or no divergence
+- Contradicting signals
+
+Response Format:
+---------------
 {{
-  "recommendation": "HOLD",
-  "confidence": 0.75,
-  "rationale": "RSI is at 45, showing neutral momentum. Price is trending sideways with no clear divergence patterns."
-}}
-
-Your response must be valid JSON with exactly these three fields. 
-The recommendation must be one of: BUY, SELL, or HOLD. 
-The confidence must be a number between 0 and 1.`,
+  "recommendation": "BUY" | "SELL" | "HOLD",
+  "confidence": number between 0 and 1,
+  "rationale": "Format your rationale as follows:
+    Primary Signal: Current RSI setup and main signal
+    Key Metrics: RSI value, momentum state, trend position
+    Risk Factors: Potential signal invalidation points
+    Key Levels: Critical RSI and price levels to monitor"
+}}`,
   system: `You are a senior technical analyst with deep expertise in Relative Strength Index (RSI) analysis for cryptocurrency markets, with particular focus on momentum dynamics and reversal identification.
 
 Core RSI Principles:

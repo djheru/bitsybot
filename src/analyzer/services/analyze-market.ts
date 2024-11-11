@@ -1,6 +1,7 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { ChatOpenAI } from "@langchain/openai";
+import { randomUUID } from "crypto";
 import {
   BollingerBandsAgent,
   FinalAnalysisAgent,
@@ -8,7 +9,7 @@ import {
   RSIAgent,
   VWAPAgent,
 } from "../services/agents";
-import { IndicatorAnalysis, IndicatorResult } from "../types";
+import { AnalysisRecord, IndicatorResult } from "../types";
 
 export class AnalysisService {
   constructor(
@@ -17,13 +18,14 @@ export class AnalysisService {
     private readonly metrics: Metrics
   ) {}
 
-  async analyzeMarket(technicalData: IndicatorResult[]): Promise<{
-    bbAnalysis: IndicatorAnalysis;
-    rsiAnalysis: IndicatorAnalysis;
-    vwapAnalysis: IndicatorAnalysis;
-    macdAnalysis: IndicatorAnalysis;
-    finalAnalysis: IndicatorAnalysis;
-  }> {
+  async analyzeMarket(
+    technicalData: IndicatorResult[]
+  ): Promise<AnalysisRecord> {
+    const uuid = randomUUID();
+    const timestamp = new Date().toISOString();
+    const price = technicalData[0].current.price;
+    const symbol = technicalData[0].symbol;
+
     const bbAgent = new BollingerBandsAgent(
       this.model,
       this.logger,
@@ -39,26 +41,33 @@ export class AnalysisService {
     );
 
     // Get individual analyses
-    const bbAnalysis = await bbAgent.analyze(technicalData[0]); // Bollinger Bands
-    const rsiAnalysis = await rsiAgent.analyze(technicalData[1]); // RSI
-    const vwapAnalysis = await vwapAgent.analyze(technicalData[2]); // VWAP
-    const macdAnalysis = await macdAgent.analyze(technicalData[3]); // MACD
+    const bollinger = await bbAgent.analyze(technicalData[0]); // Bollinger Bands
+    const rsi = await rsiAgent.analyze(technicalData[1]); // RSI
+    const vwap = await vwapAgent.analyze(technicalData[2]); // VWAP
+    const macd = await macdAgent.analyze(technicalData[3]); // MACD
 
     // Get final analysis
     const finalAnalysis = await finalAgent.analyze(
-      bbAnalysis,
-      rsiAnalysis,
-      macdAnalysis,
-      vwapAnalysis,
+      bollinger,
+      rsi,
+      macd,
+      vwap,
       technicalData[0].current.price,
-      technicalData[0].symbol
+      technicalData[0].symbol,
+      technicalData[0].interval
     );
 
     return {
-      bbAnalysis,
-      rsiAnalysis,
-      vwapAnalysis,
-      macdAnalysis,
+      uuid,
+      timestamp,
+      price,
+      symbol,
+      indicators: {
+        bollinger,
+        rsi,
+        vwap,
+        macd,
+      },
       finalAnalysis,
     };
   }

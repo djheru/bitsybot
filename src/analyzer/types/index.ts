@@ -141,6 +141,7 @@ export interface TimeSeriesPoint {
 export interface IndicatorResult {
   name: string;
   symbol: string;
+  interval: OHLCDataInterval;
   current: Record<string, number>;
   history: {
     [key: string]: TimeSeriesPoint[];
@@ -148,9 +149,9 @@ export interface IndicatorResult {
   metadata?: Record<string, any>;
 }
 export interface AnalysisRecord {
+  uuid: string;
   symbol: string; // Partition Key
-  timestamp: number; // Sort Key
-  recommendationTimestamp: string; // LSI (recommendation-timestamp)
+  timestamp: string; // Sort Key
   price: number;
   indicators: {
     bollinger: IndicatorAnalysis;
@@ -158,5 +159,26 @@ export interface AnalysisRecord {
     macd: IndicatorAnalysis;
     vwap: IndicatorAnalysis;
   };
-  finalRecommendation: IndicatorAnalysis;
+  finalAnalysis: IndicatorAnalysis;
+}
+
+export type OHLCDataInterval =
+  | 1
+  | 5
+  | 15
+  | 30
+  | 60
+  | 240
+  | 1440
+  | 10080
+  | 21600;
+
+export const allowedIntervals: OHLCDataInterval[] = [
+  1, 5, 15, 30, 60, 240, 1440, 10080, 21600,
+];
+
+export function isValidOHLCDataInterval(
+  value: number
+): value is OHLCDataInterval {
+  return allowedIntervals.includes(value as OHLCDataInterval);
 }

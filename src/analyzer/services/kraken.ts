@@ -1,11 +1,12 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
-import { PriceData } from "../types";
+import { OHLCDataInterval, PriceData } from "../types";
 
 export class KrakenService {
   public ANALYSIS_WINDOW = 50;
   constructor(
     private readonly symbol: string,
+    private interval: OHLCDataInterval,
     private readonly logger: Logger,
     private readonly metrics: Metrics
   ) {}
@@ -14,7 +15,7 @@ export class KrakenService {
       const url = "https://api.kraken.com/0/public/OHLC";
       const params = new URLSearchParams({
         pair: this.symbol,
-        interval: "15", // Interval in minutes (e.g., 5 for 5-minute intervals)
+        interval: `${this.interval}`, // Interval in minutes (e.g., 5 for 5-minute intervals)
         since: `${Date.now() - 86400000}`, // Fetch data from the last 24 hours
       });
 

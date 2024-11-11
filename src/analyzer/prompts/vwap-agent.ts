@@ -1,47 +1,77 @@
 export const VWAP = {
-  human: `You are an expert cryptocurrency technical analyst specializing in VWAP (Volume-Weighted Average Price) analysis.
-Analyze the provided VWAP data and provide a trading recommendation.
+  human: `Analyze the provided VWAP data to generate a trading recommendation for {symbol} on {timeframe} timeframe.
 
-Market Context:
-Symbol: {symbol}
-
-Current Values:
+Current Market Data:
+-------------------
+Price: {current_price}
 VWAP: {current_vwap}
-Current Price: {current_price}
-Price to VWAP Difference: {price_to_vwap}%
-Volume Strength (relative to 20-period average): {relative_volume}x
+Price to VWAP: {price_to_vwap}%
+Volume Strength: {relative_volume}x
+Current Volume: {current_volume}
 
-Recent History (Last 10 points):
-VWAP Values:
-{vwap_history}
-Price Values:
-{price_history}
-Volume Profile:
-{volume_history}
+Historical Data (Last 10 periods):
+---------------------------------
+Price Movement: {price_history}
+VWAP Values: {vwap_history}
+Volume Profile: {volume_history}
+Relative Volume: {relative_volume_history}
 
-Based on this data, provide:
-1. A trading recommendation (BUY, SELL, or HOLD)
-2. A confidence score (0.0 to 1.0)
-3. A brief rationale explaining your recommendation
+Analysis Requirements:
+---------------------
+1. Price/VWAP Relationship (40% weight)
+   - Distance from VWAP
+   - Price crosses
+   - Rejection/acceptance
+   - Historical relationship
 
-Consider:
-- Price position relative to VWAP (above/below)
-- Magnitude of price deviation from VWAP
-- Volume confirmation of price movements
-- Recent volume profile and its implications
-- Whether high-volume price movements are respecting VWAP as support/resistance
+2. Volume Analysis (30% weight)
+   - Volume strength
+   - Volume trends
+   - Price/volume divergence
+   - Historical context
 
-Key VWAP principles to consider:
-- Institutional traders often use VWAP for large orders
-- Strong trends often show consistent price position relative to VWAP
-- High-volume reversals at VWAP levels are significant
-- Price returning to VWAP after deviation often indicates potential reversal
+3. Trend Analysis (20% weight)
+   - VWAP slope
+   - Price momentum
+   - Support/resistance tests
+   - Trend strength
 
-Respond in the following JSON format:
+4. Context Analysis (10% weight)
+   - Current market phase
+   - Institutional levels
+   - Market structure
+   - Historical pattern context
+
+Signal Confidence Guidelines:
+---------------------------
+High (0.8-1.0):
+- Strong volume confirmation
+- Clear VWAP relationship
+- Multiple confirming factors
+- Clear trend direction
+
+Medium (0.5-0.7):
+- Moderate volume support
+- Mixed VWAP signals
+- Developing patterns
+- Unclear trend
+
+Low (<0.5):
+- Weak volume
+- Price/VWAP confusion
+- Contradicting signals
+- No clear direction
+
+Response Format:
+---------------
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
   "confidence": number between 0 and 1,
-  "rationale": "string explaining the analysis"
+  "rationale": "Format your rationale as follows:
+    Primary Signal: Current VWAP setup and main signal
+    Key Metrics: Price/VWAP relationship, volume context
+    Risk Factors: Potential signal invalidation points
+    Key Levels: Critical VWAP and price levels to monitor"
 }}`,
   system: `You are an expert cryptocurrency technical analyst specializing in Volume-Weighted Average Price (VWAP) analysis.
 

@@ -1,58 +1,48 @@
 export const BollingerBands = {
-  human: `Analyze the provided Bollinger Bands data to generate a trading recommendation.
+  human: `Analyze the provided Bollinger Bands data to generate a trading recommendation for {symbol} on {timeframe} timeframe.
 
-Market Context:
-Symbol: {symbol}
-
-Current Band Metrics:
---------------------
+Current Market Data:
+-------------------
 Price: {current_price}
-Middle Band (20 SMA): {current_middle}
-Upper Band (+2σ): {current_upper}
-Lower Band (-2σ): {current_lower}
+Upper Band: {current_upper}
+Middle Band: {current_middle}
+Lower Band: {current_lower}
 Band Width: {current_bandwidth}
-%B Position: {current_percentB}
+%B: {current_percentB}
 
 Historical Data (Last 10 periods):
 ---------------------------------
-Price Movement:
-{price_history}
-
-Band Movements:
+Price Movement: {price_history}
 Upper Band: {upper_history}
 Middle Band: {middle_history}
 Lower Band: {lower_history}
+Bandwidth: {bandwidth_history}
 
 Analysis Requirements:
 ---------------------
-1. Band Position Analysis (40% weight)
-   - Price location relative to bands (above, below, between)
-   - %B interpretation:
-     * >1.00: Overbought consideration
-     * <0.00: Oversold consideration
-     * Around 0.50: Neutral territory
-   - Distance from middle band (trending vs ranging)
+1. Price Position Analysis (40% weight)
+   - Location relative to bands
+   - Distance from middle band
+   - %B interpretation
+   - Recent band crosses
 
-2. Volatility Assessment (30% weight)
-   - Current bandwidth compared to recent average
-   - Bandwidth trends:
-     * Expanding: Potential trend development
-     * Contracting: Potential consolidation/breakout
-     * Stable: Established trend or range
-   - Squeeze conditions (tight bands)
+2. Pattern Recognition (30% weight)
+   - W-bottoms/M-tops
+   - Walking the bands
+   - Band touch reactions
+   - Price compression
 
-3. Pattern Recognition (20% weight)
-   - W-bottoms: Double touch of lower band
-   - M-tops: Double touch of upper band
-   - Walking the bands: Consistent touches of one band
-   - Tag and Go: Price touching and reversing
-   - Band Riding: Price moving along a band
+3. Volatility Analysis (20% weight)
+   - Bandwidth trends
+   - Squeeze conditions
+   - Expansion phases
+   - Historical context
 
-4. Context & Confirmation (10% weight)
-   - Trend direction (price relative to middle band)
-   - Recent support/resistance interactions
-   - Failed vs successful band tests
-   - Return to middle band dynamics
+4. Context Analysis (10% weight)
+   - Current market phase
+   - Volume confirmation
+   - Trend strength
+   - Support/resistance levels
 
 Signal Confidence Guidelines:
 ---------------------------
@@ -64,14 +54,14 @@ High (0.8-1.0):
 
 Medium (0.5-0.7):
 - Developing patterns
-- Mixed signals between bands
+- Mixed band signals
 - Unclear volatility context
-- Lacking secondary confirmation
+- Partial confirmation
 
 Low (<0.5):
-- Contradictory band signals
+- Contradictory signals
 - Unclear price structure
-- Extreme volatility conditions
+- Extreme conditions
 - Pattern failures
 
 Response Format:
@@ -79,11 +69,11 @@ Response Format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
   "confidence": number between 0 and 1,
-  "rationale": "Detailed analysis including:
-    - Specific band positions and values
-    - Pattern identification
-    - Volatility context
-    - Confidence justification"
+  "rationale": "Format your rationale as follows:
+    Primary Signal: Current BB setup and main signal
+    Key Metrics: Band positions, %B, bandwidth context
+    Risk Factors: Potential signal invalidation points
+    Key Levels: Critical band and price levels to monitor"
 }}`,
 
   system: `You are a senior technical analyst with 15+ years of experience specializing in Bollinger Bands analysis for cryptocurrency markets.

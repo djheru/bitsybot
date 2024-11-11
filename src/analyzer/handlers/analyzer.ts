@@ -5,7 +5,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { AnalysisService } from "../services/analyze-market";
 import { TechnicalIndicatorService } from "../services/indicators";
 import { KrakenService } from "../services/kraken";
-import { AppSecret } from "../types";
+import { AppSecret, isValidOHLCDataInterval } from "../types";
 
 const {
   DB_TABLE: dbTable = "",
@@ -23,8 +23,14 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
     try {
       logger.info("event", { event });
 
-      const { detail: { symbol = "BTCUSD" } = {} } = event;
-      logger.info("Analyzing symbol", { symbol });
+      const {
+        detail: { symbol = "BTCUSD", interval: timeInterval = 15 } = {},
+      } = event;
+      const interval = isValidOHLCDataInterval(timeInterval)
+        ? timeInterval
+        : 15;
+
+      logger.info("Analyzing symbol", { symbol, interval });
 
       const secret = await getSecret<AppSecret>(
         `${serviceName}-${environmentName}`,
@@ -45,7 +51,12 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       });
 
       logger.info("Getting price data");
-      const krakenService = new KrakenService(symbol, logger, metrics);
+      const krakenService = new KrakenService(
+        symbol,
+        interval,
+        logger,
+        metrics
+      );
       const priceData = await krakenService.fetchPriceData();
       logger.info("priceData", {
         priceData: `${priceData.length} records returned`,
@@ -54,6 +65,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       logger.info("Calculating technical indicators");
       const indicatorService = new TechnicalIndicatorService(
         symbol,
+        interval,
         logger,
         metrics
       );
