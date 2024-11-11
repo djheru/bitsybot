@@ -1,31 +1,30 @@
 export const Analysis = {
   human: `Review and analyze the following technical indicator signals to provide a consolidated trading recommendation.
 
-Market Context:
+Current Market Data:
+-------------------
 Symbol: {symbol}
-Current Price: {current_price}
+Price: {current_price}
+Timeframe: {timeframe}
 
-Individual Indicator Analyses:
------------------------------
-MOMENTUM & TREND INDICATORS
-MACD Analysis: (Trend direction and momentum)
-Recommendation: {macd_recommendation}
-Confidence: {macd_confidence}
-Rationale: {macd_rationale}
-
-RSI Analysis: (Overbought/Oversold conditions)
-Recommendation: {rsi_recommendation}
-Confidence: {rsi_confidence}
-Rationale: {rsi_rationale}
-
-VOLATILITY & PRICE CHANNEL INDICATORS
-Bollinger Bands Analysis: (Volatility and price extremes)
+Current Indicator Analyses:
+-------------------------
+Bollinger Bands:
 Recommendation: {bb_recommendation}
 Confidence: {bb_confidence}
 Rationale: {bb_rationale}
 
-VOLUME & INSTITUTIONAL INDICATORS
-VWAP Analysis: (Institutional price levels)
+RSI:
+Recommendation: {rsi_recommendation}
+Confidence: {rsi_confidence}
+Rationale: {rsi_rationale}
+
+MACD:
+Recommendation: {macd_recommendation}
+Confidence: {macd_confidence}
+Rationale: {macd_rationale}
+
+VWAP:
 Recommendation: {vwap_recommendation}
 Confidence: {vwap_confidence}
 Rationale: {vwap_rationale}
@@ -64,25 +63,44 @@ Risk Management Requirements:
 - Weight recent signals more heavily
 - Factor in current market volatility
 
-Provide your rationale in the following structure:
-1. Primary Drivers: Which indicators are most compelling and why
-2. Key Metrics:
-   - Strongest signals (quantify with values)
-   - Conflicting signals (explain weight given)
-3. Risk Assessment:
-   - Key levels to watch
-   - Potential invalidation points
-4. Trading Context:
-   - Volume confirmation
-   - Market structure context
+Analysis Requirements:
+---------------------
+1. Signal Confluence (40% weight)
+2. Momentum/Trend Analysis (30% weight)
+3. Volume/Volatility Analysis (20% weight)
+4. Risk Assessment (10% weight)
 
-Keep the final rationale under 150 words, focusing on actionable insights.
-
-Respond with a JSON object using exactly this format:
+You must respond with a JSON object in exactly this format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
-  "confidence": number between 0 and 1,
-  "rationale": "Detailed rationale as described above"
+ "confidence": <number between 0 and 1>,
+ "rationale": "Structure your rationale exactly as follows:
+
+Primary Driver: One sentence describing the dominant signal
+- Main indicator alignment
+- Key market context
+
+Indicator Alignment:
+- BB: [value] %B, [bandwidth] width, [recommendation] ([confidence])
+- RSI: [value] ([state]), [recommendation] ([confidence])
+- MACD: [line]/[signal], [histogram] histogram, [recommendation] ([confidence])
+- VWAP: [value]% distance, [volume]x vol, [recommendation] ([confidence])
+
+Key Levels:
+- Resistance: [level] (source: [indicator])
+- Support: [level] (source: [indicator])
+- Volume Threshold: [level]x average
+- Current Price: [price]
+
+Risk Assessment:
+- List 2-3 primary risks
+- Include specific values
+- Note key invalidation points
+
+Action Items:
+- List 2-3 specific things to monitor
+- Include exact levels or values
+- Note confirmation signals needed"
 }}`,
   system: `You are a senior cryptocurrency technical analyst responsible for synthesizing multiple technical indicators into actionable trading decisions.
 

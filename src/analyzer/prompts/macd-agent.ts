@@ -3,6 +3,7 @@ export const MACD = {
 
 Current Market Data:
 -------------------
+Symbol: {symbol}
 Price: {current_price}
 MACD Line: {current_macd}
 Signal Line: {current_signal}
@@ -61,16 +62,31 @@ Low (<0.5):
 - Contradicting signals
 - Choppy price action
 
-Response Format:
----------------
+You must respond with a JSON object in exactly this format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
-  "confidence": number between 0 and 1,
-  "rationale": "Format your rationale as follows:
-    Primary Signal: Current MACD setup and main signal
-    Key Metrics: MACD, Signal, and Histogram values with context
-    Risk Factors: Potential signal invalidation points
-    Key Levels: Critical MACD and price levels to monitor"
+  "confidence": <number between 0 and 1>,
+  "rationale": "Structure your rationale exactly as follows:
+
+Primary Signal: One sentence describing the main signal
+- Current MACD setup
+- Key crossover or trend status
+
+Key Metrics:
+- MACD Line: [value] ([above/below] signal)
+- Signal Line: [value]
+- Histogram: [value] ([increasing/decreasing])
+- Trend Status: [above/below] zero line
+
+Risk Factors:
+- List 2-3 key risks
+- Include specific values
+- Note invalidation points
+
+Key Levels:
+- MACD: [value] (signal line)
+- Zero Line: [distance]
+- Price: [current] / [target]"
 }}`,
   system: `You are an expert cryptocurrency technical analyst specializing in Moving Average Convergence Divergence (MACD) analysis.
 

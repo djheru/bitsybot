@@ -3,6 +3,7 @@ export const VWAP = {
 
 Current Market Data:
 -------------------
+Symbol: {symbol}
 Price: {current_price}
 VWAP: {current_vwap}
 Price to VWAP: {price_to_vwap}%
@@ -62,16 +63,32 @@ Low (<0.5):
 - Contradicting signals
 - No clear direction
 
-Response Format:
----------------
+You must respond with a JSON object in exactly this format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
-  "confidence": number between 0 and 1,
-  "rationale": "Format your rationale as follows:
-    Primary Signal: Current VWAP setup and main signal
-    Key Metrics: Price/VWAP relationship, volume context
-    Risk Factors: Potential signal invalidation points
-    Key Levels: Critical VWAP and price levels to monitor"
+  "confidence": <number between 0 and 1>,
+  "rationale": "Structure your rationale exactly as follows:
+
+Primary Signal: One sentence describing the main signal
+- Price relation to VWAP
+- Volume context
+
+Key Metrics:
+- VWAP Distance: [value]% ([above/below])
+- Volume Strength: [value]x average
+- Price: [current] vs VWAP: [value]
+- Volume Trend: [increasing/decreasing]
+
+Risk Factors:
+- List 2-3 key risks
+- Include specific values
+- Note invalidation points
+
+Key Levels:
+- VWAP: [value]
+- Price: [current]
+- Volume Threshold: [value]x average
+- Support/Resistance: [values]"
 }}`,
   system: `You are an expert cryptocurrency technical analyst specializing in Volume-Weighted Average Price (VWAP) analysis.
 

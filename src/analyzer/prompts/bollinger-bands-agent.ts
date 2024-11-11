@@ -3,6 +3,7 @@ export const BollingerBands = {
 
 Current Market Data:
 -------------------
+Symbol: {symbol}
 Price: {current_price}
 Upper Band: {current_upper}
 Middle Band: {current_middle}
@@ -64,16 +65,32 @@ Low (<0.5):
 - Extreme conditions
 - Pattern failures
 
-Response Format:
----------------
+You must respond with a JSON object in exactly this format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
-  "confidence": number between 0 and 1,
-  "rationale": "Format your rationale as follows:
-    Primary Signal: Current BB setup and main signal
-    Key Metrics: Band positions, %B, bandwidth context
-    Risk Factors: Potential signal invalidation points
-    Key Levels: Critical band and price levels to monitor"
+  "confidence": <number between 0 and 1>,
+  "rationale": "Structure your rationale exactly as follows:
+
+Primary Signal: One sentence describing the main signal
+- Price position relative to bands
+- Key pattern or trend status
+
+Key Metrics:
+- Price: [value] ([above/between/below] bands)
+- %B: [value] ([overbought/neutral/oversold])
+- Bandwidth: [value] ([expanding/contracting])
+- Band Position: [upper/middle/lower] band at [value]
+
+Risk Factors:
+- List 2-3 key risks
+- Include specific values
+- Note invalidation points
+
+Key Levels:
+- Upper Band: [value]
+- Middle Band: [value]
+- Lower Band: [value]
+- Critical Price: [current] / [target]"
 }}`,
 
   system: `You are a senior technical analyst with 15+ years of experience specializing in Bollinger Bands analysis for cryptocurrency markets.

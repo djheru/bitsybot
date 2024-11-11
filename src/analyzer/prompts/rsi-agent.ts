@@ -3,6 +3,7 @@ export const RSI = {
 
 Current Market Data:
 -------------------
+Symbol: {symbol}
 Price: {current_price}
 RSI Value: {current_rsi}
 Average Gain: {current_avg_gain}
@@ -61,16 +62,32 @@ Low (<0.5):
 - Weak or no divergence
 - Contradicting signals
 
-Response Format:
----------------
+You must respond with a JSON object in exactly this format:
 {{
   "recommendation": "BUY" | "SELL" | "HOLD",
-  "confidence": number between 0 and 1,
-  "rationale": "Format your rationale as follows:
-    Primary Signal: Current RSI setup and main signal
-    Key Metrics: RSI value, momentum state, trend position
-    Risk Factors: Potential signal invalidation points
-    Key Levels: Critical RSI and price levels to monitor"
+  "confidence": <number between 0 and 1>,
+  "rationale": "Structure your rationale exactly as follows:
+
+Primary Signal: One sentence describing the main signal
+- Current RSI condition
+- Key trend or reversal status
+
+Key Metrics:
+- RSI Value: [value] ([overbought/oversold/neutral])
+- Trend Position: [above/below] centerline
+- Recent Extreme: [value] ([high/low])
+- Momentum State: [increasing/decreasing]
+
+Risk Factors:
+- List 2-3 key risks
+- Include specific values
+- Note invalidation points
+
+Key Levels:
+- Overbought: 70
+- Oversold: 30
+- Centerline: 50
+- Price: [current] / [target]"
 }}`,
   system: `You are a senior technical analyst with deep expertise in Relative Strength Index (RSI) analysis for cryptocurrency markets, with particular focus on momentum dynamics and reversal identification.
 
