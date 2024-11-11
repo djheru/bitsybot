@@ -34,6 +34,7 @@
     "@langchain/langgraph": "^0.2.20",
     "@langchain/openai": "^0.3.12",
     "@middy/core": "^5.5.1",
+    "@slack/web-api": "^7.7.0",
     "@types/aws-lambda": "^8.10.145",
     "aws-cdk-lib": "2.166.0",
     "change-case": "^4.1.2",

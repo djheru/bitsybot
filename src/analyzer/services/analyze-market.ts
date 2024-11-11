@@ -69,6 +69,7 @@ export class AnalysisService {
       macd,
       finalAnalysis,
       finalRecommendation: finalAnalysis.recommendation,
+      confidence: finalAnalysis.confidence,
       interval,
     };
   }

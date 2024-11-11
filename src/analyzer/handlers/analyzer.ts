@@ -6,13 +6,15 @@ import { AnalysisService } from "../services/analyze-market";
 import { AnalysisRepository } from "../services/db";
 import { TechnicalIndicatorService } from "../services/indicators";
 import { KrakenService } from "../services/kraken";
+import { SlackService } from "../services/slack";
 import { AppSecret, isValidOHLCDataInterval } from "../types";
 
 const {
-  DB_TABLE: dbTable = "",
   ENVIRONMENT_NAME: environmentName = "",
   SERVICE_NAME: serviceName = "",
 } = process.env;
+
+const NOTIFICATION_THRESHOLD = 0.84;
 
 let logger: Logger;
 let metrics: Metrics;
@@ -80,8 +82,22 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       logger.info("analysis", { analysis });
 
       // Create record
+      const dbTable = `${serviceName}-${environmentName}-table`;
       const repository = new AnalysisRepository(dbTable, logger);
       await repository.createAnalysisRecord(analysis);
+
+      // Send high confidence alert to Slack
+      if (
+        analysis.finalAnalysis.confidence >= NOTIFICATION_THRESHOLD &&
+        analysis.finalAnalysis.recommendation !== "HOLD"
+      ) {
+        const slackService = new SlackService(
+          secret.SLACK_TOKEN,
+          secret.SLACK_CHANNEL,
+          logger
+        );
+        await slackService.sendHighConfidenceAlert(analysis);
+      }
 
       return {
         statusCode: 200,

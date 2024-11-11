@@ -116,9 +116,7 @@ export class RSIAgent {
         "avg_loss_history"
       ),
     };
-    console.log(JSON.stringify(input));
     const response = await this.chain.invoke(input);
-    console.log(response);
     return response;
   }
 }

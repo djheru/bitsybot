@@ -7,6 +7,8 @@ export interface AppSecret {
   KRAKEN_SECRET_KEY: string;
   OPENAI_API_KEY: string;
   SERVICE_NAME: string;
+  SLACK_TOKEN: string;
+  SLACK_CHANNEL: string;
   STRIPE_PRODUCT_PRICE_ID_LG: string;
   STRIPE_PRODUCT_PRICE_ID_MD: string;
   STRIPE_PRODUCT_PRICE_ID_SM: string;
@@ -158,6 +160,7 @@ export interface AnalysisRecord {
   macd: IndicatorAnalysis;
   vwap: IndicatorAnalysis;
   finalAnalysis: IndicatorAnalysis;
+  confidence: number;
   finalRecommendation: Signal;
   interval: OHLCDataInterval;
   ttl?: number; // TTL in seconds since epoch
