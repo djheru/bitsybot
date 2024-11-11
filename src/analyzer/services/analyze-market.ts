@@ -25,6 +25,7 @@ export class AnalysisService {
     const timestamp = new Date().toISOString();
     const price = technicalData[0].current.price;
     const symbol = technicalData[0].symbol;
+    const interval = technicalData[0].interval;
 
     const bbAgent = new BollingerBandsAgent(
       this.model,
@@ -52,9 +53,9 @@ export class AnalysisService {
       rsi,
       macd,
       vwap,
-      technicalData[0].current.price,
-      technicalData[0].symbol,
-      technicalData[0].interval
+      price,
+      symbol,
+      interval
     );
 
     return {
@@ -62,13 +63,13 @@ export class AnalysisService {
       timestamp,
       price,
       symbol,
-      indicators: {
-        bollinger,
-        rsi,
-        vwap,
-        macd,
-      },
+      bollinger,
+      rsi,
+      vwap,
+      macd,
       finalAnalysis,
+      finalRecommendation: finalAnalysis.recommendation,
+      interval,
     };
   }
 }

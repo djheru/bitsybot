@@ -153,13 +153,13 @@ export interface AnalysisRecord {
   symbol: string; // Partition Key
   timestamp: string; // Sort Key
   price: number;
-  indicators: {
-    bollinger: IndicatorAnalysis;
-    rsi: IndicatorAnalysis;
-    macd: IndicatorAnalysis;
-    vwap: IndicatorAnalysis;
-  };
+  bollinger: IndicatorAnalysis;
+  rsi: IndicatorAnalysis;
+  macd: IndicatorAnalysis;
+  vwap: IndicatorAnalysis;
   finalAnalysis: IndicatorAnalysis;
+  finalRecommendation: Signal;
+  interval: OHLCDataInterval;
 }
 
 export type OHLCDataInterval =
