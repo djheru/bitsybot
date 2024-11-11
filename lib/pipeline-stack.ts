@@ -52,7 +52,6 @@ export class PipelineStack extends Stack {
       appStackProps: {
         environmentName: props.environmentName,
         serviceName: props.serviceName,
-        stackName: `${props.serviceName}-${props.environmentName}`,
       },
     });
 
