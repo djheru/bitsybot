@@ -64,6 +64,11 @@ export class AppStack extends Stack {
       dynamoStream: StreamViewType.NEW_AND_OLD_IMAGES,
       pointInTimeRecovery: true,
       removalPolicy: RemovalPolicy.DESTROY,
+      timeToLiveAttribute: "ttl",
+    });
+    this.dbTable.addLocalSecondaryIndex({
+      indexName: "lsi1",
+      sortKey: { name: "lsi1", type: AttributeType.STRING },
     });
   }
 

@@ -3,6 +3,7 @@ import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { ChatOpenAI } from "@langchain/openai";
 import { AnalysisService } from "../services/analyze-market";
+import { AnalysisRepository } from "../services/db";
 import { TechnicalIndicatorService } from "../services/indicators";
 import { KrakenService } from "../services/kraken";
 import { AppSecret, isValidOHLCDataInterval } from "../types";
@@ -77,6 +78,10 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       const analysisService = new AnalysisService(model, logger, metrics);
       const analysis = await analysisService.analyzeMarket(indicatorResult);
       logger.info("analysis", { analysis });
+
+      // Create record
+      const repository = new AnalysisRepository(dbTable, logger);
+      await repository.createAnalysisRecord(analysis);
 
       return {
         statusCode: 200,

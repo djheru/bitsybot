@@ -1,91 +1,174 @@
+import { Logger } from "@aws-lambda-powertools/logger";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient,
   PutCommand,
   PutCommandInput,
   QueryCommand,
+  QueryCommandInput,
 } from "@aws-sdk/lib-dynamodb";
-import { AnalysisRecord } from "../types";
+import { AnalysisRecord, Signal } from "../types";
 
-const { TABLE_NAME: TableName } = process.env;
+export class AnalysisRepository {
+  private readonly ddbDocClient: DynamoDBDocumentClient;
+  private readonly TTL_DAYS = 90; // Configure TTL period
 
-const dynamodbClient = new DynamoDBClient({});
-const ddbDocClient = DynamoDBDocumentClient.from(dynamodbClient, {
-  marshallOptions: { removeUndefinedValues: true },
-});
-
-const createKeys = (analysisRecord: AnalysisRecord) => ({
-  pk: `analysisRecord|${analysisRecord.symbol}`,
-  sk: `${analysisRecord.timestamp}|${analysisRecord.finalRecommendation}`,
-  gsipk1: `analysisRecord|${analysisRecord.uuid}`,
-  lsi1: `${analysisRecord.timestamp}|${analysisRecord.interval}`,
-});
-
-export const createAnalysisRecord = async (
-  analysisrecord: Omit<AnalysisRecord, "id">
-): Promise<AnalysisRecord> => {
-  const newAnalysisRecord: AnalysisRecord = {
-    ...analysisrecord,
-  };
-
-  const params: PutCommandInput = {
-    TableName,
-    Item: {
-      ...createKeys(newAnalysisRecord),
-      ...newAnalysisRecord,
-    },
-  };
-
-  await ddbDocClient.send(new PutCommand(params));
-  return newAnalysisRecord;
-};
-
-export const getAnalysisRecord = async (
-  uuid: string
-): Promise<AnalysisRecord> => {
-  const params = {
-    TableName,
-    IndexName: "gsi1",
-    KeyConditionExpression: "gsipk1 = :gsipk1",
-    ExpressionAttributeValues: {
-      ":gsipk1": `analysisrecord|${uuid}`,
-    },
-  };
-
-  const result = await ddbDocClient.send(new QueryCommand(params));
-  if (!result.Items?.length) {
-    throw new Error("AnalysisRecord not found");
+  constructor(
+    private readonly tableName: string,
+    private readonly logger: Logger
+  ) {
+    const dynamodbClient = new DynamoDBClient({
+      region: "us-east-1",
+    });
+    this.ddbDocClient = DynamoDBDocumentClient.from(dynamodbClient, {
+      marshallOptions: { removeUndefinedValues: true },
+    });
   }
 
-  const analysisrecord: AnalysisRecord = result.Items[0] as AnalysisRecord;
-  return analysisrecord;
-};
+  private calculateTTL(timestamp: string): number {
+    const ttlDate = new Date(timestamp);
+    ttlDate.setDate(ttlDate.getDate() + this.TTL_DAYS);
+    return Math.floor(ttlDate.getTime() / 1000);
+  }
 
-export const listByTimestamp = async (
-  symbol: string,
-  start: string,
-  end?: string,
-  nextToken?: string,
-  limit = 10,
-  direction = "asc"
-): Promise<AnalysisRecord[]> => {
-  const params = {
-    TableName,
-    KeyConditionExpression: end
-      ? "pk = :pk and sk between :start and :end"
-      : `pk = :pk and ${direction === "asc" ? "sk >" : "sk <"} :start`,
-    ExpressionAttributeValues: {
-      ":pk": `analysisrecord|${symbol}`,
-      ":start": start,
-      ...(end && { ":end": end }),
-    },
-    Limit: limit,
-    ScanIndexForward: direction === "asc",
-    ExclusiveStartKey: nextToken
-      ? JSON.parse(Buffer.from(nextToken, "base64").toString())
-      : undefined,
-  };
+  private createKeys(analysisRecord: AnalysisRecord) {
+    return {
+      pk: `analysis#${analysisRecord.symbol}`,
+      sk: `${analysisRecord.timestamp}#${analysisRecord.finalRecommendation}`,
+      gsipk1: `analysis#${analysisRecord.uuid}`,
+      lsi1: `${analysisRecord.timestamp}#${analysisRecord.interval}`,
+    };
+  }
 
-  const result = await ddbDocClient.send(new QueryCommand(params));
-  return (result.Items || []) as AnalysisRecord[];
-};
+  async createAnalysisRecord(
+    record: Omit<AnalysisRecord, "id">
+  ): Promise<AnalysisRecord> {
+    try {
+      const ttl = this.calculateTTL(record.timestamp);
+      const newAnalysisRecord: AnalysisRecord = { ...record, ttl };
+
+      const params: PutCommandInput = {
+        TableName: this.tableName,
+        Item: {
+          ...this.createKeys(newAnalysisRecord),
+          ...newAnalysisRecord,
+        },
+        // Optional: Add condition to prevent overwriting
+        ConditionExpression: "attribute_not_exists(gsipk1)",
+      };
+
+      await this.ddbDocClient.send(new PutCommand(params));
+      this.logger.info("Analysis record created", { uuid: record.uuid });
+
+      return newAnalysisRecord;
+    } catch (error) {
+      this.logger.error("Failed to create analysis record", { error, record });
+      throw error;
+    }
+  }
+
+  async getAnalysisRecord(uuid: string): Promise<AnalysisRecord> {
+    try {
+      const params: QueryCommandInput = {
+        TableName: this.tableName,
+        IndexName: "gsi1",
+        KeyConditionExpression: "gsipk1 = :gsipk1",
+        ExpressionAttributeValues: {
+          ":gsipk1": `analysis#${uuid}`,
+        },
+      };
+
+      const result = await this.ddbDocClient.send(new QueryCommand(params));
+
+      if (!result.Items?.length) {
+        const error = new Error(`Analysis record not found: ${uuid}`);
+        this.logger.error("Analysis record not found", { uuid });
+        throw error;
+      }
+
+      return result.Items[0] as AnalysisRecord;
+    } catch (error) {
+      this.logger.error("Failed to get analysis record", { error, uuid });
+      throw error;
+    }
+  }
+
+  async listByTimestamp(params: {
+    symbol: string;
+    start: string;
+    end?: string;
+    nextToken?: string;
+    limit?: number;
+    direction?: "asc" | "desc";
+    recommendation?: Signal;
+  }): Promise<{
+    records: AnalysisRecord[];
+    nextToken?: string;
+  }> {
+    try {
+      const {
+        symbol,
+        start,
+        end,
+        nextToken,
+        limit = 10,
+        direction = "asc",
+        recommendation,
+      } = params;
+
+      const queryParams: QueryCommandInput = {
+        TableName: this.tableName,
+        KeyConditionExpression: end
+          ? "pk = :pk and sk between :start and :end"
+          : `pk = :pk and ${direction === "asc" ? "sk >" : "sk <"} :start`,
+        ExpressionAttributeValues: {
+          ":pk": `analysis#${symbol}`,
+          ":start": start,
+          ...(end && { ":end": end }),
+          ...(recommendation && { ":rec": recommendation }),
+        },
+        ...(recommendation && {
+          FilterExpression: "finalRecommendation = :rec",
+        }),
+        Limit: limit,
+        ScanIndexForward: direction === "asc",
+        ExclusiveStartKey: nextToken
+          ? JSON.parse(Buffer.from(nextToken, "base64").toString())
+          : undefined,
+      };
+
+      const result = await this.ddbDocClient.send(
+        new QueryCommand(queryParams)
+      );
+
+      return {
+        records: (result.Items || []) as AnalysisRecord[],
+        nextToken: result.LastEvaluatedKey
+          ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString(
+              "base64"
+            )
+          : undefined,
+      };
+    } catch (error) {
+      this.logger.error("Failed to list analysis records", {
+        error,
+        ...params,
+      });
+      throw error;
+    }
+  }
+
+  async getRecentAnalyses(
+    symbol: string,
+    limit = 10
+  ): Promise<AnalysisRecord[]> {
+    return (
+      await this.listByTimestamp({
+        symbol,
+        start: new Date(0).toISOString(),
+        limit,
+        direction: "desc",
+      })
+    ).records;
+  }
+}

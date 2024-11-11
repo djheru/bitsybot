@@ -160,6 +160,7 @@ export interface AnalysisRecord {
   finalAnalysis: IndicatorAnalysis;
   finalRecommendation: Signal;
   interval: OHLCDataInterval;
+  ttl?: number; // TTL in seconds since epoch
 }
 
 export type OHLCDataInterval =
