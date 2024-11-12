@@ -3,6 +3,7 @@ import { z } from "zod";
 export type Signal = "BUY" | "SELL" | "HOLD";
 
 export interface AppSecret {
+  CONFIDENCE_THRESHOLD: number;
   KRAKEN_API_KEY: string;
   KRAKEN_SECRET_KEY: string;
   OPENAI_API_KEY: string;

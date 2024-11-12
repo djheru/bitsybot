@@ -14,8 +14,6 @@ const {
   SERVICE_NAME: serviceName = "",
 } = process.env;
 
-const NOTIFICATION_THRESHOLD = 0.84;
-
 let logger: Logger;
 let metrics: Metrics;
 
@@ -88,7 +86,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
 
       // Send high confidence alert to Slack
       if (
-        analysis.finalAnalysis.confidence >= NOTIFICATION_THRESHOLD &&
+        analysis.finalAnalysis.confidence >= secret.CONFIDENCE_THRESHOLD &&
         analysis.finalAnalysis.recommendation !== "HOLD"
       ) {
         const slackService = new SlackService(
