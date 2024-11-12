@@ -8,7 +8,7 @@ import {
   MACDAgent,
   RSIAgent,
   VWAPAgent,
-} from "../services/agents";
+} from "../agents";
 import { AnalysisRecord, IndicatorResult } from "../types";
 
 export class AnalysisService {

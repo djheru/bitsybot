@@ -1,4 +1,4 @@
-import { Signal } from "../types";
+import { Signal } from "../../types";
 import { Analysis } from "./analysis-agent";
 import { BollingerBands } from "./bollinger-bands-agent";
 import { MACD } from "./macd-agent";
