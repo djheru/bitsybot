@@ -32,6 +32,10 @@ export function formatAnalysisRecord(record: AnalysisRecord): string {
 \`Recommendation: ${record.stoch.recommendation}\`
 >${record.stoch.rationale}
 
+*💥 ATR* _(${record.atr.confidence.toFixed(2)})_
+\`Recommendation: ${record.atr.recommendation}\`
+>${record.atr.rationale}
+
 *📊 VWAP* _(${record.vwap.confidence.toFixed(2)})_
 \`Recommendation: ${record.vwap.recommendation}\`
 >${record.vwap.rationale}

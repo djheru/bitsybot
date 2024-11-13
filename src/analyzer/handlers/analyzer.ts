@@ -4,6 +4,7 @@ import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { ChatOpenAI } from "@langchain/openai";
 import { AnalysisService } from "../services/analyze-market";
 import { AnalysisRepository } from "../services/db";
+import { formatAnalysisRecord } from "../services/format-analysis";
 import { TechnicalIndicatorService } from "../services/indicators";
 import { KrakenService } from "../services/kraken";
 import { SlackService } from "../services/slack";
@@ -83,6 +84,10 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       const repository = new AnalysisRepository(dbTable, logger);
       await repository.createAnalysisRecord(analysis);
 
+      const formattedMessage = formatAnalysisRecord(analysis);
+
+      logger.info(formattedMessage);
+
       // Send high confidence alert to Slack
       if (
         analysis.finalAnalysis.confidence >= secret.CONFIDENCE_THRESHOLD &&
@@ -93,7 +98,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
           secret.SLACK_CHANNEL,
           logger
         );
-        await slackService.sendHighConfidenceAlert(analysis);
+        await slackService.sendHighConfidenceAlert(analysis, formattedMessage);
       }
 
       return {

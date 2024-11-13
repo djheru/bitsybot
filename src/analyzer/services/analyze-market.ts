@@ -3,13 +3,14 @@ import { Metrics } from "@aws-lambda-powertools/metrics";
 import { ChatOpenAI } from "@langchain/openai";
 import { randomUUID } from "crypto";
 import {
+  ATRAgent,
   BollingerBandsAgent,
   FinalAnalysisAgent,
   MACDAgent,
   RSIAgent,
+  StochasticOscillatorAgent,
   VWAPAgent,
 } from "../agents";
-import { StochasticOscillatorAgent } from "../agents/stochastic-oscillator-agent";
 import { AnalysisRecord, IndicatorResult } from "../types";
 
 export class AnalysisService {
@@ -41,6 +42,7 @@ export class AnalysisService {
       this.logger,
       this.metrics
     );
+    const atrAgent = new ATRAgent(this.model, this.logger, this.metrics);
     const finalAgent = new FinalAnalysisAgent(
       this.model,
       this.logger,
@@ -49,10 +51,11 @@ export class AnalysisService {
 
     // Get individual analyses
     const bollinger = await bbAgent.analyze(technicalData[0]); // Bollinger Bands
-    const macd = await macdAgent.analyze(technicalData[3]); // MACD
     const rsi = await rsiAgent.analyze(technicalData[1]); // RSI
-    const stoch = await stochAgent.analyze(technicalData[4]); // Stochastic
     const vwap = await vwapAgent.analyze(technicalData[2]); // VWAP
+    const macd = await macdAgent.analyze(technicalData[3]); // MACD
+    const stoch = await stochAgent.analyze(technicalData[4]); // Stochastic
+    const atr = await atrAgent.analyze(technicalData[5]); // ATR
 
     // Get final analysis
     const finalAnalysis = await finalAgent.analyze(
@@ -61,6 +64,7 @@ export class AnalysisService {
       rsi,
       stoch,
       vwap,
+      atr,
       price,
       symbol,
       interval
@@ -76,6 +80,7 @@ export class AnalysisService {
       vwap,
       stoch,
       macd,
+      atr,
       finalAnalysis,
       finalRecommendation: finalAnalysis.recommendation,
       confidence: finalAnalysis.confidence,

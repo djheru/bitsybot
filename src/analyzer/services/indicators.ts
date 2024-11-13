@@ -1,6 +1,7 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import {
+  ATR,
   BollingerBands,
   EMA,
   MACD,
@@ -23,6 +24,7 @@ export class TechnicalIndicatorService {
   private static readonly STOCH_K_PERIOD = 14; // %K period (m)
   private static readonly STOCH_K_SMOOTHING = 3; // %K smoothing (n)
   private static readonly STOCH_D_PERIOD = 3; // %D period (p)
+  private static readonly ATR_PERIOD = 14; // Traditional ATR period
   constructor(
     private readonly symbol: string,
     private readonly interval: OHLCDataInterval,
@@ -427,6 +429,93 @@ export class TechnicalIndicatorService {
 
     return result;
   }
+  calculateATR(data: PriceData[]): IndicatorResult {
+    this.validateDataSize(data, TechnicalIndicatorService.ATR_PERIOD, "ATR");
+
+    const result: IndicatorResult = {
+      name: "ATR",
+      symbol: this.symbol,
+      interval: this.interval,
+      current: {},
+      history: {
+        atr: [],
+        price: [],
+        trueRange: [], // Adding true range for additional context
+        percentageATR: [], // ATR as percentage of price
+      },
+      metadata: {
+        period: TechnicalIndicatorService.ATR_PERIOD,
+      },
+    };
+
+    // Initialize ATR indicator
+    const atr = new ATR(TechnicalIndicatorService.ATR_PERIOD);
+
+    // Process each price point
+    for (let i = 0; i < data.length; i++) {
+      const candle = data[i];
+
+      // Update ATR with high, low, close prices
+      atr.update({
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+      });
+
+      // Add to history if we have enough data
+      if (atr.isStable) {
+        const atrValue = Number(atr.getResult().valueOf());
+        const timestamp = candle.timestamp;
+
+        // Calculate True Range (it's one of: high-low, high-prevClose, low-prevClose)
+        const prevClose = i > 0 ? data[i - 1].close : candle.close;
+        const trueRange = Math.max(
+          candle.high - candle.low,
+          Math.abs(candle.high - prevClose),
+          Math.abs(candle.low - prevClose)
+        );
+
+        // Calculate ATR as percentage of current price
+        const percentageATR = (atrValue / candle.close) * 100;
+
+        result.history.atr.push({ timestamp, value: atrValue });
+        result.history.price.push({ timestamp, value: candle.close });
+        result.history.trueRange.push({ timestamp, value: trueRange });
+        result.history.percentageATR.push({ timestamp, value: percentageATR });
+
+        // Set current values for the last point
+        if (i === data.length - 1) {
+          result.current = {
+            atr: atrValue,
+            price: candle.close,
+            trueRange: trueRange,
+            percentageATR: percentageATR,
+            volatilityState: this.categorizeVolatility(percentageATR),
+            averageRange: atrValue, // Useful for setting stops/targets
+          };
+        }
+      }
+    }
+
+    if (Object.keys(result.current).length === 0) {
+      throw new Error(
+        "Unable to calculate ATR: insufficient data points after calculations"
+      );
+    }
+
+    return result;
+  }
+
+  // Helper method to categorize volatility levels
+  private categorizeVolatility(
+    percentageATR: number
+  ): "LOW" | "MODERATE" | "HIGH" | "EXTREME" {
+    // These thresholds can be adjusted based on the specific asset
+    if (percentageATR < 2) return "LOW";
+    if (percentageATR < 4) return "MODERATE";
+    if (percentageATR < 7) return "HIGH";
+    return "EXTREME";
+  }
 
   // Get all indicators
   calculateIndicators(data: PriceData[]): IndicatorResult[] {
@@ -442,6 +531,7 @@ export class TechnicalIndicatorService {
       this.calculateVWAP(data),
       this.calculateMACD(data),
       this.calculateStochastic(data),
+      this.calculateATR(data),
     ];
   }
 }

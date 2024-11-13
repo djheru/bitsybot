@@ -1,5 +1,6 @@
 import { Signal } from "../../types";
 import { Analysis } from "./analysis-agent";
+import { ATR } from "./atr-agent";
 import { BollingerBands } from "./bollinger-bands-agent";
 import { MACD } from "./macd-agent";
 import { RSI } from "./rsi-agent";
@@ -12,7 +13,8 @@ export type EnabledPrompts =
   | "VWAP"
   | "MACD"
   | "Analysis"
-  | "StochasticOscillator";
+  | "StochasticOscillator"
+  | "ATR";
 
 export interface PromptTemplate {
   system: string;
@@ -30,6 +32,7 @@ export const Prompts: AnalysisPrompts = {
   RSI,
   VWAP,
   StochasticOscillator,
+  ATR,
 };
 
 // Helper function to format price data for prompts

@@ -161,6 +161,7 @@ export interface AnalysisRecord {
   macd: IndicatorAnalysis;
   stoch: IndicatorAnalysis;
   vwap: IndicatorAnalysis;
+  atr: IndicatorAnalysis;
   finalAnalysis: IndicatorAnalysis;
   confidence: number;
   finalRecommendation: Signal;

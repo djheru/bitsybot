@@ -14,10 +14,11 @@ export class SlackService {
     this.client = new WebClient(slackToken);
   }
 
-  async sendHighConfidenceAlert(record: AnalysisRecord): Promise<void> {
+  async sendHighConfidenceAlert(
+    record: AnalysisRecord,
+    formattedMessage: string
+  ): Promise<void> {
     try {
-      const formattedMessage = formatAnalysisRecord(record);
-
       await this.client.chat.postMessage({
         token: this.slackToken,
         channel: this.channelId,

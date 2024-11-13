@@ -33,6 +33,7 @@ export class FinalAnalysisAgent {
     macdAnalysis: IndicatorAnalysis,
     stochAnalysis: IndicatorAnalysis,
     vwapAnalysis: IndicatorAnalysis,
+    atrAnalysis: IndicatorAnalysis,
     currentPrice: number,
     symbol: string,
     interval: OHLCDataInterval
@@ -43,6 +44,7 @@ export class FinalAnalysisAgent {
       macdAnalysis,
       stochAnalysis,
       vwapAnalysis,
+      atrAnalysis,
       currentPrice,
     });
 
@@ -64,6 +66,9 @@ export class FinalAnalysisAgent {
       vwap_recommendation: vwapAnalysis.recommendation,
       vwap_confidence: vwapAnalysis.confidence,
       vwap_rationale: vwapAnalysis.rationale,
+      atr_recommendation: atrAnalysis.recommendation,
+      atr_confidence: atrAnalysis.confidence,
+      atr_rationale: atrAnalysis.rationale,
       current_price: currentPrice.toFixed(2),
     };
 
