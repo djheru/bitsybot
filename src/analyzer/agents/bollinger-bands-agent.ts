@@ -4,7 +4,7 @@ import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
-import { formatTimeSeries } from ".";
+import { formatTimeSeries, toFixed } from ".";
 import { IndicatorAnalysis, IndicatorResult } from "../types";
 import { Prompts } from "./prompts";
 
@@ -33,12 +33,12 @@ export class BollingerBandsAgent {
     const input = {
       symbol: data.symbol,
       timeframe: data.interval,
-      current_middle: data.current.middle.toFixed(2),
-      current_upper: data.current.upper.toFixed(2),
-      current_lower: data.current.lower.toFixed(2),
-      current_price: data.current.price.toFixed(2),
-      current_bandwidth: data.current.bandwidth.toFixed(4),
-      current_percentB: data.current.percentB.toFixed(2),
+      current_middle: toFixed(data.current.middle, 2),
+      current_upper: toFixed(data.current.upper, 2),
+      current_lower: toFixed(data.current.lower, 2),
+      current_price: toFixed(data.current.price, 2),
+      current_bandwidth: toFixed(data.current.bandwidth, 4),
+      current_percentB: toFixed(data.current.percentB, 2),
       price_history: formatTimeSeries(data.history.price, "price_history"),
       upper_history: formatTimeSeries(data.history.upper, "upper_history"),
       middle_history: formatTimeSeries(data.history.middle, "middle_history"),

@@ -4,8 +4,8 @@ import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
-import { Prompts } from "./prompts";
 import { IndicatorAnalysis, OHLCDataInterval } from "../types";
+import { Prompts } from "./prompts";
 
 // Final Analysis Agent
 export class FinalAnalysisAgent {
@@ -31,6 +31,7 @@ export class FinalAnalysisAgent {
     bbAnalysis: IndicatorAnalysis,
     rsiAnalysis: IndicatorAnalysis,
     macdAnalysis: IndicatorAnalysis,
+    stochAnalysis: IndicatorAnalysis,
     vwapAnalysis: IndicatorAnalysis,
     currentPrice: number,
     symbol: string,
@@ -40,6 +41,7 @@ export class FinalAnalysisAgent {
       bbAnalysis,
       rsiAnalysis,
       macdAnalysis,
+      stochAnalysis,
       vwapAnalysis,
       currentPrice,
     });
@@ -56,6 +58,9 @@ export class FinalAnalysisAgent {
       macd_recommendation: macdAnalysis.recommendation,
       macd_confidence: macdAnalysis.confidence,
       macd_rationale: macdAnalysis.rationale,
+      stoch_recommendation: stochAnalysis.recommendation,
+      stoch_confidence: stochAnalysis.confidence,
+      stoch_rationale: stochAnalysis.rationale,
       vwap_recommendation: vwapAnalysis.recommendation,
       vwap_confidence: vwapAnalysis.confidence,
       vwap_rationale: vwapAnalysis.rationale,

@@ -70,8 +70,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         logger,
         metrics
       );
-      const indicatorResult =
-        indicatorService.calculateAllIndicators(priceData);
+      const indicatorResult = indicatorService.calculateIndicators(priceData);
       logger.info("indicatorResult", { indicatorResult });
 
       logger.info("Analyzing indicator results");

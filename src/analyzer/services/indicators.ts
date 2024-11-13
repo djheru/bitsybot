@@ -1,5 +1,13 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
+import {
+  BollingerBands,
+  EMA,
+  MACD,
+  RSI,
+  SMA,
+  StochasticOscillator,
+} from "trading-signals";
 import { IndicatorResult, OHLCDataInterval, PriceData } from "../types";
 
 export class TechnicalIndicatorService {
@@ -12,7 +20,9 @@ export class TechnicalIndicatorService {
   private static readonly MACD_FAST_PERIOD = 12;
   private static readonly MACD_SLOW_PERIOD = 26;
   private static readonly MACD_SIGNAL_PERIOD = 9;
-
+  private static readonly STOCH_K_PERIOD = 14; // %K period (m)
+  private static readonly STOCH_K_SMOOTHING = 3; // %K smoothing (n)
+  private static readonly STOCH_D_PERIOD = 3; // %D period (p)
   constructor(
     private readonly symbol: string,
     private readonly interval: OHLCDataInterval,
@@ -32,8 +42,6 @@ export class TechnicalIndicatorService {
     }
   }
 
-  // Calculate Bollinger Bands with history
-  // Calculate Bollinger Bands
   calculateBollingerBands(data: PriceData[]): IndicatorResult {
     this.validateDataSize(
       data,
@@ -51,7 +59,7 @@ export class TechnicalIndicatorService {
         upper: [],
         lower: [],
         price: [],
-        bandwidth: [], // Adding bandwidth history for volatility analysis
+        bandwidth: [],
       },
       metadata: {
         period: TechnicalIndicatorService.BB_PERIOD,
@@ -59,45 +67,45 @@ export class TechnicalIndicatorService {
       },
     };
 
-    // We'll calculate for each point where we have enough previous data
-    for (
-      let i = TechnicalIndicatorService.BB_PERIOD - 1;
-      i < data.length;
-      i++
-    ) {
-      const slice = data.slice(
-        i - TechnicalIndicatorService.BB_PERIOD + 1,
-        i + 1
-      );
-      const closes = slice.map((d) => d.close);
-      const timestamp = data[i].timestamp;
+    // Initialize Bollinger Bands indicator
+    const bb = new BollingerBands(
+      TechnicalIndicatorService.BB_PERIOD,
+      TechnicalIndicatorService.BB_STD_DEV
+    );
 
-      const sma = this.calculateSMA(closes);
-      const stdDev = this.calculateStandardDeviation(closes, sma);
-      const upper = sma + TechnicalIndicatorService.BB_STD_DEV * stdDev;
-      const lower = sma - TechnicalIndicatorService.BB_STD_DEV * stdDev;
-      const bandwidth = (upper - lower) / sma;
+    // Calculate for each point where we have enough data
+    for (let i = 0; i < data.length; i++) {
+      // Update the indicator with new price
+      bb.update(data[i].close);
 
-      // Add to history
-      result.history.middle.push({ timestamp, value: sma });
-      result.history.upper.push({ timestamp, value: upper });
-      result.history.lower.push({ timestamp, value: lower });
-      result.history.price.push({ timestamp, value: data[i].close });
-      result.history.bandwidth.push({ timestamp, value: bandwidth });
+      // Only add to history if we have a result
+      if (bb.isStable) {
+        const bands = bb.getResult();
+        const timestamp = data[i].timestamp;
+        const middle = Number(bands.middle.valueOf());
+        const upper = Number(bands.upper.valueOf());
+        const lower = Number(bands.lower.valueOf());
+        const bandwidth = (upper - lower) / middle;
 
-      // If this is the last point, set current values
-      if (i === data.length - 1) {
-        result.current = {
-          middle: sma,
-          upper: upper,
-          lower: lower,
-          price: data[i].close,
-          bandwidth: bandwidth,
-          percentB: ((data[i].close - lower) / (upper - lower)) * 100,
-        };
+        result.history.middle.push({ timestamp, value: middle });
+        result.history.upper.push({ timestamp, value: upper });
+        result.history.lower.push({ timestamp, value: lower });
+        result.history.price.push({ timestamp, value: data[i].close });
+        result.history.bandwidth.push({ timestamp, value: bandwidth });
+
+        // Set current values for the last point
+        if (i === data.length - 1) {
+          result.current = {
+            middle,
+            upper,
+            lower,
+            price: data[i].close,
+            bandwidth,
+            percentB: ((data[i].close - lower) / (upper - lower)) * 100,
+          };
+        }
       }
     }
-
     return result;
   }
 
@@ -117,7 +125,7 @@ export class TechnicalIndicatorService {
       history: {
         rsi: [],
         price: [],
-        avgGain: [], // Adding gain/loss histories for trend analysis
+        avgGain: [],
         avgLoss: [],
       },
       metadata: {
@@ -125,48 +133,65 @@ export class TechnicalIndicatorService {
       },
     };
 
-    // Calculate initial gains and losses
+    // Initialize RSI indicator
+    const rsi = new RSI(TechnicalIndicatorService.RSI_PERIOD);
+
+    // Track gains and losses separately
     let gains: number[] = [];
     let losses: number[] = [];
+    let prevClose = data[0].close;
 
+    // Process each price point
     for (let i = 1; i < data.length; i++) {
-      const change = data[i].close - data[i - 1].close;
+      const price = data[i].close;
+      const change = price - prevClose;
+
+      // Calculate gain/loss for this period
       gains.push(change > 0 ? change : 0);
       losses.push(change < 0 ? Math.abs(change) : 0);
-    }
 
-    // Calculate RSI for each point where we have enough data
-    for (let i = TechnicalIndicatorService.RSI_PERIOD; i < gains.length; i++) {
-      const gainsSlice = gains.slice(
-        i - TechnicalIndicatorService.RSI_PERIOD,
-        i
-      );
-      const lossesSlice = losses.slice(
-        i - TechnicalIndicatorService.RSI_PERIOD,
-        i
-      );
+      // Update RSI with new price
+      rsi.update(price);
 
-      const avgGain = this.calculateSMA(gainsSlice);
-      const avgLoss = this.calculateSMA(lossesSlice);
+      // Calculate average gain/loss for the period
+      if (i >= TechnicalIndicatorService.RSI_PERIOD) {
+        const periodGains = gains.slice(
+          -1 * TechnicalIndicatorService.RSI_PERIOD
+        );
+        const periodLosses = losses.slice(
+          -1 * TechnicalIndicatorService.RSI_PERIOD
+        );
 
-      const rs = avgLoss === 0 ? 100 : avgGain / avgLoss;
-      const rsi = 100 - 100 / (1 + rs);
+        const avgGain =
+          periodGains.reduce((sum, g) => sum + g, 0) /
+          TechnicalIndicatorService.RSI_PERIOD;
+        const avgLoss =
+          periodLosses.reduce((sum, l) => sum + l, 0) /
+          TechnicalIndicatorService.RSI_PERIOD;
 
-      const timestamp = data[i + 1].timestamp; // +1 because gains/losses array starts one period later
-      result.history.rsi.push({ timestamp, value: rsi });
-      result.history.price.push({ timestamp, value: data[i + 1].close });
-      result.history.avgGain.push({ timestamp, value: avgGain });
-      result.history.avgLoss.push({ timestamp, value: avgLoss });
+        // Add to history if we have enough data
+        if (rsi.isStable) {
+          const timestamp = data[i].timestamp;
+          const rsiValue = Number(rsi.getResult().valueOf());
 
-      // If this is the last point, set current values
-      if (i === gains.length - 1) {
-        result.current = {
-          rsi: rsi,
-          price: data[i + 1].close,
-          avgGain: avgGain,
-          avgLoss: avgLoss,
-        };
+          result.history.rsi.push({ timestamp, value: rsiValue });
+          result.history.price.push({ timestamp, value: price });
+          result.history.avgGain.push({ timestamp, value: avgGain });
+          result.history.avgLoss.push({ timestamp, value: avgLoss });
+
+          // Set current values for the last point
+          if (i === data.length - 1) {
+            result.current = {
+              rsi: rsiValue,
+              price: price,
+              avgGain: avgGain,
+              avgLoss: avgLoss,
+            };
+          }
+        }
       }
+
+      prevClose = price;
     }
 
     return result;
@@ -188,43 +213,58 @@ export class TechnicalIndicatorService {
         vwap: [],
         price: [],
         volume: [],
-        relativeVolume: [], // Volume relative to moving average
+        relativeVolume: [],
       },
       metadata: {
         volumeAvgPeriod: TechnicalIndicatorService.VOLUME_AVG_PERIOD,
       },
     };
 
-    // Calculate volume moving average for relative volume
-    const volumeMA = this.calculateSMA(
-      data
-        .slice(-TechnicalIndicatorService.VOLUME_AVG_PERIOD)
-        .map((d) => d.volume)
-    );
+    // Initialize SMA indicator for volume
+    const volumeSMA = new SMA(TechnicalIndicatorService.VOLUME_AVG_PERIOD);
+    let volumeMA = 0;
 
     data.forEach((candle, index) => {
       const timestamp = candle.timestamp;
 
-      // Add to history
-      result.history.vwap.push({ timestamp, value: candle.vwap });
-      result.history.price.push({ timestamp, value: candle.close });
-      result.history.volume.push({ timestamp, value: candle.volume });
-      result.history.relativeVolume.push({
-        timestamp,
-        value: candle.volume / volumeMA,
-      });
+      // Update volume SMA
+      volumeSMA.update(candle.volume);
 
-      // If this is the last point, set current values
-      if (index === data.length - 1) {
-        result.current = {
-          vwap: candle.vwap,
-          price: candle.close,
-          volume: candle.volume,
-          relativeVolume: candle.volume / volumeMA,
-          priceToVWAP: ((candle.close - candle.vwap) / candle.vwap) * 100,
-        };
+      // Get volume MA if we have enough data
+      if (volumeSMA.isStable) {
+        volumeMA = Number(volumeSMA.getResult().valueOf());
+      }
+
+      // Only start recording history once we have a valid volume MA
+      if (volumeSMA.isStable) {
+        const relativeVolume = candle.volume / volumeMA;
+
+        result.history.vwap.push({ timestamp, value: candle.vwap });
+        result.history.price.push({ timestamp, value: candle.close });
+        result.history.volume.push({ timestamp, value: candle.volume });
+        result.history.relativeVolume.push({
+          timestamp,
+          value: relativeVolume,
+        });
+
+        // If this is the last point, set current values
+        if (index === data.length - 1) {
+          result.current = {
+            vwap: candle.vwap,
+            price: candle.close,
+            volume: candle.volume,
+            relativeVolume: relativeVolume,
+            priceToVWAP: ((candle.close - candle.vwap) / candle.vwap) * 100,
+          };
+        }
       }
     });
+
+    if (Object.keys(result.current).length === 0) {
+      throw new Error(
+        "Unable to calculate VWAP: insufficient data points after calculations"
+      );
+    }
 
     return result;
   }
@@ -255,92 +295,45 @@ export class TechnicalIndicatorService {
       },
     };
 
-    const prices = data.map((d) => d.close);
+    // Initialize MACD indicator with EMA as the indicator type
+    const macd = new MACD({
+      longInterval: TechnicalIndicatorService.MACD_SLOW_PERIOD,
+      shortInterval: TechnicalIndicatorService.MACD_FAST_PERIOD,
+      signalInterval: TechnicalIndicatorService.MACD_SIGNAL_PERIOD,
+      indicator: EMA,
+    });
 
-    // Calculate fast and slow EMAs
-    const fastEMA = this.calculateEMA(
-      prices,
-      TechnicalIndicatorService.MACD_FAST_PERIOD
-    );
-    const slowEMA = this.calculateEMA(
-      prices,
-      TechnicalIndicatorService.MACD_SLOW_PERIOD
-    );
+    // Rest of the code remains the same...
+    for (let i = 0; i < data.length; i++) {
+      const price = data[i].close;
 
-    // Calculate MACD line (fast EMA - slow EMA)
-    const macdLine: number[] = [];
-    for (
-      let i = TechnicalIndicatorService.MACD_SLOW_PERIOD - 1;
-      i < fastEMA.length;
-      i++
-    ) {
-      macdLine.push(fastEMA[i] - slowEMA[i]);
+      macd.update(price);
+
+      if (macd.isStable) {
+        const macdResult = macd.getResult();
+        const timestamp = data[i].timestamp;
+
+        const macdValue = Number(macdResult.macd.valueOf());
+        const signalValue = Number(macdResult.signal.valueOf());
+        const histogramValue = Number(macdResult.histogram.valueOf());
+
+        result.history.macdLine.push({ timestamp, value: macdValue });
+        result.history.signalLine.push({ timestamp, value: signalValue });
+        result.history.histogram.push({ timestamp, value: histogramValue });
+        result.history.price.push({ timestamp, value: price });
+
+        if (i === data.length - 1) {
+          result.current = {
+            macdLine: macdValue,
+            signalLine: signalValue,
+            histogram: histogramValue,
+            price: price,
+          };
+        }
+      }
     }
 
-    // Calculate signal line (EMA of MACD line)
-    const signalLine = this.calculateEMA(
-      macdLine,
-      TechnicalIndicatorService.MACD_SIGNAL_PERIOD
-    );
-
-    // Calculate the valid range we can process
-    const maxIndex = Math.min(
-      signalLine.length,
-      data.length -
-        (TechnicalIndicatorService.MACD_SLOW_PERIOD +
-          TechnicalIndicatorService.MACD_SIGNAL_PERIOD -
-          1)
-    );
-
-    // Process all valid points
-    for (let i = 0; i < maxIndex; i++) {
-      const dataIndex =
-        i +
-        TechnicalIndicatorService.MACD_SLOW_PERIOD +
-        TechnicalIndicatorService.MACD_SIGNAL_PERIOD -
-        1;
-      const macdValue =
-        macdLine[i + TechnicalIndicatorService.MACD_SIGNAL_PERIOD - 1];
-      const signalValue = signalLine[i];
-      const histogram = macdValue - signalValue;
-
-      result.history.macdLine.push({
-        timestamp: data[dataIndex].timestamp,
-        value: macdValue,
-      });
-      result.history.signalLine.push({
-        timestamp: data[dataIndex].timestamp,
-        value: signalValue,
-      });
-      result.history.histogram.push({
-        timestamp: data[dataIndex].timestamp,
-        value: histogram,
-      });
-      result.history.price.push({
-        timestamp: data[dataIndex].timestamp,
-        value: data[dataIndex].close,
-      });
-    }
-
-    // Set current values using the last valid point
-    if (maxIndex > 0) {
-      const lastIndex = maxIndex - 1;
-      const dataIndex =
-        lastIndex +
-        TechnicalIndicatorService.MACD_SLOW_PERIOD +
-        TechnicalIndicatorService.MACD_SIGNAL_PERIOD -
-        1;
-      const macdValue =
-        macdLine[lastIndex + TechnicalIndicatorService.MACD_SIGNAL_PERIOD - 1];
-      const signalValue = signalLine[lastIndex];
-
-      result.current = {
-        macdLine: macdValue,
-        signalLine: signalValue,
-        histogram: macdValue - signalValue,
-        price: data[dataIndex].close,
-      };
-    } else {
+    if (Object.keys(result.current).length === 0) {
       throw new Error(
         "Unable to calculate MACD: insufficient data points after calculations"
       );
@@ -349,33 +342,94 @@ export class TechnicalIndicatorService {
     return result;
   }
 
-  private calculateSMA(data: number[]): number {
-    return data.reduce((sum, val) => sum + val, 0) / data.length;
-  }
+  calculateStochastic(data: PriceData[]): IndicatorResult {
+    this.validateDataSize(
+      data,
+      TechnicalIndicatorService.STOCH_K_PERIOD +
+        TechnicalIndicatorService.STOCH_D_PERIOD,
+      "Stochastic"
+    );
 
-  private calculateEMA(
-    data: number[],
-    period: number,
-    smoothing: number = 2
-  ): number[] {
-    const ema = [data[0]]; // First value is same as SMA
-    const multiplier = smoothing / (period + 1);
+    const result: IndicatorResult = {
+      name: "Stochastic",
+      symbol: this.symbol,
+      interval: this.interval,
+      current: {
+        k: 0,
+        d: 0,
+        price: 0,
+        isOverbought: false,
+        isOversold: false,
+        crossover: false,
+      },
+      history: {
+        k: [], // Fast %K line
+        d: [], // Slow %D line (signal)
+        price: [],
+      },
+      metadata: {
+        kPeriod: TechnicalIndicatorService.STOCH_K_PERIOD,
+        dPeriod: TechnicalIndicatorService.STOCH_D_PERIOD,
+      },
+    };
 
-    for (let i = 1; i < data.length; i++) {
-      ema.push((data[i] - ema[i - 1]) * multiplier + ema[i - 1]);
+    // Initialize Stochastic indicator
+    const stoch = new StochasticOscillator(
+      TechnicalIndicatorService.STOCH_K_PERIOD, // m: %K period
+      TechnicalIndicatorService.STOCH_K_SMOOTHING, // n: %K smoothing
+      TechnicalIndicatorService.STOCH_D_PERIOD // p: %D period
+    );
+
+    // Process each price point
+    for (let i = 0; i < data.length; i++) {
+      const candle = data[i];
+
+      // Update with high, low, close prices
+      stoch.update({
+        high: candle.high,
+        low: candle.low,
+        close: candle.close,
+      });
+
+      // Add to history if we have enough data
+      if (stoch.isStable) {
+        const stochResult = stoch.getResult();
+        const timestamp = candle.timestamp;
+
+        // Convert Big.js values to numbers
+        const k = Number(stochResult.stochK.valueOf());
+        const d = Number(stochResult.stochD.valueOf());
+
+        result.history.k.push({ timestamp, value: k });
+        result.history.d.push({ timestamp, value: d });
+        result.history.price.push({ timestamp, value: candle.close });
+
+        // Set current values for the last point
+        if (i === data.length - 1) {
+          result.current = {
+            k: k,
+            d: d,
+            price: candle.close,
+            isOverbought: k > 80, // Traditional overbought level
+            isOversold: k < 20, // Traditional oversold level
+            crossover: k > d, // True if %K crosses above %D
+          };
+        }
+      }
     }
-    return ema;
-  }
 
-  private calculateStandardDeviation(data: number[], mean: number): number {
-    const squaredDiffs = data.map((value) => Math.pow(value - mean, 2));
-    const avgSquaredDiff =
-      squaredDiffs.reduce((sum, diff) => sum + diff, 0) / data.length;
-    return Math.sqrt(avgSquaredDiff);
+    // Check if we got any results
+    if (Object.keys(result.current).length === 0) {
+      throw new Error(
+        "Unable to calculate Stochastic: insufficient data points after calculations"
+      );
+    }
+
+    return result;
   }
 
   // Get all indicators
-  calculateAllIndicators(data: PriceData[]): IndicatorResult[] {
+  calculateIndicators(data: PriceData[]): IndicatorResult[] {
     this.logger.info("Calculating all indicators");
     this.validateDataSize(
       data,
@@ -387,6 +441,7 @@ export class TechnicalIndicatorService {
       this.calculateRSI(data),
       this.calculateVWAP(data),
       this.calculateMACD(data),
+      this.calculateStochastic(data),
     ];
   }
 }

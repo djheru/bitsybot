@@ -4,7 +4,7 @@ import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
-import { formatTimeSeries } from ".";
+import { formatTimeSeries, toFixed } from ".";
 import { IndicatorAnalysis, IndicatorResult } from "../types";
 import { Prompts } from "./prompts";
 
@@ -34,10 +34,10 @@ export class MACDAgent {
     const input = {
       symbol: data.symbol,
       timeframe: data.interval,
-      current_macd: data.current.macdLine.toFixed(2),
-      current_signal: data.current.signalLine.toFixed(2),
-      current_histogram: data.current.histogram.toFixed(2),
-      current_price: data.current.price.toFixed(2),
+      current_macd: toFixed(data.current.macdLine, 2),
+      current_signal: toFixed(data.current.signalLine, 2),
+      current_histogram: toFixed(data.current.histogram, 2),
+      current_price: toFixed(data.current.price, 2),
       macd_history: formatTimeSeries(data.history.macdLine, "macd_history"),
       signal_history: formatTimeSeries(
         data.history.signalLine,

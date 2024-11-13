@@ -4,7 +4,7 @@ import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
-import { formatTimeSeries } from ".";
+import { formatTimeSeries, toFixed } from ".";
 import { IndicatorAnalysis, IndicatorResult } from "../types";
 import { Prompts } from "./prompts";
 
@@ -35,10 +35,10 @@ export class RSIAgent {
     const input = {
       symbol: data.symbol,
       timeframe: data.interval,
-      current_rsi: data.current.rsi.toFixed(2),
-      current_price: data.current.price.toFixed(2),
-      current_avg_gain: data.current.avgGain.toFixed(2),
-      current_avg_loss: data.current.avgLoss.toFixed(2),
+      current_rsi: toFixed(data.current.rsi, 2),
+      current_price: toFixed(data.current.price, 2),
+      current_avg_gain: toFixed(data.current.avgGain, 2),
+      current_avg_loss: toFixed(data.current.avgLoss, 2),
       rsi_history: formatTimeSeries(data.history.rsi, "rsi_history"),
       price_history: formatTimeSeries(data.history.price, "price_history"),
       avg_gain_history: formatTimeSeries(

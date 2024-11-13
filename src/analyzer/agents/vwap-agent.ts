@@ -4,7 +4,7 @@ import { JsonOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { RunnableSequence } from "@langchain/core/runnables";
 import { ChatOpenAI } from "@langchain/openai";
-import { formatTimeSeries } from ".";
+import { formatTimeSeries, toFixed } from ".";
 import { IndicatorAnalysis, IndicatorResult } from "../types";
 import { Prompts } from "./prompts";
 
@@ -34,11 +34,11 @@ export class VWAPAgent {
     const input = {
       symbol: data.symbol,
       timeframe: data.interval,
-      current_vwap: data.current.vwap.toFixed(2),
-      current_price: data.current.price.toFixed(2),
-      current_volume: data.current.volume.toFixed(2),
-      price_to_vwap: data.current.priceToVWAP.toFixed(2),
-      relative_volume: data.current.relativeVolume.toFixed(2),
+      current_vwap: toFixed(data.current.vwap, 2),
+      current_price: toFixed(data.current.price, 2),
+      current_volume: toFixed(data.current.volume, 2),
+      price_to_vwap: toFixed(data.current.priceToVWAP, 2),
+      relative_volume: toFixed(data.current.relativeVolume, 2),
       vwap_history: formatTimeSeries(data.history.vwap, "vwap_history"),
       price_history: formatTimeSeries(data.history.price, "price_history"),
       volume_history: formatTimeSeries(

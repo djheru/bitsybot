@@ -145,7 +145,7 @@ export interface IndicatorResult {
   name: string;
   symbol: string;
   interval: OHLCDataInterval;
-  current: Record<string, number>;
+  current: Record<string, number | string | boolean>;
   history: {
     [key: string]: TimeSeriesPoint[];
   };
@@ -159,6 +159,7 @@ export interface AnalysisRecord {
   bollinger: IndicatorAnalysis;
   rsi: IndicatorAnalysis;
   macd: IndicatorAnalysis;
+  stoch: IndicatorAnalysis;
   vwap: IndicatorAnalysis;
   finalAnalysis: IndicatorAnalysis;
   confidence: number;

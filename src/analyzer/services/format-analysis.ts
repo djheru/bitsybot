@@ -28,7 +28,11 @@ export function formatAnalysisRecord(record: AnalysisRecord): string {
 \`Recommendation: ${record.macd.recommendation}\`
 >${record.macd.rationale}
 
-*💹 VWAP* _(${record.vwap.confidence.toFixed(2)})_
+*💹 STOCH* _(${record.stoch.confidence.toFixed(2)})_
+\`Recommendation: ${record.stoch.recommendation}\`
+>${record.stoch.rationale}
+
+*📊 VWAP* _(${record.vwap.confidence.toFixed(2)})_
 \`Recommendation: ${record.vwap.recommendation}\`
 >${record.vwap.rationale}
 

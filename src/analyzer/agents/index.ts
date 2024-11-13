@@ -24,3 +24,14 @@ export function formatTimeSeries(
     })
     .join("\n");
 }
+
+export function toFixed(
+  value: string | number | boolean,
+  precision = 2
+): string | number | boolean {
+  if (typeof value === "string" || typeof value === "boolean") {
+    return value;
+  }
+
+  return value.toFixed(precision);
+}
