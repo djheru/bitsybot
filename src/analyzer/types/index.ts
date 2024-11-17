@@ -15,6 +15,8 @@ export interface AppSecret {
   STRIPE_PRODUCT_PRICE_ID_SM: string;
   STRIPE_SECRET_KEY: string;
   STRIPE_WEBHOOK_SECRET: string;
+  TIMEFRAME_INTERVAL: number;
+  TOTAL_PERIODS: number;
 }
 // Zod schema for runtime validation
 export const PriceDataSchema = z

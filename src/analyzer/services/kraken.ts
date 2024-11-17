@@ -3,12 +3,12 @@ import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { OHLCDataInterval, PriceData } from "../types";
 
 export class KrakenService {
-  public ANALYSIS_WINDOW = 50;
   constructor(
     private readonly symbol: string,
     private interval: OHLCDataInterval,
     private readonly logger: Logger,
-    private readonly metrics: Metrics
+    private readonly metrics: Metrics,
+    private readonly totalPeriods: number
   ) {}
   async fetchPriceData() {
     try {
@@ -48,7 +48,7 @@ export class KrakenService {
       > = data.result[dataKey];
 
       const priceData: PriceData[] = ohlcData
-        .slice(-this.ANALYSIS_WINDOW)
+        .slice(-this.totalPeriods)
         .map((item) => ({
           timestamp: item[0],
           open: parseFloat(item[1]),

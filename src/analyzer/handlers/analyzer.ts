@@ -25,9 +25,8 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
     try {
       logger.info("event", { event });
 
-      const {
-        detail: { symbol = "BTCUSD", interval: timeInterval = 15 } = {},
-      } = event;
+      const { detail: { symbol = "BTCUSD", interval: timeInterval = 5 } = {} } =
+        event;
       const interval = isValidOHLCDataInterval(timeInterval)
         ? timeInterval
         : 15;
@@ -47,7 +46,10 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       metrics.addMetric("handlerInvoked", MetricUnit.Count, 1);
 
       const model = new ChatOpenAI({
+        // modelName: "o1-preview",
+        // modelName: "o1-mini",
         modelName: "gpt-4o",
+        // modelName: "gpt-4o-mini",
         apiKey: secret.OPENAI_API_KEY,
         temperature: 0.3,
       });
@@ -57,7 +59,8 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         symbol,
         interval,
         logger,
-        metrics
+        metrics,
+        secret.TOTAL_PERIODS
       );
       const priceData = await krakenService.fetchPriceData();
       logger.info("priceData", {
@@ -69,7 +72,8 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         symbol,
         interval,
         logger,
-        metrics
+        metrics,
+        secret.TOTAL_PERIODS
       );
       const indicatorResult = indicatorService.calculateIndicators(priceData);
       logger.info("indicatorResult", { indicatorResult });

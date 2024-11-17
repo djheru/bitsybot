@@ -13,7 +13,6 @@ import { IndicatorResult, OHLCDataInterval, PriceData } from "../types";
 
 export class TechnicalIndicatorService {
   // Configuration constants
-  private static readonly TOTAL_PERIODS = 50;
   private static readonly BB_PERIOD = 20;
   private static readonly RSI_PERIOD = 14;
   private static readonly VOLUME_AVG_PERIOD = 20;
@@ -29,7 +28,8 @@ export class TechnicalIndicatorService {
     private readonly symbol: string,
     private readonly interval: OHLCDataInterval,
     private readonly logger: Logger,
-    private readonly metrics: Metrics
+    private readonly metrics: Metrics,
+    private readonly totalPeriods: number
   ) {}
 
   private validateDataSize(
@@ -520,11 +520,7 @@ export class TechnicalIndicatorService {
   // Get all indicators
   calculateIndicators(data: PriceData[]): IndicatorResult[] {
     this.logger.info("Calculating all indicators");
-    this.validateDataSize(
-      data,
-      TechnicalIndicatorService.TOTAL_PERIODS,
-      "Technical Analysis"
-    );
+    this.validateDataSize(data, this.totalPeriods, "Technical Analysis");
     return [
       this.calculateBollingerBands(data),
       this.calculateRSI(data),
