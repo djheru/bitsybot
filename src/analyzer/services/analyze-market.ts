@@ -25,7 +25,7 @@ export class AnalysisService {
   ): Promise<AnalysisRecord> {
     const uuid = randomUUID();
     const timestamp = new Date().toISOString();
-    const price = parseFloat(`${technicalData[0].current.price}`);
+    const currentPrice = parseFloat(`${technicalData[0].current.price}`);
     const symbol = technicalData[0].symbol;
     const interval = technicalData[0].interval;
 
@@ -50,41 +50,41 @@ export class AnalysisService {
     );
 
     // Get individual analyses
-    const bollinger = await bbAgent.analyze(technicalData[0]); // Bollinger Bands
-    const rsi = await rsiAgent.analyze(technicalData[1]); // RSI
-    const vwap = await vwapAgent.analyze(technicalData[2]); // VWAP
-    const macd = await macdAgent.analyze(technicalData[3]); // MACD
-    const stoch = await stochAgent.analyze(technicalData[4]); // Stochastic
-    const atr = await atrAgent.analyze(technicalData[5]); // ATR
+    const atrAnalysis = await atrAgent.analyze(technicalData[5]); // ATR
+    const bbAnalysis = await bbAgent.analyze(technicalData[0]); // Bollinger Bands
+    const macdAnalysis = await macdAgent.analyze(technicalData[3]); // MACD
+    const rsiAnalysis = await rsiAgent.analyze(technicalData[1]); // RSI
+    const stochAnalysis = await stochAgent.analyze(technicalData[4]); // Stochastic
+    const vwapAnalysis = await vwapAgent.analyze(technicalData[2]); // VWAP
 
     // Get final analysis
-    const finalAnalysis = await finalAgent.analyze(
-      bollinger,
-      macd,
-      rsi,
-      stoch,
-      vwap,
-      atr,
-      price,
+    const finalAnalysis = await finalAgent.analyze({
+      atrAnalysis,
+      bbAnalysis,
+      currentPrice,
+      interval,
+      macdAnalysis,
+      rsiAnalysis,
+      stochAnalysis,
       symbol,
-      interval
-    );
+      vwapAnalysis,
+    });
 
     return {
-      uuid,
-      timestamp,
-      price,
-      symbol,
-      bollinger,
-      rsi,
-      vwap,
-      stoch,
-      macd,
-      atr,
+      atrAnalysis,
+      bbAnalysis,
+      confidence: finalAnalysis.confidence,
       finalAnalysis,
       finalRecommendation: finalAnalysis.recommendation,
-      confidence: finalAnalysis.confidence,
       interval,
+      macdAnalysis,
+      currentPrice,
+      rsiAnalysis,
+      stochAnalysis,
+      symbol,
+      timestamp,
+      uuid,
+      vwapAnalysis,
     };
   }
 }

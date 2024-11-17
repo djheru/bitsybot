@@ -8,7 +8,7 @@ export function formatAnalysisRecord(record: AnalysisRecord): string {
 >*Symbol:* ${record.symbol}
 >*Interval:* ${record.interval}
 >*Time:* ${timestamp}
->*Price:* $${record.price.toLocaleString()}
+>*Price:* $${record.currentPrice.toLocaleString()}
 >*Final Recommendation:* ${
     record.finalRecommendation
   } (${record.confidence.toFixed(2)})
@@ -16,29 +16,29 @@ export function formatAnalysisRecord(record: AnalysisRecord): string {
 *📊 INDICATOR ANALYSIS*
 --------------------------------
 
-*🎯 Bollinger Bands* _(${record.bollinger.confidence.toFixed(2)})_
-\`Recommendation: ${record.bollinger.recommendation}\`
->${record.bollinger.rationale}
+*🎯 Bollinger Bands* _(${record.bbAnalysis.confidence.toFixed(2)})_
+\`Recommendation: ${record.bbAnalysis.recommendation}\`
+>${record.bbAnalysis.rationale}
 
-*📈 RSI* _(${record.rsi.confidence.toFixed(2)})_
-\`Recommendation: ${record.rsi.recommendation}\`
->${record.rsi.rationale}
+*📈 RSI* _(${record.rsiAnalysis.confidence.toFixed(2)})_
+\`Recommendation: ${record.rsiAnalysis.recommendation}\`
+>${record.rsiAnalysis.rationale}
 
-*📉 MACD* _(${record.macd.confidence.toFixed(2)})_
-\`Recommendation: ${record.macd.recommendation}\`
->${record.macd.rationale}
+*📉 MACD* _(${record.macdAnalysis.confidence.toFixed(2)})_
+\`Recommendation: ${record.macdAnalysis.recommendation}\`
+>${record.macdAnalysis.rationale}
 
-*💹 STOCH* _(${record.stoch.confidence.toFixed(2)})_
-\`Recommendation: ${record.stoch.recommendation}\`
->${record.stoch.rationale}
+*💹 STOCH* _(${record.stochAnalysis.confidence.toFixed(2)})_
+\`Recommendation: ${record.stochAnalysis.recommendation}\`
+>${record.stochAnalysis.rationale}
 
-*💥 ATR* _(${record.atr.confidence.toFixed(2)})_
-\`Recommendation: ${record.atr.recommendation}\`
->${record.atr.rationale}
+*💥 ATR* _(${record.atrAnalysis.confidence.toFixed(2)})_
+\`Recommendation: ${record.atrAnalysis.recommendation}\`
+>${record.atrAnalysis.rationale}
 
-*📊 VWAP* _(${record.vwap.confidence.toFixed(2)})_
-\`Recommendation: ${record.vwap.recommendation}\`
->${record.vwap.rationale}
+*📊 VWAP* _(${record.vwapAnalysis.confidence.toFixed(2)})_
+\`Recommendation: ${record.vwapAnalysis.recommendation}\`
+>${record.vwapAnalysis.rationale}
 
 *🎯 FINAL ANALYSIS* _(${record.confidence.toFixed(2)})_
 --------------------------------

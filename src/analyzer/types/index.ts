@@ -152,21 +152,21 @@ export interface IndicatorResult {
   metadata?: Record<string, any>;
 }
 export interface AnalysisRecord {
-  uuid: string;
-  symbol: string; // Partition Key
-  timestamp: string; // Sort Key
-  price: number;
-  bollinger: IndicatorAnalysis;
-  rsi: IndicatorAnalysis;
-  macd: IndicatorAnalysis;
-  stoch: IndicatorAnalysis;
-  vwap: IndicatorAnalysis;
-  atr: IndicatorAnalysis;
-  finalAnalysis: IndicatorAnalysis;
+  atrAnalysis: IndicatorAnalysis;
+  bbAnalysis: IndicatorAnalysis;
   confidence: number;
+  finalAnalysis: IndicatorAnalysis;
   finalRecommendation: Signal;
   interval: OHLCDataInterval;
+  macdAnalysis: IndicatorAnalysis;
+  currentPrice: number;
+  rsiAnalysis: IndicatorAnalysis;
+  stochAnalysis: IndicatorAnalysis;
+  symbol: string; // Partition Key
+  timestamp: string; // Sort Key
   ttl?: number; // TTL in seconds since epoch
+  uuid: string;
+  vwapAnalysis: IndicatorAnalysis;
 }
 
 export type OHLCDataInterval =

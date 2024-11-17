@@ -7,6 +7,18 @@ import { ChatOpenAI } from "@langchain/openai";
 import { IndicatorAnalysis, OHLCDataInterval } from "../types";
 import { Prompts } from "./prompts";
 
+export interface AnalyzeProps {
+  bbAnalysis: IndicatorAnalysis;
+  rsiAnalysis: IndicatorAnalysis;
+  macdAnalysis: IndicatorAnalysis;
+  stochAnalysis: IndicatorAnalysis;
+  vwapAnalysis: IndicatorAnalysis;
+  atrAnalysis: IndicatorAnalysis;
+  currentPrice: number;
+  symbol: string;
+  interval: OHLCDataInterval;
+}
+
 // Final Analysis Agent
 export class FinalAnalysisAgent {
   private parser: JsonOutputParser<IndicatorAnalysis>;
@@ -27,17 +39,17 @@ export class FinalAnalysisAgent {
     this.chain = RunnableSequence.from([prompt, this.model, this.parser]);
   }
 
-  async analyze(
-    bbAnalysis: IndicatorAnalysis,
-    rsiAnalysis: IndicatorAnalysis,
-    macdAnalysis: IndicatorAnalysis,
-    stochAnalysis: IndicatorAnalysis,
-    vwapAnalysis: IndicatorAnalysis,
-    atrAnalysis: IndicatorAnalysis,
-    currentPrice: number,
-    symbol: string,
-    interval: OHLCDataInterval
-  ): Promise<IndicatorAnalysis> {
+  async analyze({
+    bbAnalysis,
+    rsiAnalysis,
+    macdAnalysis,
+    stochAnalysis,
+    vwapAnalysis,
+    atrAnalysis,
+    currentPrice,
+    symbol,
+    interval,
+  }: AnalyzeProps): Promise<IndicatorAnalysis> {
     this.logger.info("Performing final analysis", {
       bbAnalysis,
       rsiAnalysis,
