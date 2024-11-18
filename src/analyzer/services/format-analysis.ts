@@ -12,33 +12,21 @@ export function formatAnalysisRecord(record: AnalysisRecord): string {
 >*Final Recommendation:* ${
     record.finalRecommendation
   } (${record.confidence.toFixed(2)})
+--------------------------------
 
 *📊 INDICATOR ANALYSIS*
 --------------------------------
+*🎰 ATR* _(${record.atrAnalysis.confidence.toFixed(2)})_
+\`Recommendation: ${record.atrAnalysis.recommendation}\`
+>${record.atrAnalysis.rationale}
 
-*🎯 Bollinger Bands* _(${record.bbAnalysis.confidence.toFixed(2)})_
-\`Recommendation: ${record.bbAnalysis.recommendation}\`
->${record.bbAnalysis.rationale}
+*💹 MACD* _(${record.macdAnalysis.confidence.toFixed(2)})_
+\`Recommendation: ${record.macdAnalysis.recommendation}\`
+>${record.macdAnalysis.rationale}
 
 *📈 RSI* _(${record.rsiAnalysis.confidence.toFixed(2)})_
 \`Recommendation: ${record.rsiAnalysis.recommendation}\`
 >${record.rsiAnalysis.rationale}
-
-*📉 MACD* _(${record.macdAnalysis.confidence.toFixed(2)})_
-\`Recommendation: ${record.macdAnalysis.recommendation}\`
->${record.macdAnalysis.rationale}
-
-*💹 STOCH* _(${record.stochAnalysis.confidence.toFixed(2)})_
-\`Recommendation: ${record.stochAnalysis.recommendation}\`
->${record.stochAnalysis.rationale}
-
-*💥 ATR* _(${record.atrAnalysis.confidence.toFixed(2)})_
-\`Recommendation: ${record.atrAnalysis.recommendation}\`
->${record.atrAnalysis.rationale}
-
-*📊 VWAP* _(${record.vwapAnalysis.confidence.toFixed(2)})_
-\`Recommendation: ${record.vwapAnalysis.recommendation}\`
->${record.vwapAnalysis.rationale}
 
 *🎯 FINAL ANALYSIS* _(${record.confidence.toFixed(2)})_
 --------------------------------

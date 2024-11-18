@@ -2,11 +2,8 @@ import { TimeSeriesPoint } from "../types";
 
 export { FinalAnalysisAgent } from "./analysis-agent";
 export { ATRAgent } from "./atr-agent";
-export { BollingerBandsAgent } from "./bollinger-bands-agent";
 export { MACDAgent } from "./macd-agent";
 export { RSIAgent } from "./rsi-agent";
-export { StochasticOscillatorAgent } from "./stochastic-oscillator-agent";
-export { VWAPAgent } from "./vwap-agent";
 
 // Base formatter for time series data
 export function formatTimeSeries(

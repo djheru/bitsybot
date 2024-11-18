@@ -8,15 +8,12 @@ import { IndicatorAnalysis, OHLCDataInterval } from "../types";
 import { Prompts } from "./prompts";
 
 export interface AnalyzeProps {
-  bbAnalysis: IndicatorAnalysis;
-  rsiAnalysis: IndicatorAnalysis;
-  macdAnalysis: IndicatorAnalysis;
-  stochAnalysis: IndicatorAnalysis;
-  vwapAnalysis: IndicatorAnalysis;
   atrAnalysis: IndicatorAnalysis;
   currentPrice: number;
-  symbol: string;
   interval: OHLCDataInterval;
+  macdAnalysis: IndicatorAnalysis;
+  rsiAnalysis: IndicatorAnalysis;
+  symbol: string;
 }
 
 // Final Analysis Agent
@@ -40,47 +37,32 @@ export class FinalAnalysisAgent {
   }
 
   async analyze({
-    bbAnalysis,
-    rsiAnalysis,
-    macdAnalysis,
-    stochAnalysis,
-    vwapAnalysis,
     atrAnalysis,
     currentPrice,
-    symbol,
     interval,
+    macdAnalysis,
+    rsiAnalysis,
+    symbol,
   }: AnalyzeProps): Promise<IndicatorAnalysis> {
     this.logger.info("Performing final analysis", {
-      bbAnalysis,
-      rsiAnalysis,
-      macdAnalysis,
-      stochAnalysis,
-      vwapAnalysis,
       atrAnalysis,
       currentPrice,
+      macdAnalysis,
+      rsiAnalysis,
     });
 
     const input = {
       symbol,
       timeframe: interval,
-      bb_recommendation: bbAnalysis.recommendation,
-      bb_confidence: bbAnalysis.confidence,
-      bb_rationale: bbAnalysis.rationale,
-      rsi_recommendation: rsiAnalysis.recommendation,
-      rsi_confidence: rsiAnalysis.confidence,
-      rsi_rationale: rsiAnalysis.rationale,
-      macd_recommendation: macdAnalysis.recommendation,
-      macd_confidence: macdAnalysis.confidence,
-      macd_rationale: macdAnalysis.rationale,
-      stoch_recommendation: stochAnalysis.recommendation,
-      stoch_confidence: stochAnalysis.confidence,
-      stoch_rationale: stochAnalysis.rationale,
-      vwap_recommendation: vwapAnalysis.recommendation,
-      vwap_confidence: vwapAnalysis.confidence,
-      vwap_rationale: vwapAnalysis.rationale,
-      atr_recommendation: atrAnalysis.recommendation,
       atr_confidence: atrAnalysis.confidence,
       atr_rationale: atrAnalysis.rationale,
+      atr_recommendation: atrAnalysis.recommendation,
+      macd_confidence: macdAnalysis.confidence,
+      macd_rationale: macdAnalysis.rationale,
+      macd_recommendation: macdAnalysis.recommendation,
+      rsi_confidence: rsiAnalysis.confidence,
+      rsi_rationale: rsiAnalysis.rationale,
+      rsi_recommendation: rsiAnalysis.recommendation,
       current_price: currentPrice.toFixed(2),
     };
 

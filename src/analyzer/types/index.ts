@@ -93,45 +93,6 @@ export function validateAnalysisSummary(summary: unknown): AnalysisSummary {
 export function validateAnalysisState(state: unknown): AnalysisState {
   return AnalysisStateSchema.parse(state);
 }
-
-// Constants for analysis
-export const ANALYSIS_TYPES = ["bollinger", "rsi", "trend"] as const;
-export type AnalysisType = (typeof ANALYSIS_TYPES)[number];
-
-// Configuration interfaces
-export interface AnalysisConfig {
-  minConfidenceThreshold: number;
-  minDataPoints: number;
-  maxDataPoints: number;
-  requiredIndicators: AnalysisType[];
-}
-
-// Error types
-export class ValidationError extends Error {
-  constructor(message: string, public details: unknown) {
-    super(message);
-    this.name = "ValidationError";
-  }
-}
-
-export class AnalysisError extends Error {
-  constructor(
-    message: string,
-    public analysisType: AnalysisType,
-    public details: unknown
-  ) {
-    super(message);
-    this.name = "AnalysisError";
-  }
-}
-
-// Configuration for fetching price data
-export interface PriceDataConfig {
-  pair: string;
-  interval: number;
-  lookbackPeriods: number;
-}
-
 // Types for agent outputs
 export interface IndicatorAnalysis {
   recommendation: "BUY" | "SELL" | "HOLD";
@@ -153,9 +114,13 @@ export interface IndicatorResult {
   };
   metadata?: Record<string, any>;
 }
+
+export type IndicatorResults = Record<
+  "rsiData" | "macdData" | "atrData",
+  IndicatorResult
+>;
 export interface AnalysisRecord {
   atrAnalysis: IndicatorAnalysis;
-  bbAnalysis: IndicatorAnalysis;
   confidence: number;
   finalAnalysis: IndicatorAnalysis;
   finalRecommendation: Signal;
@@ -163,31 +128,26 @@ export interface AnalysisRecord {
   macdAnalysis: IndicatorAnalysis;
   currentPrice: number;
   rsiAnalysis: IndicatorAnalysis;
-  stochAnalysis: IndicatorAnalysis;
   symbol: string; // Partition Key
   timestamp: string; // Sort Key
   ttl?: number; // TTL in seconds since epoch
   uuid: string;
-  vwapAnalysis: IndicatorAnalysis;
 }
 
-export type OHLCDataInterval =
-  | 1
-  | 5
-  | 15
-  | 30
-  | 60
-  | 240
-  | 1440
-  | 10080
-  | 21600;
-
-export const allowedIntervals: OHLCDataInterval[] = [
+// Define allowed intervals as a constant array and infer the type
+export const allowedIntervalsArray = [
   1, 5, 15, 30, 60, 240, 1440, 10080, 21600,
-];
+] as const;
 
+// Derive the type directly from the array
+export type OHLCDataInterval = (typeof allowedIntervalsArray)[number];
+
+// Convert to a Set for faster lookups
+const allowedIntervals = new Set<number>(allowedIntervalsArray);
+
+// Validation function using the Set
 export function isValidOHLCDataInterval(
   value: number
 ): value is OHLCDataInterval {
-  return allowedIntervals.includes(value as OHLCDataInterval);
+  return allowedIntervals.has(value);
 }
