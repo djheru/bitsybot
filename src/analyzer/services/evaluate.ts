@@ -6,6 +6,7 @@ import { AnalysisRepository } from "./db";
 import { KrakenService } from "./kraken";
 
 interface SignalResult {
+  signalId: string;
   success: boolean;
   entryPrice: number;
   exitPrice: number;
@@ -14,6 +15,7 @@ interface SignalResult {
   timeToResult: number; // minutes
   hitTarget: boolean;
   hitStop: boolean;
+  confidence: number;
 }
 
 interface EvaluationSummary {
@@ -96,96 +98,128 @@ export class SignalEvaluator {
     try {
       // Parse action plan from rationale
       const actionPlan = this.parseActionPlan(signal.finalAnalysis.rationale);
-      if (!actionPlan) return null;
+      if (!actionPlan) {
+        this.logger.warn("Could not parse action plan", {
+          signalId: signal.uuid,
+          rationale: signal.finalAnalysis.rationale,
+        });
+        return null;
+      }
 
       // Get next hour of price data (12 x 5min candles)
-      const futureData = await this.krakenService.fetchPriceData();
+      const futureData = await this.krakenService.fetchPriceData({
+        interval: 5,
+        since: new Date(signal.timestamp).getTime() / 1000,
+        totalPeriods: 12,
+      });
 
-      // Evaluate the outcome
-      let result: SignalResult | null = null;
+      if (!futureData || futureData.length === 0) {
+        this.logger.warn("No future price data available", {
+          signalId: signal.uuid,
+          timestamp: signal.timestamp,
+        });
+        return null;
+      }
 
+      this.logger.debug("Evaluating signal", {
+        signalId: signal.uuid,
+        recommendation: signal.finalRecommendation,
+        confidence: signal.confidence,
+        entry: signal.currentPrice,
+        stop: actionPlan.stop,
+        target: actionPlan.target,
+        candlesReceived: futureData.length,
+      });
+
+      // Create base result object for DRY code
+      const createResult = (
+        success: boolean,
+        exitPrice: number,
+        timeToResult: number,
+        hitTarget: boolean,
+        hitStop: boolean
+      ): SignalResult => ({
+        signalId: signal.uuid,
+        success,
+        entryPrice: signal.currentPrice,
+        exitPrice,
+        pnlPoints:
+          signal.finalRecommendation === "BUY"
+            ? exitPrice - signal.currentPrice
+            : signal.currentPrice - exitPrice,
+        pnlPercent:
+          ((exitPrice - signal.currentPrice) / signal.currentPrice) * 100,
+        timeToResult,
+        hitTarget,
+        hitStop,
+        confidence: signal.confidence,
+      });
+
+      // Evaluate each candle
       for (let i = 0; i < futureData.length; i++) {
         const candle = futureData[i];
+        const timeToResult = i * 5; // minutes
 
         if (signal.finalRecommendation === "BUY") {
-          // Check if target was hit
+          // Check target hit
           if (candle.high >= actionPlan.target) {
-            result = {
-              success: true,
-              entryPrice: signal.currentPrice,
-              exitPrice: actionPlan.target,
-              pnlPoints: actionPlan.target - signal.currentPrice,
-              pnlPercent:
-                ((actionPlan.target - signal.currentPrice) /
-                  signal.currentPrice) *
-                100,
-              timeToResult: i * 5, // minutes
-              hitTarget: true,
-              hitStop: false,
-            };
-            break;
+            return createResult(
+              true,
+              actionPlan.target,
+              timeToResult,
+              true,
+              false
+            );
           }
-          // Check if stop was hit
+          // Check stop hit
           if (candle.low <= actionPlan.stop) {
-            result = {
-              success: false,
-              entryPrice: signal.currentPrice,
-              exitPrice: actionPlan.stop,
-              pnlPoints: actionPlan.stop - signal.currentPrice,
-              pnlPercent:
-                ((actionPlan.stop - signal.currentPrice) /
-                  signal.currentPrice) *
-                100,
-              timeToResult: i * 5,
-              hitTarget: false,
-              hitStop: true,
-            };
-            break;
+            return createResult(
+              false,
+              actionPlan.stop,
+              timeToResult,
+              false,
+              true
+            );
           }
         } else if (signal.finalRecommendation === "SELL") {
-          // Check if target was hit
+          // Check target hit
           if (candle.low <= actionPlan.target) {
-            result = {
-              success: true,
-              entryPrice: signal.currentPrice,
-              exitPrice: actionPlan.target,
-              pnlPoints: signal.currentPrice - actionPlan.target,
-              pnlPercent:
-                ((signal.currentPrice - actionPlan.target) /
-                  signal.currentPrice) *
-                100,
-              timeToResult: i * 5,
-              hitTarget: true,
-              hitStop: false,
-            };
-            break;
+            return createResult(
+              true,
+              actionPlan.target,
+              timeToResult,
+              true,
+              false
+            );
           }
-          // Check if stop was hit
+          // Check stop hit
           if (candle.high >= actionPlan.stop) {
-            result = {
-              success: false,
-              entryPrice: signal.currentPrice,
-              exitPrice: actionPlan.stop,
-              pnlPoints: signal.currentPrice - actionPlan.stop,
-              pnlPercent:
-                ((signal.currentPrice - actionPlan.stop) /
-                  signal.currentPrice) *
-                100,
-              timeToResult: i * 5,
-              hitTarget: false,
-              hitStop: true,
-            };
-            break;
+            return createResult(
+              false,
+              actionPlan.stop,
+              timeToResult,
+              false,
+              true
+            );
           }
         }
       }
 
-      return result;
+      // If neither target nor stop was hit
+      this.logger.debug("Signal evaluation incomplete", {
+        signalId: signal.uuid,
+        recommendation: signal.finalRecommendation,
+        reason: "No target or stop hit within timeframe",
+      });
+
+      return null;
     } catch (error) {
       this.logger.error("Failed to evaluate signal", {
         error,
         signalId: signal.uuid,
         timestamp: signal.timestamp,
+        recommendation: signal.finalRecommendation,
+        confidence: signal.confidence,
       });
       return null;
     }
@@ -234,12 +268,43 @@ export class SignalEvaluator {
     signals: AnalysisRecord[],
     results: Array<SignalResult | null>
   ): EvaluationSummary {
+    // Filter out null results and separate wins/losses
     const validResults = results.filter((r) => r !== null) as SignalResult[];
     const successfulTrades = validResults.filter((r) => r.success);
+    const failedTrades = validResults.filter((r) => !r.success);
+
+    // High confidence analysis
     const highConfidenceSignals = signals.filter((s) => s.confidence >= 4);
-    const highConfidenceSuccesses = highConfidenceSignals.filter((s) =>
-      validResults.find((r) => r.success)
+    const highConfidenceResults = validResults.filter((r) => {
+      const signal = signals.find((s) => s.uuid === r.signalId);
+      return signal ? signal.confidence >= 4 : false;
+    });
+    const highConfidenceSuccesses = highConfidenceResults.filter(
+      (r) => r.success
     );
+
+    // Calculate PnL metrics
+    const winSizes = successfulTrades.map((r) => Math.abs(r.pnlPercent));
+    const lossSizes = failedTrades.map((r) => Math.abs(r.pnlPercent));
+
+    // Calculate profit factor (handle division by zero)
+    const totalWins = winSizes.reduce((sum, size) => sum + size, 0);
+    const totalLosses = lossSizes.reduce((sum, size) => sum + size, 0);
+    const profitFactor =
+      totalLosses === 0 ? totalWins : totalWins / totalLosses;
+
+    // Time analysis
+    const winTimes = successfulTrades.map((r) => r.timeToResult);
+    const lossTimes = failedTrades.map((r) => r.timeToResult);
+
+    // Confidence breakdown
+    const confidenceBreakdown = {
+      confidence5: signals.filter((s) => s.confidence === 5).length,
+      confidence4: signals.filter((s) => s.confidence === 4).length,
+      confidence3: signals.filter((s) => s.confidence === 3).length,
+      confidence2: signals.filter((s) => s.confidence === 2).length,
+      confidence1: signals.filter((s) => s.confidence === 1).length,
+    };
 
     return {
       totalSignals: signals.length,
@@ -247,17 +312,48 @@ export class SignalEvaluator {
       sellSignals: signals.filter((s) => s.finalRecommendation === "SELL")
         .length,
       successfulTrades: successfulTrades.length,
-      failedTrades: validResults.length - successfulTrades.length,
+      failedTrades: failedTrades.length,
       pendingTrades: signals.length - validResults.length,
-      winRate: successfulTrades.length / validResults.length,
+
+      winRate:
+        validResults.length > 0
+          ? successfulTrades.length / validResults.length
+          : 0,
+
       averagePnlPercent: this.average(validResults.map((r) => r.pnlPercent)),
       averageTimeToResult: this.average(
         validResults.map((r) => r.timeToResult)
       ),
-      bestTrade: Math.max(...validResults.map((r) => r.pnlPercent)),
-      worstTrade: Math.min(...validResults.map((r) => r.pnlPercent)),
+
+      bestTrade:
+        validResults.length > 0
+          ? Math.max(...validResults.map((r) => r.pnlPercent))
+          : 0,
+
+      worstTrade:
+        validResults.length > 0
+          ? Math.min(...validResults.map((r) => r.pnlPercent))
+          : 0,
+
       highConfidenceWinRate:
-        highConfidenceSuccesses.length / highConfidenceSignals.length,
+        highConfidenceResults.length > 0
+          ? highConfidenceSuccesses.length / highConfidenceResults.length
+          : 0,
+
+      highConfidenceSignals: highConfidenceSignals.length,
+
+      avgWinSize: successfulTrades.length > 0 ? this.average(winSizes) : 0,
+
+      avgLossSize: failedTrades.length > 0 ? this.average(lossSizes) : 0,
+
+      profitFactor,
+
+      timeAnalysis: {
+        avgTimeToWin: successfulTrades.length > 0 ? this.average(winTimes) : 0,
+        avgTimeToLoss: failedTrades.length > 0 ? this.average(lossTimes) : 0,
+      },
+
+      confidenceBreakdown,
     };
   }
 }

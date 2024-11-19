@@ -4,22 +4,27 @@ import { OHLCDataInterval, PriceData } from "../types";
 
 export class KrakenService {
   constructor(
-    private readonly symbol: string,
+    private readonly pair: string,
     private interval: OHLCDataInterval,
     private readonly logger: Logger,
     private readonly metrics: Metrics,
     private readonly totalPeriods: number
   ) {}
-  async fetchPriceData() {
+  async fetchPriceData(params?: {
+    since?: number;
+    pair?: string;
+    interval?: OHLCDataInterval;
+    totalPeriods?: number;
+  }): Promise<PriceData[]> {
     try {
       const url = "https://api.kraken.com/0/public/OHLC";
-      const params = new URLSearchParams({
-        pair: this.symbol,
-        interval: `${this.interval}`, // Interval in minutes (e.g., 5 for 5-minute intervals)
-        since: `${Date.now() - 86400000}`, // Fetch data from the last 24 hours
+      const urlParams = new URLSearchParams({
+        pair: params?.pair || this.pair,
+        interval: `${params?.interval || this.interval}`, // Interval in minutes (e.g., 5 for 5-minute intervals)
+        since: `${params?.since || Date.now() - 86400000}`, // Fetch data from the last 24 hours by default
       });
 
-      const response = await fetch(`${url}?${params}`);
+      const response = await fetch(`${url}?${urlParams}`);
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -48,7 +53,7 @@ export class KrakenService {
       > = data.result[dataKey];
 
       const priceData: PriceData[] = ohlcData
-        .slice(-this.totalPeriods)
+        .slice(-1 * (params?.totalPeriods || this.totalPeriods))
         .map((item) => ({
           timestamp: item[0],
           open: parseFloat(item[1]),
