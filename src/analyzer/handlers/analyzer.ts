@@ -2,8 +2,10 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { ChatOpenAI } from "@langchain/openai";
+import { DateTime } from "luxon";
 import { AnalysisService } from "../services/analyze-market";
 import { AnalysisRepository } from "../services/db";
+import { SignalEvaluator } from "../services/evaluate";
 import { formatAnalysisRecord } from "../services/format-analysis";
 import { TechnicalIndicatorService } from "../services/indicators";
 import { KrakenService } from "../services/kraken";
@@ -103,6 +105,18 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         );
         await slackService.sendHighConfidenceAlert(analysis, formattedMessage);
       }
+
+      const evaluator = new SignalEvaluator(logger, krakenService, repository);
+      const start = DateTime.utc().minus({ hours: 1 }).toISO();
+      const end = DateTime.utc().toISO();
+      logger.info("Evaluating historical signals", { start, end, symbol });
+      const summary = await evaluator.evaluateHistoricalSignals(
+        start,
+        end,
+        symbol
+      );
+
+      logger.info("Summary", { summary });
 
       return {
         statusCode: 200,
