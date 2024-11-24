@@ -104,6 +104,13 @@ export interface TimeSeriesPoint {
   value: number;
 }
 
+export interface VolumeAnalysis {
+  currentVolume: number;
+  averageVolume: number;
+  relativeVolume: number;
+  isHighVolume: boolean;
+}
+
 export interface IndicatorResult {
   name: string;
   symbol: string;
@@ -115,10 +122,14 @@ export interface IndicatorResult {
   metadata?: Record<string, any>;
 }
 
-export type IndicatorResults = Record<
-  "rsiData" | "macdData" | "atrData",
-  IndicatorResult
->;
+export interface IndicatorResults {
+  rsiData: IndicatorResult;
+  macdData: IndicatorResult;
+  atrData: IndicatorResult;
+  volumeMetrics: VolumeAnalysis;
+  isValidPeriod: boolean;
+  timestamp: number;
+}
 export interface AnalysisRecord {
   atrAnalysis: IndicatorAnalysis;
   confidence: number;

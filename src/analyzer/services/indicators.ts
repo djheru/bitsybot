@@ -1,21 +1,23 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
-import { ATR, EMA, MACD, RSI } from "trading-signals";
+import { ATR, EMA, MACD, RSI, SMA } from "trading-signals";
 import {
   IndicatorResult,
   IndicatorResults,
   OHLCDataInterval,
   PriceData,
+  VolumeAnalysis,
 } from "../types";
 
 export class TechnicalIndicatorService {
   // Configuration constants
   private static readonly RSI_PERIOD = 14;
-  private static readonly VOLUME_AVG_PERIOD = 20;
   private static readonly MACD_FAST_PERIOD = 12;
   private static readonly MACD_SLOW_PERIOD = 26;
   private static readonly MACD_SIGNAL_PERIOD = 9;
   private static readonly ATR_PERIOD = 14; // Traditional ATR period
+  private static readonly VOLUME_MA_PERIOD = 20;
+
   constructor(
     private readonly symbol: string,
     private readonly interval: OHLCDataInterval,
@@ -34,6 +36,24 @@ export class TechnicalIndicatorService {
         `Insufficient data for ${indicatorName}. Need at least ${requiredSize} periods, got ${data.length}`
       );
     }
+  }
+
+  calculateVolumeMetrics(data: PriceData[]): VolumeAnalysis {
+    const volumeMA = new SMA(TechnicalIndicatorService.VOLUME_MA_PERIOD);
+
+    for (const candle of data) {
+      volumeMA.update(candle.volume);
+    }
+
+    const currentVolume = data[data.length - 1].volume;
+    const averageVolume = Number(volumeMA.getResult().valueOf());
+
+    return {
+      currentVolume,
+      averageVolume,
+      relativeVolume: currentVolume / averageVolume,
+      isHighVolume: currentVolume > averageVolume * 1.5,
+    };
   }
 
   // Calculate RSI with history
@@ -274,25 +294,51 @@ export class TechnicalIndicatorService {
     return result;
   }
 
+  private isValidTradingPeriod(timestamp: number): boolean {
+    const hour = new Date(timestamp).getUTCHours();
+
+    // Avoid known low volume periods
+    if (hour >= 22 || hour <= 2) return false;
+
+    // Avoid typical high volatility periods
+    if (hour === 8 || hour === 16) return false;
+
+    return true;
+  }
+
   // Helper method to categorize volatility levels
   private categorizeVolatility(
     percentageATR: number
   ): "LOW" | "MODERATE" | "HIGH" | "EXTREME" {
-    // These thresholds can be adjusted based on the specific asset
-    if (percentageATR < 2) return "LOW";
-    if (percentageATR < 4) return "MODERATE";
-    if (percentageATR < 7) return "HIGH";
+    // Tighter ranges for 5min timeframe
+    if (percentageATR < 0.15) return "LOW";
+    if (percentageATR < 0.3) return "MODERATE";
+    if (percentageATR < 0.5) return "HIGH";
     return "EXTREME";
   }
 
-  // Get all indicators
   calculateIndicators(data: PriceData[]): IndicatorResults {
-    this.logger.info("Calculating all indicators");
+    this.logger.info("Calculating indicators", {
+      dataPoints: data.length,
+      symbol: this.symbol,
+      interval: this.interval,
+    });
+
     this.validateDataSize(data, this.totalPeriods, "Technical Analysis");
+
+    // Check if it's a valid trading period
+    const currentTimestamp = data[data.length - 1].timestamp;
+    const isValidPeriod = this.isValidTradingPeriod(currentTimestamp);
+
+    const volumeMetrics = this.calculateVolumeMetrics(data);
+
     return {
       rsiData: this.calculateRSI(data),
       macdData: this.calculateMACD(data),
       atrData: this.calculateATR(data),
+      volumeMetrics,
+      isValidPeriod,
+      timestamp: currentTimestamp,
     };
   }
 }
