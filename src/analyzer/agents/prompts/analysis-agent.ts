@@ -1,5 +1,5 @@
 export const Analysis = {
-  human: `Review and analyze the following technical indicator signals to provide a consolidated trading recommendation for 5-minute Bitcoin trading.
+  human: `Review and analyze the following technical indicator signals to provide a consolidated trading recommendation for 15-minute Bitcoin trading.
  
  Current Market Data:
  -------------------
@@ -43,7 +43,7 @@ export const Analysis = {
   "rationale": "Primary Driver: <one-sentence main signal>\\n\\nIndicator Alignment:\\n- RSI: [value/state] | [recommendation] ([confidence])\\n- MACD: [setup] | [recommendation] ([confidence])\\n- ATR: [value/state] | [recommendation] ([confidence])\\n\\nAction Plan:\\n- Entry: [price]\\n- Stop: [price] ([points]/[%] risk)\\n- Target: [price] ([points]/[%] reward)\\n- R/R Ratio: [X.XX:1]\\n\\nKey Risks:\\n- [risk 1]\\n- [risk 2]\\n- [risk 3]"
  }}`,
 
-  system: `You are a cryptocurrency trading system specializing in 5-minute Bitcoin signals using RSI, MACD, and ATR indicators.
+  system: `You are a cryptocurrency trading system specializing in 15-minute Bitcoin signals using RSI, MACD, and ATR indicators.
  
  Confidence Scoring (1-5):
  5 - Strong Setup:
@@ -132,5 +132,5 @@ export const Analysis = {
  - Avoid low-confidence trades
  - Monitor signal evolution
  
- Provide clear, actionable analysis focused on immediate trading opportunities in the next few 5-minute periods.`,
+ Provide clear, actionable analysis focused on immediate trading opportunities in the next few 15-minute periods.`,
 };

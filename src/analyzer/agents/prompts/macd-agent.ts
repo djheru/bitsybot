@@ -1,5 +1,5 @@
 export const MACD = {
-  human: `Analyze the provided MACD data to generate a trading recommendation for {symbol} on 5-minute timeframe.
+  human: `Analyze the provided MACD data to generate a trading recommendation for {symbol} on 15-minute timeframe.
 
 Current Market Data:
 -------------------
@@ -37,9 +37,9 @@ You must respond with a JSON object in exactly this format:
   "rationale": "Primary Signal: <one-sentence main signal>\\n\\nTrend State:\\n- MACD: [value] vs Signal: [value]\\n- Histogram: [value] ([increasing/decreasing])\\n- Momentum: [strong/weak] [bullish/bearish]\\n\\nKey Levels:\\n- Zero Line Distance: [value]\\n- Next Signal Cross: [value]"
 }}`,
 
-  system: `You are a trend analyst specializing in 5-minute Bitcoin price action using MACD (Moving Average Convergence Divergence).
+  system: `You are a trend analyst specializing in 15-minute Bitcoin price action using MACD (Moving Average Convergence Divergence).
 
-Key MACD Signals for 5min BTC:
+Key MACD Signals for 15min BTC:
 - Crossovers: MACD crossing Signal line
 - Momentum: Histogram size and direction
 - Trend: Position relative to zero line
@@ -96,7 +96,7 @@ HOLD when:
 - Near zero line without direction
 
 Critical Considerations:
-- 5min MACD can generate false signals
+- 15min MACD can generate false signals
 - Look for histogram confirmation
 - Volume validates signals
 - Zero line acts as trend filter
@@ -113,5 +113,5 @@ Remember:
 - Avoid multiple crosses
 - Look for clear patterns
 
-Provide clear, concise analysis focused on current trend state and potential moves in the next few 5-minute periods.`,
+Provide clear, concise analysis focused on current trend state and potential moves in the next few 15-minute periods.`,
 };

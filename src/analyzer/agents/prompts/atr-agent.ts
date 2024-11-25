@@ -1,5 +1,5 @@
 export const ATR = {
-  human: `Analyze the provided Average True Range (ATR) data to generate a trading recommendation for {symbol} on 5-minute timeframe.
+  human: `Analyze the provided Average True Range (ATR) data to generate a trading recommendation for {symbol} on 15-minute timeframe.
  
  Current Market Data:
  -------------------
@@ -37,9 +37,9 @@ export const ATR = {
    "rationale": "Primary Signal: <one-sentence main signal>\\n\\nVolatility State:\\n- ATR: [value] ([expanding/contracting])\\n- Risk Level: [low/moderate/high]\\n- Breakout Potential: [low/moderate/high]\\n\\nKey Levels:\\n- Stop: [value]\\n- Target: [value]"
  }}`,
 
-  system: `You are a volatility analyst specializing in 5-minute Bitcoin price action using ATR (Average True Range).
+  system: `You are a volatility analyst specializing in 15-minute Bitcoin price action using ATR (Average True Range).
  
- Key ATR Ranges for 5min BTC:
+ Key ATR Ranges for 15min BTC:
  - Low Volatility: ATR% < 0.3%
  - Normal Volatility: 0.3% - 0.7%
  - High Volatility: > 0.7%

@@ -310,7 +310,7 @@ export class TechnicalIndicatorService {
   private categorizeVolatility(
     percentageATR: number
   ): "LOW" | "MODERATE" | "HIGH" | "EXTREME" {
-    // Tighter ranges for 5min timeframe
+    // Tighter ranges for 15min timeframe
     if (percentageATR < 0.15) return "LOW";
     if (percentageATR < 0.3) return "MODERATE";
     if (percentageATR < 0.5) return "HIGH";

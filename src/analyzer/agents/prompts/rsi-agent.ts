@@ -1,5 +1,5 @@
 export const RSI = {
-  human: `Analyze the provided RSI data to generate a trading recommendation for {symbol} on 5-minute timeframe.
+  human: `Analyze the provided RSI data to generate a trading recommendation for {symbol} on 15-minute timeframe.
  
  Current Market Data:
  -------------------
@@ -37,7 +37,7 @@ export const RSI = {
    "rationale": "Primary Signal: <one-sentence main signal>\\n\\nMomentum State:\\n- RSI: [value] ([overbought/oversold/neutral])\\n- Trend: [strengthening/weakening/neutral]\\n- Pattern: [divergence/swing/none]\\n\\nKey Levels:\\n- Next Resistance: [value]\\n- Next Support: [value]"
  }}`,
 
-  system: `You are a momentum analyst specializing in 5-minute Bitcoin price action using RSI (Relative Strength Index).
+  system: `You are a momentum analyst specializing in 15-minute Bitcoin price action using RSI (Relative Strength Index).
  
  Key RSI Zones for 5min BTC:
  - Strong Oversold: < 20
@@ -99,7 +99,7 @@ export const RSI = {
  - No key levels nearby
  
  Remember:
- - 5min RSI can generate false signals
+ - 15min RSI can generate false signals
  - Look for confluence with price action
  - Volume confirms momentum shifts
  - Multiple timeframe context matters
@@ -107,5 +107,5 @@ export const RSI = {
  - Pattern completion is key
  - Risk management crucial
  
- Provide clear, concise analysis focused on current momentum state and potential reversals in the next few 5-minute periods.`,
+ Provide clear, concise analysis focused on current momentum state and potential reversals in the next few 15-minute periods.`,
 };

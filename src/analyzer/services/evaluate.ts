@@ -106,9 +106,9 @@ export class SignalEvaluator {
         return null;
       }
 
-      // Get next hour of price data (12 x 5min candles)
+      // Get next hour of price data (12 x 15min candles)
       const futureData = await this.krakenService.fetchPriceData({
-        interval: 5,
+        interval: 15,
         since: new Date(signal.timestamp).getTime() / 1000,
         totalPeriods: 12,
       });
@@ -158,7 +158,7 @@ export class SignalEvaluator {
       // Evaluate each candle
       for (let i = 0; i < futureData.length; i++) {
         const candle = futureData[i];
-        const timeToResult = i * 5; // minutes
+        const timeToResult = i * 15; // minutes
 
         if (signal.finalRecommendation === "BUY") {
           // Check target hit

@@ -20,7 +20,7 @@ export class KrakenService {
       const url = "https://api.kraken.com/0/public/OHLC";
       const urlParams = new URLSearchParams({
         pair: params?.pair || this.pair,
-        interval: `${params?.interval || this.interval}`, // Interval in minutes (e.g., 5 for 5-minute intervals)
+        interval: `${params?.interval || this.interval}`, // Interval in minutes (e.g., 15 for 15-minute intervals)
         since: `${params?.since || Date.now() - 86400000}`, // Fetch data from the last 24 hours by default
       });
 
