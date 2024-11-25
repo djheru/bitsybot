@@ -96,6 +96,7 @@ export class AppStack extends Stack {
         SECRET_ARN: this.appSecret.secretArn,
         SERVICE_NAME: this.props.serviceName,
       },
+      memorySize: 256,
       functionName: `${this.props.serviceName}-${this.props.environmentName}-analyzer`,
       timeout: Duration.minutes(15),
       tracing: Tracing.ACTIVE,

@@ -11,17 +11,19 @@ export class KrakenService {
     private readonly totalPeriods: number
   ) {}
   async fetchPriceData(params?: {
-    since?: number;
     pair?: string;
     interval?: OHLCDataInterval;
     totalPeriods?: number;
   }): Promise<PriceData[]> {
     try {
       const url = "https://api.kraken.com/0/public/OHLC";
+      const now = Date.now() / 1000;
+      const since =
+        now - (params?.interval || 15) * 60 * (params?.totalPeriods || 100);
       const urlParams = new URLSearchParams({
         pair: params?.pair || this.pair,
         interval: `${params?.interval || this.interval}`, // Interval in minutes (e.g., 15 for 15-minute intervals)
-        since: `${params?.since || Date.now() - 86400000}`, // Fetch data from the last 24 hours by default
+        since: since.toString(),
       });
 
       const response = await fetch(`${url}?${urlParams}`);
