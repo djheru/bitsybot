@@ -1,8 +1,21 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
-import { OHLCDataInterval, PriceData } from "../types";
+import { DateTime } from "luxon";
+import { KrakenOHLCVRow, OHLCDataInterval, PriceData } from "../types";
 
 export class KrakenService {
+  public lastResult: PriceData = {
+    timestamp: [],
+    open: [],
+    high: [],
+    low: [],
+    close: [],
+    vwap: [],
+    volume: [],
+    count: [],
+  };
+  public lastResultDate: DateTime;
+
   constructor(
     private readonly pair: string,
     private interval: OHLCDataInterval,
@@ -10,16 +23,19 @@ export class KrakenService {
     private readonly metrics: Metrics,
     private readonly totalPeriods: number
   ) {}
+
   async fetchPriceData(params?: {
     pair?: string;
     interval?: OHLCDataInterval;
     totalPeriods?: number;
-  }): Promise<PriceData[]> {
+  }): Promise<PriceData> {
     try {
+      const queryInterval = params?.interval || this.interval || 15;
+      const queryTotalPeriods =
+        params?.totalPeriods || this.totalPeriods || 250;
       const url = "https://api.kraken.com/0/public/OHLC";
       const now = Date.now() / 1000;
-      const since =
-        now - (params?.interval || 15) * 60 * (params?.totalPeriods || 100);
+      const since = now - queryInterval * 60 * queryTotalPeriods;
       const urlParams = new URLSearchParams({
         pair: params?.pair || this.pair,
         interval: `${params?.interval || this.interval}`, // Interval in minutes (e.g., 15 for 15-minute intervals)
@@ -36,7 +52,7 @@ export class KrakenService {
 
       if (data.error && data.error.length > 0) {
         this.logger.error("Error from Kraken API:", data.error);
-        return [];
+        return this.lastResult;
       }
 
       this.metrics.addMetric("priceDataFetched", MetricUnit.Count, 1);
@@ -47,29 +63,52 @@ export class KrakenService {
 
       if (!dataKey) {
         this.logger.error("No OHLC data found");
-        return [];
+        return this.lastResult;
       }
 
-      const ohlcData: Array<
-        [number, string, string, string, string, string, string]
-      > = data.result[dataKey];
-
-      const priceData: PriceData[] = ohlcData
-        .slice(-1 * (params?.totalPeriods || this.totalPeriods))
-        .map((item) => ({
-          timestamp: item[0],
-          open: parseFloat(item[1]),
-          high: parseFloat(item[2]),
-          low: parseFloat(item[3]),
-          close: parseFloat(item[4]),
-          vwap: parseFloat(item[5]),
-          volume: parseFloat(item[6]),
-        }));
-
-      return priceData;
+      const ohlcvData = data.result[dataKey] as KrakenOHLCVRow[];
+      this.lastResult = this.formatPriceData(ohlcvData);
+      return this.lastResult;
     } catch (error) {
       console.error("Error fetching OHLC data:", error);
       throw error;
     }
+  }
+
+  /**
+   * Converts Kraken OHLCV array format to an object with arrays for each field
+   * @param ohlcvData Array of Kraken OHLCV data
+   * @returns Object containing arrays for each OHLCV field
+   */
+  formatPriceData(ohlcvData: KrakenOHLCVRow[]): PriceData {
+    const result: PriceData = {
+      timestamp: [],
+      open: [],
+      high: [],
+      low: [],
+      close: [],
+      vwap: [],
+      volume: [],
+      count: [],
+    };
+
+    ohlcvData.forEach(
+      ([timestamp, open, high, low, close, vwap, volume, count]) => {
+        result.timestamp.push(timestamp);
+        result.open.push(parseFloat(open));
+        result.high.push(parseFloat(high));
+        result.low.push(parseFloat(low));
+        result.close.push(parseFloat(close));
+        result.vwap.push(parseFloat(vwap));
+        result.volume.push(parseFloat(volume));
+        result.count.push(count);
+      }
+    );
+
+    return result;
+  }
+
+  getLastResult(): PriceData {
+    return this.lastResult;
   }
 }

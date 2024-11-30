@@ -3,8 +3,9 @@ import { Analysis } from "./analysis-agent";
 import { ATR } from "./atr-agent";
 import { MACD } from "./macd-agent";
 import { RSI } from "./rsi-agent";
+import { Trend } from "./trend";
 
-export type EnabledPrompts = "Analysis" | "ATR" | "MACD" | "RSI";
+export type EnabledPrompts = "Analysis" | "ATR" | "MACD" | "RSI" | "Trend";
 
 export interface PromptTemplate {
   system: string;
@@ -20,6 +21,7 @@ export const Prompts: AnalysisPrompts = {
   ATR,
   MACD,
   RSI,
+  Trend,
 };
 
 // Helper function to format price data for prompts

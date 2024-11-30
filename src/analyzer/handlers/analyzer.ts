@@ -2,15 +2,14 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { ChatOpenAI } from "@langchain/openai";
-import { DateTime } from "luxon";
 import { AnalysisService } from "../services/analyze-market";
-import { AnalysisRepository } from "../services/db";
-import { SignalEvaluator } from "../services/evaluate";
-import { formatAnalysisRecord } from "../services/format-analysis";
 import { TechnicalIndicatorService } from "../services/indicators";
 import { KrakenService } from "../services/kraken";
-import { SlackService } from "../services/slack";
-import { AppSecret, isValidOHLCDataInterval } from "../types";
+import {
+  AppSecret,
+  CalculatedIndicators,
+  isValidOHLCDataInterval,
+} from "../types";
 
 const {
   ENVIRONMENT_NAME: environmentName = "",
@@ -67,7 +66,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       );
       const priceData = await krakenService.fetchPriceData();
       logger.info("priceData", {
-        priceData: `${priceData.length} records returned`,
+        priceData: `${priceData.close.length} records returned`,
       });
 
       logger.info("Calculating technical indicators");
@@ -75,50 +74,56 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         symbol,
         interval,
         logger,
-        metrics,
-        secret.TOTAL_PERIODS
+        metrics
       );
-      const indicatorResult = indicatorService.calculateIndicators(priceData);
+      const indicatorResult: CalculatedIndicators =
+        indicatorService.calculateIndicators(priceData);
       logger.info("indicatorResult", { indicatorResult });
 
       logger.info("Analyzing indicator results");
-      const analysisService = new AnalysisService(model, logger, metrics);
+      const analysisService = new AnalysisService(
+        symbol,
+        interval,
+        model,
+        logger,
+        metrics
+      );
       const analysis = await analysisService.analyzeMarket(indicatorResult);
       logger.info("analysis", { analysis });
 
       // Create record
-      const dbTable = `${serviceName}-${environmentName}-table`;
-      const repository = new AnalysisRepository(dbTable, logger);
-      await repository.createAnalysisRecord(analysis);
+      // const dbTable = `${serviceName}-${environmentName}-table`;
+      // const repository = new AnalysisRepository(dbTable, logger);
+      // await repository.createAnalysisRecord(analysis);
 
-      const formattedMessage = formatAnalysisRecord(analysis);
+      // const formattedMessage = formatAnalysisRecord(analysis);
 
-      logger.info(formattedMessage);
+      // logger.info(formattedMessage);
 
-      // Send high confidence alert to Slack
-      if (
-        analysis.finalAnalysis.confidence >= secret.CONFIDENCE_THRESHOLD &&
-        analysis.finalAnalysis.recommendation !== "HOLD"
-      ) {
-        const slackService = new SlackService(
-          secret.SLACK_TOKEN,
-          secret.SLACK_CHANNEL,
-          logger
-        );
-        await slackService.sendHighConfidenceAlert(analysis, formattedMessage);
-      }
+      // // Send high confidence alert to Slack
+      // if (
+      //   analysis.finalAnalysis.confidence >= secret.CONFIDENCE_THRESHOLD &&
+      //   analysis.finalAnalysis.recommendation !== "HOLD"
+      // ) {
+      //   const slackService = new SlackService(
+      //     secret.SLACK_TOKEN,
+      //     secret.SLACK_CHANNEL,
+      //     logger
+      //   );
+      //   await slackService.sendHighConfidenceAlert(analysis, formattedMessage);
+      // }
 
-      const evaluator = new SignalEvaluator(logger, krakenService, repository);
-      const start = DateTime.utc().minus({ hours: 1 }).toISO();
-      const end = DateTime.utc().toISO();
-      logger.info("Evaluating historical signals", { start, end, symbol });
-      const summary = await evaluator.evaluateHistoricalSignals(
-        start,
-        end,
-        symbol
-      );
+      // const evaluator = new SignalEvaluator(logger, krakenService, repository);
+      // const start = DateTime.utc().minus({ hours: 1 }).toISO();
+      // const end = DateTime.utc().toISO();
+      // logger.info("Evaluating historical signals", { start, end, symbol });
+      // const summary = await evaluator.evaluateHistoricalSignals(
+      //   start,
+      //   end,
+      //   symbol
+      // );
 
-      logger.info("Summary", { summary });
+      // logger.info("Summary", { summary });
 
       return {
         statusCode: 200,

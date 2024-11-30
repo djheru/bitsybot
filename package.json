@@ -43,6 +43,7 @@
     "dotenv": "^16.4.5",
     "luxon": "^3.5.0",
     "source-map-support": "^0.5.21",
+    "technicalindicators": "^3.1.0",
     "trading-signals": "^5.0.4",
     "zod": "^3.23.8"
   }

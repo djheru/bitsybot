@@ -21,29 +21,43 @@ export interface AppSecret {
 // Zod schema for runtime validation
 export const PriceDataSchema = z
   .object({
-    timestamp: z
-      .number()
-      .int()
-      .positive()
-      .lte(Date.now(), "Timestamp cannot be in the future"),
-    open: z.number().positive(),
-    high: z.number().positive(),
-    low: z.number().positive(),
-    close: z.number().positive(),
-    volume: z.number().positive(),
-    vwap: z.number().positive(),
+    timestamp: z.array(z.number().int().positive()),
+    open: z.array(z.number().positive()),
+    high: z.array(z.number().positive()),
+    low: z.array(z.number().positive()),
+    close: z.array(z.number().positive()),
+    volume: z.array(z.number().positive()),
+    vwap: z.array(z.number().positive()),
+    count: z.array(z.number().int().positive()),
   })
   .refine(
-    (data) => data.high >= data.low,
-    "High price must be greater than or equal to low price"
+    (data) =>
+      data.high.length === data.low.length &&
+      data.high.length === data.open.length &&
+      data.high.length === data.close.length &&
+      data.high.length === data.volume.length &&
+      data.high.length === data.vwap.length &&
+      data.high.length === data.timestamp.length &&
+      data.high.length === data.count.length,
+    "All arrays must have the same length"
   )
   .refine(
-    (data) => data.high >= data.open && data.high >= data.close,
-    "High price must be the highest value"
+    (data) => data.high.every((value, i) => value >= data.low[i]),
+    "High price must be greater than or equal to low price for each entry"
   )
   .refine(
-    (data) => data.low <= data.open && data.low <= data.close,
-    "Low price must be the lowest value"
+    (data) =>
+      data.high.every(
+        (value, i) => value >= data.open[i] && value >= data.close[i]
+      ),
+    "High price must be the highest value for each entry"
+  )
+  .refine(
+    (data) =>
+      data.low.every(
+        (value, i) => value <= data.open[i] && value <= data.close[i]
+      ),
+    "Low price must be the lowest value for each entry"
   );
 
 export const AnalysisSummarySchema = z.object({
@@ -73,10 +87,57 @@ export const AnalysisStateSchema = z.object({
   final_recommendation: AnalysisSummarySchema.optional(),
 });
 
+export const CalculatedIndicatorsSchema = z.object({
+  // Trend Indicators
+  ema: z.array(z.number()), // EMA values must be an array of numbers
+  macd: z.array(
+    z.object({
+      MACD: z.number().optional(), // MACD Line
+      signal: z.number().optional(), // Signal Line
+      histogram: z.number().optional(), // MACD Histogram
+    })
+  ),
+  adx: z.array(
+    z.object({
+      adx: z.number(), // Average Directional Index
+      mdi: z.number(), // Minus Directional Indicator
+      pdi: z.number(), // Plus Directional Indicator
+    })
+  ),
+
+  // Momentum Indicators
+  rsi: z.array(z.number()), // RSI values
+  stochastic: z.array(
+    z.object({
+      k: z.number(), // %K Line
+      d: z.number(), // %D Line
+    })
+  ),
+  williamsR: z.array(z.number()), // Williams %R values
+
+  // Volatility Indicators
+  bollingerBands: z.array(
+    z.object({
+      lower: z.number(), // Lower Band
+      middle: z.number(), // Middle Band
+      upper: z.number(), // Upper Band
+    })
+  ),
+  atr: z.array(z.number()), // ATR values
+
+  // Volume-Based Indicators
+  obv: z.array(z.number()), // On-Balance Volume values
+
+  // Candlestick Patterns
+  bullishEngulfing: z.boolean(), // Boolean for Bullish Engulfing pattern presence
+  bearishEngulfing: z.boolean(), // Boolean for Bearish Engulfing pattern presence
+});
+
 // TypeScript interfaces derived from Zod schemas
 export type PriceData = z.infer<typeof PriceDataSchema>;
 export type AnalysisSummary = z.infer<typeof AnalysisSummarySchema>;
 export type AnalysisState = z.infer<typeof AnalysisStateSchema>;
+export type CalculatedIndicators = z.infer<typeof CalculatedIndicatorsSchema>;
 
 // Helper functions for validation
 export function validatePriceData(data: unknown): PriceData[] {
@@ -93,6 +154,19 @@ export function validateAnalysisSummary(summary: unknown): AnalysisSummary {
 export function validateAnalysisState(state: unknown): AnalysisState {
   return AnalysisStateSchema.parse(state);
 }
+
+// Output type for the Kraken API
+export type KrakenOHLCVRow = [
+  timestamp: number, // Time
+  open: string, // Open price
+  high: string, // High price
+  low: string, // Low price
+  close: string, // Close price
+  vwap: string, // Volume weighted average price
+  volume: string, // Volume
+  count: number // Number of trades
+];
+
 // Types for agent outputs
 export interface IndicatorAnalysis {
   recommendation: "BUY" | "SELL" | "HOLD";

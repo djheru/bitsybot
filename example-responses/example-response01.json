@@ -1,34 +1,34 @@
 {
-  "level": "INFO",
-  "message": "analysis",
-  "sampling_rate": 0,
-  "service": "bitsybot-prod-handler",
-  "timestamp": "2024-11-10T18:22:15.081+00:00",
-  "analysis": {
-    "bbAnalysis": {
-      "recommendation": "SELL",
-      "confidence": 0.85,
-      "rationale": "The current price is above the upper Bollinger Band, indicating a potential overbought condition and suggesting a possible price correction. The %B value of 111.83 confirms that the price is significantly above the upper band. Additionally, the recent expansion of the band width suggests increased volatility, which often precedes a reversal. Given these factors, a SELL recommendation is made with a high confidence level."
-    },
-    "rsiAnalysis": {
-      "recommendation": "SELL",
-      "confidence": 0.9,
-      "rationale": "The RSI is at 88.69, indicating an overbought condition. The recent trend shows a sharp increase in RSI from 65.11 to 88.69, suggesting potential exhaustion in the price rally. There is no clear divergence pattern, but the extreme RSI level suggests a high likelihood of a price pullback."
-    },
-    "vwapAnalysis": {
-      "recommendation": "HOLD",
-      "confidence": 0.7,
-      "rationale": "The current price is slightly above the VWAP, with a minimal deviation of 0.04%, indicating that the market is relatively balanced around this level. The volume strength is significantly lower than the 20-period average at 0.33x, suggesting a lack of strong conviction in the current price movement. Recent high-volume spikes did not lead to significant deviations from the VWAP, implying that the VWAP is acting as a neutral point rather than a strong support or resistance. Given these factors, there is no strong indication of a trend reversal or continuation, warranting a HOLD recommendation with moderate confidence."
-    },
-    "macdAnalysis": {
-      "recommendation": "BUY",
-      "confidence": 0.9,
-      "rationale": "The MACD line is significantly above the signal line, and the histogram is expanding positively, indicating strong bullish momentum. There is no divergence between the MACD and price, suggesting the upward trend is supported by momentum. The recent sharp increase in the MACD line and histogram size further supports a strong buy signal."
-    },
-    "finalAnalysis": {
-      "recommendation": "SELL",
-      "confidence": 0.88,
-      "rationale": "The RSI and Bollinger Bands both indicate overbought conditions with high confidence, suggesting a potential price correction. While the MACD shows bullish momentum, the extreme RSI level and price above the upper Bollinger Band suggest exhaustion in the rally. The VWAP analysis shows a balanced market, but with low volume, it does not strongly counter the SELL signals. Overall, the combination of overbought signals from RSI and Bollinger Bands outweighs the bullish MACD, leading to a SELL recommendation."
-    }
-  }
+  "pk": "analysis#BTCUSDT",
+  "sk": "2024-11-26T02:13:57.623Z#BUY",
+  "atrAnalysis": {
+    "confidence": 3,
+    "rationale": "Primary Signal: ATR is contracting, indicating a potential pause in volatility.\n\nVolatility State:\n- ATR: 511.92 (contracting)\n- Risk Level: moderate\n- Breakout Potential: moderate\n\nKey Levels:\n- Stop: 95461.98\n- Target: 96229.86",
+    "recommendation": "HOLD"
+  },
+  "confidence": 4,
+  "currentPrice": 94693.1,
+  "finalAnalysis": {
+    "confidence": 4,
+    "rationale": "Primary Driver: MACD indicates a strong bullish momentum with an imminent crossover above the Signal line.\n\nIndicator Alignment:\n- RSI: 53.48 (neutral) | HOLD (2)\n- MACD: Bullish crossover approaching | BUY (4)\n- ATR: 511.92 (contracting) | HOLD (3)\n\nAction Plan:\n- Entry: 94693.10\n- Stop: 94500.00 (193.10 points/0.20% risk)\n- Target: 96229.86 (1536.76 points/1.62% reward)\n- R/R Ratio: 7.96:1\n\nKey Risks:\n- RSI remains neutral, lacking strong confirmation\n- Potential resistance at 94799.90\n- ATR contraction may lead to sudden volatility changes",
+    "recommendation": "BUY"
+  },
+  "finalRecommendation": "BUY",
+  "gsipk1": "analysis#85b519b2-61bd-448f-97fc-33dd341e118f",
+  "interval": 15,
+  "lsi1": "2024-11-26T02:13:57.623Z#15",
+  "macdAnalysis": {
+    "confidence": 4,
+    "rationale": "Primary Signal: The MACD line is approaching a crossover above the Signal line with a strong upward histogram.\n\nTrend State:\n- MACD: -133.57 vs Signal: -332.98\n- Histogram: 199.40 (increasing)\n- Momentum: strong bullish\n\nKey Levels:\n- Zero Line Distance: -133.57\n- Next Signal Cross: Expected soon as MACD approaches Signal",
+    "recommendation": "BUY"
+  },
+  "rsiAnalysis": {
+    "confidence": 2,
+    "rationale": "Primary Signal: RSI is in the neutral zone with no clear momentum direction.\n\nMomentum State:\n- RSI: 53.48 (neutral)\n- Trend: neutral\n- Pattern: none\n\nKey Levels:\n- Next Resistance: 94799.90\n- Next Support: 94500.00",
+    "recommendation": "HOLD"
+  },
+  "symbol": "BTCUSDT",
+  "timestamp": "2024-11-26T02:13:57.623Z",
+  "ttl": 1740363237,
+  "uuid": "85b519b2-61bd-448f-97fc-33dd341e118f"
 }
