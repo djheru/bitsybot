@@ -2,10 +2,17 @@ import { Signal } from "../../types";
 import { Analysis } from "./analysis-agent";
 import { ATR } from "./atr-agent";
 import { MACD } from "./macd-agent";
+import { Momentum } from "./momentum";
 import { RSI } from "./rsi-agent";
 import { Trend } from "./trend";
 
-export type EnabledPrompts = "Analysis" | "ATR" | "MACD" | "RSI" | "Trend";
+export type EnabledPrompts =
+  | "Analysis"
+  | "ATR"
+  | "MACD"
+  | "RSI"
+  | "Trend"
+  | "Momentum";
 
 export interface PromptTemplate {
   system: string;
@@ -22,6 +29,7 @@ export const Prompts: AnalysisPrompts = {
   MACD,
   RSI,
   Trend,
+  Momentum,
 };
 
 // Helper function to format price data for prompts
