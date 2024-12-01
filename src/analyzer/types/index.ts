@@ -130,6 +130,10 @@ export const CalculatedIndicatorsSchema = z.object({
 
   // Volume-Based Indicators
   obv: z.array(z.number()), // On-Balance Volume values
+  mfi: z.array(z.number()), // Money Flow Index values
+  adl: z.array(z.number()), // Accumulation/Distribution Line values
+  vwap: z.array(z.number()), // Volume Weighted Average Price values
+  forceIndex: z.array(z.number()), // Force Index values
 
   // Candlestick Patterns
   bullishEngulfing: z.boolean(), // Boolean for Bullish Engulfing pattern presence

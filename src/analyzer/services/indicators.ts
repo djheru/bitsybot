@@ -151,6 +151,52 @@ export class TechnicalIndicatorService {
     return obv.getResult();
   }
 
+  getMFI(
+    input: Pick<PriceData, "high" | "low" | "close" | "volume">
+  ): number[] {
+    const mfi = new TechnicalIndicators.MFI({
+      high: input.high,
+      low: input.low,
+      close: input.close,
+      volume: input.volume,
+      period: 14,
+    });
+    return mfi.getResult();
+  }
+
+  getADL(
+    input: Pick<PriceData, "high" | "low" | "close" | "volume">
+  ): number[] {
+    const adl = new TechnicalIndicators.ADL({
+      high: input.high,
+      low: input.low,
+      close: input.close,
+      volume: input.volume,
+    });
+    return adl.getResult();
+  }
+
+  getVWAP(
+    input: Pick<PriceData, "high" | "low" | "close" | "volume">
+  ): number[] {
+    const vwap = new TechnicalIndicators.VWAP({
+      high: input.high,
+      low: input.low,
+      close: input.close,
+      volume: input.volume,
+    });
+    return vwap.getResult();
+  }
+
+  getForceIndex(input: Pick<PriceData, "close" | "volume">): number[] {
+    const forceIndex = new TechnicalIndicators.ForceIndex({
+      close: input.close,
+      volume: input.volume,
+      period: 13,
+    });
+    return forceIndex.getResult();
+  }
+
   // 5. Candlestick Pattern Tools
   getBullishEngulfing(
     input: Pick<PriceData, "open" | "high" | "low" | "close">
@@ -192,6 +238,10 @@ export class TechnicalIndicatorService {
       psar: this.getPSAR(priceData),
       // Volume-Based Indicators
       obv: this.getOBV(priceData),
+      mfi: this.getMFI(priceData),
+      adl: this.getADL(priceData),
+      vwap: this.getVWAP(priceData),
+      forceIndex: this.getForceIndex(priceData),
       // Candlestick Patterns
       bullishEngulfing: this.getBullishEngulfing(priceData),
       bearishEngulfing: this.getBearishEngulfing(priceData),
