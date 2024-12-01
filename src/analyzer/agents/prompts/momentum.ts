@@ -16,7 +16,7 @@ Keep the rationale concise (approximately 5 sentences), referencing specific ind
 
 Your output must adhere strictly to the following JSON format:
 {{
-  "recommendation": "BUY" | "SELL" | "HOLD",
+  "recommendation": Signal,
   "confidence": integer (1-10),
   "rationale": "A concise yet specific explanation of the recommendation and confidence values, with no newlines and properly escaped quotes."
 }}`,

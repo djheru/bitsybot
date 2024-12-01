@@ -321,6 +321,7 @@ export class TechnicalIndicatorService {
 
   calculateIndicators(priceData: PriceData): CalculatedIndicators {
     return {
+      close: priceData.close,
       // Trend Following Indicators
       ema: this.getEMA(priceData),
       macd: this.getMACD(priceData),

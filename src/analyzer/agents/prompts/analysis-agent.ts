@@ -38,7 +38,7 @@ export const Analysis = {
  
  You must respond with a JSON object in exactly this format:
  {{
-  "recommendation": "BUY" | "SELL" | "HOLD",
+  "recommendation": Signal,
   "confidence": <integer between 1 and 5>,
   "rationale": "Primary Driver: <one-sentence main signal>\\n\\nIndicator Alignment:\\n- RSI: [value/state] | [recommendation] ([confidence])\\n- MACD: [setup] | [recommendation] ([confidence])\\n- ATR: [value/state] | [recommendation] ([confidence])\\n\\nAction Plan:\\n- Entry: [price]\\n- Stop: [price] ([points]/[%] risk)\\n- Target: [price] ([points]/[%] reward)\\n- R/R Ratio: [X.XX:1]\\n\\nKey Risks:\\n- [risk 1]\\n- [risk 2]\\n- [risk 3]"
  }}`,

@@ -88,6 +88,7 @@ export const AnalysisStateSchema = z.object({
 });
 
 export const CalculatedIndicatorsSchema = z.object({
+  close: z.array(z.number()), // Close prices
   // Trend Indicators
   ema: z.array(z.number()), // EMA values must be an array of numbers
   macd: z.array(
@@ -185,7 +186,7 @@ export type KrakenOHLCVRow = [
 
 // Types for agent outputs
 export interface IndicatorAnalysis {
-  recommendation: "BUY" | "SELL" | "HOLD";
+  recommendation: Signal;
   confidence: number;
   rationale: string;
 }
@@ -220,19 +221,33 @@ export interface IndicatorResults {
   isValidPeriod: boolean;
   timestamp: number;
 }
+
+export interface AnalysisEntryPosition {
+  entryPrice: number;
+  exitPrice: number;
+  stopLoss: number;
+  rationale: string;
+}
 export interface AnalysisRecord {
-  atrAnalysis: IndicatorAnalysis;
-  confidence: number;
-  finalAnalysis: IndicatorAnalysis;
-  finalRecommendation: Signal;
-  interval: OHLCDataInterval;
-  macdAnalysis: IndicatorAnalysis;
-  currentPrice: number;
-  rsiAnalysis: IndicatorAnalysis;
-  symbol: string; // Partition Key
-  timestamp: string; // Sort Key
-  ttl?: number; // TTL in seconds since epoch
   uuid: string;
+  timestamp: string; // Sort Key
+  symbol: string; // Partition Key
+  interval: OHLCDataInterval;
+  currentPrice: number;
+
+  recommendation?: Signal;
+  confidence?: number;
+  rationale?: string;
+
+  candlestickAnalysis: IndicatorAnalysis;
+  momentumAnalysis: IndicatorAnalysis;
+  trendAnalysis: IndicatorAnalysis;
+  volatilityAnalysis: IndicatorAnalysis;
+  volumeAnalysis: IndicatorAnalysis;
+
+  entryPosition?: AnalysisEntryPosition;
+
+  ttl?: number; // TTL in seconds since epoch
 }
 
 // Define allowed intervals as a constant array and infer the type

@@ -2,6 +2,8 @@ import { Signal } from "../../types";
 import { Analysis } from "./analysis-agent";
 import { ATR } from "./atr-agent";
 import { Candlestick } from "./candlestick";
+import { EntryPosition } from "./entry-position";
+import { FinalAnalysis } from "./final-analysis";
 import { MACD } from "./macd-agent";
 import { Momentum } from "./momentum";
 import { RSI } from "./rsi-agent";
@@ -18,7 +20,9 @@ export type EnabledPrompts =
   | "Momentum"
   | "Volatility"
   | "Volume"
-  | "Candlestick";
+  | "Candlestick"
+  | "FinalAnalysis"
+  | "EntryPosition";
 
 export interface PromptTemplate {
   system: string;
@@ -39,6 +43,8 @@ export const Prompts: AnalysisPrompts = {
   Volatility,
   Volume,
   Candlestick,
+  FinalAnalysis,
+  EntryPosition,
 };
 
 // Helper function to format price data for prompts

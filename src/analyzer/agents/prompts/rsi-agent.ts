@@ -32,7 +32,7 @@ export const RSI = {
  
  You must respond with a JSON object in exactly this format:
  {{
-   "recommendation": "BUY" | "SELL" | "HOLD",
+   "recommendation": Signal,
    "confidence": <integer between 1 and 5>,
    "rationale": "Primary Signal: <one-sentence main signal>\\n\\nMomentum State:\\n- RSI: [value] ([overbought/oversold/neutral])\\n- Trend: [strengthening/weakening/neutral]\\n- Pattern: [divergence/swing/none]\\n\\nKey Levels:\\n- Next Resistance: [value]\\n- Next Support: [value]"
  }}`,

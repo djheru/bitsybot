@@ -32,7 +32,7 @@ Analysis Requirements:
 
 You must respond with a JSON object in exactly this format:
 {{
-  "recommendation": "BUY" | "SELL" | "HOLD",
+  "recommendation": Signal,
   "confidence": <integer between 1 and 5>,
   "rationale": "Primary Signal: <one-sentence main signal>\\n\\nTrend State:\\n- MACD: [value] vs Signal: [value]\\n- Histogram: [value] ([increasing/decreasing])\\n- Momentum: [strong/weak] [bullish/bearish]\\n\\nKey Levels:\\n- Zero Line Distance: [value]\\n- Next Signal Cross: [value]"
 }}`,

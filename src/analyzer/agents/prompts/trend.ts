@@ -20,7 +20,7 @@ If necessary, adjust the rationale length to provide sufficient explanation whil
 
 Your output must adhere strictly to the following JSON format:
 {{
-  "recommendation": "BUY" | "SELL" | "HOLD",
+  "recommendation": Signal,
   "confidence": integer (1-10),
   "rationale": "A concise yet specific description of the reasoning behind the recommendation and confidence values (approximately 5 sentences). Must be a valid JSON string."
 }}`,

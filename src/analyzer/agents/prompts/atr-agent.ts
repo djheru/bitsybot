@@ -32,7 +32,7 @@ export const ATR = {
  
  You must respond with a JSON object in exactly this format:
  {{
-   "recommendation": "BUY" | "SELL" | "HOLD",
+   "recommendation": Signal,
    "confidence": <integer between 1 and 5>,
    "rationale": "Primary Signal: <one-sentence main signal>\\n\\nVolatility State:\\n- ATR: [value] ([expanding/contracting])\\n- Risk Level: [low/moderate/high]\\n- Breakout Potential: [low/moderate/high]\\n\\nKey Levels:\\n- Stop: [value]\\n- Target: [value]"
  }}`,
