@@ -16,6 +16,9 @@ export class TechnicalIndicatorService {
   public MACD_FAST_PERIOD = 9;
   public MACD_SIGNAL_PERIOD = 6;
   public MACD_SLOW_PERIOD = 18;
+  public PSAR_STEP = 0.02;
+  public PSAR_MAX = 0.2;
+  public ROC_PERIOD = 12;
   public RSI_PERIOD = 12;
   public STOCHASTIC_D = 3;
   public STOCHASTIC_K = 10;
@@ -111,6 +114,34 @@ export class TechnicalIndicatorService {
     return atr.getResult();
   }
 
+  getROC(input: Pick<PriceData, "close">): number[] {
+    const roc = new TechnicalIndicators.ROC({
+      values: input.close,
+      period: this.ROC_PERIOD,
+    });
+    return roc.getResult();
+  }
+
+  getCCI(input: Pick<PriceData, "high" | "low" | "close">): number[] {
+    const cci = new TechnicalIndicators.CCI({
+      high: input.high,
+      low: input.low,
+      close: input.close,
+      period: 20,
+    });
+    return cci.getResult();
+  }
+
+  getPSAR(input: Pick<PriceData, "high" | "low">): number[] {
+    const psar = new TechnicalIndicators.PSAR({
+      high: input.high,
+      low: input.low,
+      step: this.PSAR_STEP,
+      max: this.PSAR_MAX,
+    });
+    return psar.getResult();
+  }
+
   // 4. Volume-Based Indicator Tools
   getOBV(input: Pick<PriceData, "volume" | "close">): number[] {
     const obv = new TechnicalIndicators.OBV({
@@ -145,15 +176,23 @@ export class TechnicalIndicatorService {
 
   calculateIndicators(priceData: PriceData): CalculatedIndicators {
     return {
+      // Trend Following Indicators
       ema: this.getEMA(priceData),
       macd: this.getMACD(priceData),
       adx: this.getADX(priceData),
+      // Momentum Indicators
       rsi: this.getRSI(priceData),
       stochastic: this.getStochastic(priceData),
       williamsR: this.getWilliamsR(priceData),
+      // Volatility Indicators
       bollingerBands: this.getBollingerBands(priceData),
       atr: this.getATR(priceData),
+      roc: this.getROC(priceData),
+      cci: this.getCCI(priceData),
+      psar: this.getPSAR(priceData),
+      // Volume-Based Indicators
       obv: this.getOBV(priceData),
+      // Candlestick Patterns
       bullishEngulfing: this.getBullishEngulfing(priceData),
       bearishEngulfing: this.getBearishEngulfing(priceData),
     };

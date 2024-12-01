@@ -124,6 +124,9 @@ export const CalculatedIndicatorsSchema = z.object({
     })
   ),
   atr: z.array(z.number()), // ATR values
+  roc: z.array(z.number()), // Rate of Change values
+  cci: z.array(z.number()), // Commodity Channel Index values
+  psar: z.array(z.number()), // Parabolic SAR values
 
   // Volume-Based Indicators
   obv: z.array(z.number()), // On-Balance Volume values
