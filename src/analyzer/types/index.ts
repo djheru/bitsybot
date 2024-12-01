@@ -136,8 +136,17 @@ export const CalculatedIndicatorsSchema = z.object({
   forceIndex: z.array(z.number()), // Force Index values
 
   // Candlestick Patterns
-  bullishCandlesticks: z.boolean(), // Boolean for Bullish pattern presence
-  bearishCandlesticks: z.boolean(), // Boolean for Bearish pattern presence
+  bullishEngulfing: z.boolean(), // Boolean for Bullish pattern presence
+  morningStar: z.boolean(), // Boolean for Morning Star pattern presence
+  hammer: z.boolean(), // Boolean for Hammer pattern presence
+  threeWhiteSoldiers: z.boolean(), // Boolean for Three White Soldiers pattern presence
+  bearishEngulfing: z.boolean(), // Boolean for Bearish pattern presence
+  eveningStar: z.boolean(), // Boolean for Evening Star pattern presence
+  shootingStar: z.boolean(), // Boolean for Shooting Star pattern presence
+  threeBlackCrows: z.boolean(), // Boolean for Three Black Crows pattern presence
+  doji: z.boolean(), // Boolean for Doji pattern presence
+  dragonflyDoji: z.boolean(), // Boolean for Dragonfly Doji pattern presence
+  gravestoneDoji: z.boolean(), // Boolean for Gravestone Doji pattern presence
 });
 
 // TypeScript interfaces derived from Zod schemas

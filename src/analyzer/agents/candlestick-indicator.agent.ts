@@ -33,15 +33,33 @@ export class CandlestickIndicatorAgent {
   }
 
   async analyze({
-    bearishCandlesticks,
-    bullishCandlesticks,
+    bullishEngulfing,
+    morningStar,
+    hammer,
+    threeWhiteSoldiers,
+    bearishEngulfing,
+    eveningStar,
+    shootingStar,
+    threeBlackCrows,
+    doji,
+    dragonflyDoji,
+    gravestoneDoji,
   }: CalculatedIndicators): Promise<IndicatorAnalysis> {
     this.logger.info("Analyzing candlestick indicators");
     const input = {
       SYMBOL: this.symbol,
       INTERVAL: this.interval,
-      BEARISH_CANDLESTICKS: bearishCandlesticks,
-      BULLISH_CANDLESTICKS: bullishCandlesticks,
+      BULLISH_ENGULFING: bullishEngulfing,
+      MORNING_STAR: morningStar,
+      HAMMER: hammer,
+      THREE_WHITE_SOLDIERS: threeWhiteSoldiers,
+      BEARISH_ENGULFING: bearishEngulfing,
+      EVENING_STAR: eveningStar,
+      SHOOTING_STAR: shootingStar,
+      THREE_BLACK_CROWS: threeBlackCrows,
+      DOJI: doji,
+      DRAGONFLY_DOJI: dragonflyDoji,
+      GRAVESTONE_DOJI: gravestoneDoji,
     };
     this.logger.info("Analysis agent input", input);
 
@@ -49,13 +67,6 @@ export class CandlestickIndicatorAgent {
     this.metrics.addDimension("interval", `${this.interval} minutes`);
     this.metrics.addDimension("analysisType", "candlestick");
     this.metrics.addMetric("candlestickAnalysisInvoked", "Count", 1);
-
-    if (bullishCandlesticks) {
-      this.metrics.addMetric("bullishPatternDetected", "Count", 1);
-    }
-    if (bearishCandlesticks) {
-      this.metrics.addMetric("bearishPatternDetected", "Count", 1);
-    }
     try {
       const response = await this.chain.invoke(input);
       this.logger.info("Analysis agent response", response);

@@ -197,11 +197,11 @@ export class TechnicalIndicatorService {
     return forceIndex.getResult();
   }
 
-  // 5. Candlestick Pattern Tools
-  getBullish(
+  // 5a. Candlestick Pattern Tools (Bullish)
+  getBullishEngulfing(
     input: Pick<PriceData, "open" | "high" | "low" | "close">
   ): boolean {
-    return TechnicalIndicators.bullish({
+    return TechnicalIndicators.bullishengulfingpattern({
       open: input.open,
       high: input.high,
       low: input.low,
@@ -209,10 +209,109 @@ export class TechnicalIndicatorService {
     });
   }
 
-  getBearish(
+  getMorningStar(
     input: Pick<PriceData, "open" | "high" | "low" | "close">
   ): boolean {
-    return TechnicalIndicators.bearish({
+    return TechnicalIndicators.morningstar({
+      open: input.open,
+      high: input.high,
+      low: input.low,
+      close: input.close,
+    });
+  }
+
+  getHammerPattern(
+    input: Pick<PriceData, "open" | "high" | "low" | "close">
+  ): boolean {
+    return TechnicalIndicators.hammerpattern({
+      open: input.open,
+      high: input.high,
+      low: input.low,
+      close: input.close,
+    });
+  }
+
+  getThreeWhiteSoldiers(
+    input: Pick<PriceData, "open" | "high" | "low" | "close">
+  ): boolean {
+    return TechnicalIndicators.threewhitesoldiers({
+      open: input.open,
+      high: input.high,
+      low: input.low,
+      close: input.close,
+    });
+  }
+
+  // 5b. Candlestick Pattern Tools (Bearish)
+  getBearishEngulfing(
+    input: Pick<PriceData, "open" | "high" | "low" | "close">
+  ): boolean {
+    return TechnicalIndicators.bearishengulfingpattern({
+      open: input.open,
+      high: input.high,
+      low: input.low,
+      close: input.close,
+    });
+  }
+
+  getEveningStar(
+    input: Pick<PriceData, "open" | "high" | "low" | "close">
+  ): boolean {
+    return TechnicalIndicators.eveningstar({
+      open: input.open,
+      high: input.high,
+      low: input.low,
+      close: input.close,
+    });
+  }
+
+  getShootingStar(
+    input: Pick<PriceData, "open" | "high" | "low" | "close">
+  ): boolean {
+    return TechnicalIndicators.shootingstar({
+      open: input.open,
+      high: input.high,
+      low: input.low,
+      close: input.close,
+    });
+  }
+
+  getThreeBlackCrows(
+    input: Pick<PriceData, "open" | "high" | "low" | "close">
+  ): boolean {
+    return TechnicalIndicators.threeblackcrows({
+      open: input.open,
+      high: input.high,
+      low: input.low,
+      close: input.close,
+    });
+  }
+
+  // 5c. Candlestick Pattern Tools (Neutral)
+  getDoji(input: Pick<PriceData, "open" | "high" | "low" | "close">): boolean {
+    return TechnicalIndicators.doji({
+      open: input.open,
+      high: input.high,
+      low: input.low,
+      close: input.close,
+    });
+  }
+
+  getDragonflyDoji(
+    input: Pick<PriceData, "open" | "high" | "low" | "close">
+  ): boolean {
+    return TechnicalIndicators.dragonflydoji({
+      open: input.open,
+      high: input.high,
+      low: input.low,
+      close: input.close,
+    });
+  }
+
+  getGravestoneDoji(
+    input: Pick<PriceData, "open" | "high" | "low" | "close">
+  ): boolean {
+    return TechnicalIndicators.gravestonedoji({
       open: input.open,
       high: input.high,
       low: input.low,
@@ -242,9 +341,20 @@ export class TechnicalIndicatorService {
       adl: this.getADL(priceData),
       vwap: this.getVWAP(priceData),
       forceIndex: this.getForceIndex(priceData),
-      // Candlestick Patterns
-      bullishCandlesticks: this.getBullish(priceData),
-      bearishCandlesticks: this.getBearish(priceData),
+      // Candlestick Patterns (Bullish)
+      bullishEngulfing: this.getBullishEngulfing(priceData),
+      morningStar: this.getMorningStar(priceData),
+      hammer: this.getHammerPattern(priceData),
+      threeWhiteSoldiers: this.getThreeWhiteSoldiers(priceData),
+      // Candlestick Patterns (Bearish)
+      bearishEngulfing: this.getBearishEngulfing(priceData),
+      eveningStar: this.getEveningStar(priceData),
+      shootingStar: this.getShootingStar(priceData),
+      threeBlackCrows: this.getThreeBlackCrows(priceData),
+      // Candlestick Patterns (Neutral)
+      doji: this.getDoji(priceData),
+      dragonflyDoji: this.getDragonflyDoji(priceData),
+      gravestoneDoji: this.getGravestoneDoji(priceData),
     };
   }
 }
