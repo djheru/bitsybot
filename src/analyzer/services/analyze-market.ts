@@ -2,6 +2,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics } from "@aws-lambda-powertools/metrics";
 import { ChatOpenAI } from "@langchain/openai";
 import { randomUUID } from "crypto";
+import { CandlestickIndicatorAgent } from "../agents/candlestick-indicator.agent";
 import { MomentumIndicatorAgent } from "../agents/momentum-indicator.agent";
 import { TrendIndicatorAgent } from "../agents/trend-indicator.agent";
 import { VolatilityIndicatorAgent } from "../agents/volatility-indicator.agent";
@@ -22,6 +23,7 @@ export class AnalysisService {
     const timestamp = new Date().toISOString();
 
     const agents = [
+      CandlestickIndicatorAgent,
       MomentumIndicatorAgent,
       TrendIndicatorAgent,
       VolatilityIndicatorAgent,
@@ -29,6 +31,7 @@ export class AnalysisService {
     ];
 
     const [
+      candlestickAnalysis,
       momentumAnalysis,
       trendAnalysis,
       volatilityAnalysis,
@@ -47,6 +50,7 @@ export class AnalysisService {
     );
 
     this.logger.info("Trend analysis completed", {
+      candlestickAnalysis,
       momentumAnalysis,
       trendAnalysis,
       volatilityAnalysis,

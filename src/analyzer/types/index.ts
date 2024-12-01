@@ -136,8 +136,8 @@ export const CalculatedIndicatorsSchema = z.object({
   forceIndex: z.array(z.number()), // Force Index values
 
   // Candlestick Patterns
-  bullish: z.boolean(), // Boolean for Bullish pattern presence
-  bearish: z.boolean(), // Boolean for Bearish pattern presence
+  bullishCandlesticks: z.boolean(), // Boolean for Bullish pattern presence
+  bearishCandlesticks: z.boolean(), // Boolean for Bearish pattern presence
 });
 
 // TypeScript interfaces derived from Zod schemas

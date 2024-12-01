@@ -243,8 +243,8 @@ export class TechnicalIndicatorService {
       vwap: this.getVWAP(priceData),
       forceIndex: this.getForceIndex(priceData),
       // Candlestick Patterns
-      bullish: this.getBullish(priceData),
-      bearish: this.getBearish(priceData),
+      bullishCandlesticks: this.getBullish(priceData),
+      bearishCandlesticks: this.getBearish(priceData),
     };
   }
 }
