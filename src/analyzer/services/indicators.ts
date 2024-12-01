@@ -198,10 +198,10 @@ export class TechnicalIndicatorService {
   }
 
   // 5. Candlestick Pattern Tools
-  getBullishEngulfing(
+  getBullish(
     input: Pick<PriceData, "open" | "high" | "low" | "close">
   ): boolean {
-    return TechnicalIndicators.bullishengulfingpattern({
+    return TechnicalIndicators.bullish({
       open: input.open,
       high: input.high,
       low: input.low,
@@ -209,10 +209,10 @@ export class TechnicalIndicatorService {
     });
   }
 
-  getBearishEngulfing(
+  getBearish(
     input: Pick<PriceData, "open" | "high" | "low" | "close">
   ): boolean {
-    return TechnicalIndicators.bearishengulfingpattern({
+    return TechnicalIndicators.bearish({
       open: input.open,
       high: input.high,
       low: input.low,
@@ -243,8 +243,8 @@ export class TechnicalIndicatorService {
       vwap: this.getVWAP(priceData),
       forceIndex: this.getForceIndex(priceData),
       // Candlestick Patterns
-      bullishEngulfing: this.getBullishEngulfing(priceData),
-      bearishEngulfing: this.getBearishEngulfing(priceData),
+      bullish: this.getBullish(priceData),
+      bearish: this.getBearish(priceData),
     };
   }
 }
