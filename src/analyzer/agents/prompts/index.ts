@@ -27,6 +27,7 @@ export type EnabledPrompts =
 export interface PromptTemplate {
   system: string;
   human: string;
+  type?: string;
 }
 
 export type AnalysisPrompts = {

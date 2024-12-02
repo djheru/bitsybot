@@ -77,7 +77,7 @@ export class AnalysisService {
       this.metrics
     );
 
-    const finalAnalysis = await finalAnalysisAgent.analyze(analysisRecord);
+    const finalAnalysis = await finalAnalysisAgent.collate(analysisRecord);
 
     let finalAnalysisRecord = { ...analysisRecord, ...finalAnalysis };
 

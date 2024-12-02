@@ -186,7 +186,7 @@ export type KrakenOHLCVRow = [
 
 // Types for agent outputs
 export interface IndicatorAnalysis {
-  recommendation: Signal;
+  recommendation?: Signal;
   confidence: number;
   rationale: string;
 }
@@ -226,6 +226,8 @@ export interface AnalysisEntryPosition {
   entryPrice: number;
   exitPrice: number;
   stopLoss: number;
+  recommendation?: Signal;
+  confidence?: number;
   rationale: string;
 }
 export interface AnalysisRecord {

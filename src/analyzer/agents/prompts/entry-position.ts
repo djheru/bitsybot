@@ -25,6 +25,8 @@ Your response must strictly adhere to the following JSON format:
   "entryPrice": number,
   "exitPrice": number,
   "stopLoss": number,
+  "recommendation": Signal,
+  "confidence": integer (1-10),
   "rationale": "A detailed explanation of how the values were calculated, including the use of the ATR, R:R ratio, and other relevant indicators."
 }}`,
   system: `You are a professional trader specializing in precise trade execution strategies. Your task is to calculate entry, exit, stop loss, and position size for a trade based on the given parameters.
