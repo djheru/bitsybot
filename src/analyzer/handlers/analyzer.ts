@@ -14,7 +14,10 @@ import {
 const {
   ENVIRONMENT_NAME: environmentName = "",
   SERVICE_NAME: serviceName = "",
+  // USE_MOCK_DATA = "false",
 } = process.env;
+
+// const useMockData = USE_MOCK_DATA === "true";
 
 let logger: Logger;
 let metrics: Metrics;

@@ -21,14 +21,22 @@ export class KrakenService {
     private interval: OHLCDataInterval,
     private readonly logger: Logger,
     private readonly metrics: Metrics,
-    private readonly totalPeriods: number
-  ) {}
+    private readonly totalPeriods: number,
+    lastResult?: PriceData
+  ) {
+    if (lastResult) {
+      this.lastResult = lastResult;
+    }
+  }
 
   async fetchPriceData(params?: {
     pair?: string;
     interval?: OHLCDataInterval;
     totalPeriods?: number;
   }): Promise<PriceData> {
+    if (this.lastResult.timestamp.length > 0) {
+      return this.lastResult;
+    }
     try {
       const queryInterval = params?.interval || this.interval || 15;
       const queryTotalPeriods =
