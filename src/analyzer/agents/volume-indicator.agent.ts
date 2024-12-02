@@ -43,11 +43,11 @@ export class VolumeIndicatorAgent {
     const input = {
       SYMBOL: this.symbol,
       INTERVAL: this.interval,
-      OBV: obv.slice(0, this.inputArrayLength).join(","),
-      MFI: mfi.slice(0, this.inputArrayLength).join(","),
-      ADL: adl.slice(0, this.inputArrayLength).join(","),
-      VWAP: vwap.slice(0, this.inputArrayLength).join(","),
-      FORCE_INDEX: forceIndex.slice(0, this.inputArrayLength).join(","),
+      OBV: obv.slice(-1 * this.inputArrayLength).join(","),
+      MFI: mfi.slice(-1 * this.inputArrayLength).join(","),
+      ADL: adl.slice(-1 * this.inputArrayLength).join(","),
+      VWAP: vwap.slice(-1 * this.inputArrayLength).join(","),
+      FORCE_INDEX: forceIndex.slice(-1 * this.inputArrayLength).join(","),
     };
     this.logger.info("Analysis agent input", input);
 

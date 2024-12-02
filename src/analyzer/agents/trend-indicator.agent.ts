@@ -40,29 +40,29 @@ export class TrendIndicatorAgent {
     const input = {
       SYMBOL: this.symbol,
       INTERVAL: this.interval,
-      EMA: ema.slice(0, this.inputArrayLength).join(","),
+      EMA: ema.slice(-1 * this.inputArrayLength).join(","),
       MACD: macd
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((m) => m.MACD || "-")
         .join(","),
       SIGNAL: macd
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((m) => m.signal || "-")
         .join(","),
       HIST: macd
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((m) => m.histogram || "-")
         .join(","),
       ADX: adx
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((a) => a.adx)
         .join(","),
       PDI: adx
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((a) => a.pdi)
         .join(","),
       MDI: adx
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((a) => a.mdi)
         .join(","),
     };

@@ -41,16 +41,16 @@ export class MomentumIndicatorAgent {
     const input = {
       SYMBOL: this.symbol,
       INTERVAL: this.interval,
-      RSI: rsi.slice(0, this.inputArrayLength).join(","),
+      RSI: rsi.slice(-1 * this.inputArrayLength).join(","),
       STOCHASTIC_K: stochastic
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((s) => s.k)
         .join(","),
       STOCHASTIC_D: stochastic
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((s) => s.d)
         .join(","),
-      WILLIAMS_R: williamsR.slice(0, this.inputArrayLength).join(","),
+      WILLIAMS_R: williamsR.slice(-1 * this.inputArrayLength).join(","),
     };
     this.logger.info("Analysis agent input", input);
 

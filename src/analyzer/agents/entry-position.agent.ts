@@ -41,10 +41,11 @@ export class EntryPositionAgent {
     const input = {
       SYMBOL: this.symbol,
       INTERVAL: this.interval,
-      CLOSE: close.slice(0, this.inputArrayLength).join(","),
-      ATR: atr.slice(0, this.inputArrayLength).join(","),
+      CURRENT: close[close.length - 1],
+      CLOSE: close.slice(-1 * this.inputArrayLength).join(","),
+      ATR: atr.slice(-1 * this.inputArrayLength).join(","),
       BB_LOWER: bollingerBands
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((b) => b.lower)
         .join(","),
     };

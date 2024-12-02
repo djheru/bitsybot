@@ -1,8 +1,11 @@
 export const EntryPosition = {
-  human: `The final recommendation from the analysis is "BUY." Please determine the following trading parameters:
+  human: `The final recommendation from the analysis is "BUY at a price of {CURRENT}" 
 
 Symbol: {SYMBOL}
 Interval: {INTERVAL} minutes
+Current Market Price: {CURRENT}
+  
+Please determine the following trading parameters to determine the entry position:
 
 1. Entry Price:
    - Use the current market price history: {CLOSE}.
@@ -29,7 +32,8 @@ Your response must strictly adhere to the following JSON format:
 Guidelines for Calculation:
 1. **Entry Price**:
    - Start with the current market price.
-   - Adjust for recent volatility or support levels if needed.
+   - Adjust slightly for recent volatility or support levels if needed.
+   - Remember that the "BUY" recommendation is based on the current price, so don't deviate too far from it.
 
 2. **Exit Price (Take Profit)**:
    - Use a Risk-to-Reward (R:R) ratio of 2:1 or higher.
@@ -39,11 +43,7 @@ Guidelines for Calculation:
    - Use the ATR value to set a volatility-based stop loss.
    - Place below recent support levels or Bollinger Band lower limits.
 
-4. **Position Size**:
-   - Use a risk percentage of 2% of the available account balance.
-   - Formula: Position Size = (Risk Percentage × Account Balance) / (Entry Price - Stop Loss).
-
-5. **Output**:
+4. **Output**:
    - Provide the values in JSON format.
    - Include a detailed rationale explaining the calculations and adjustments.`,
 };

@@ -44,21 +44,21 @@ export class VolatilityIndicatorAgent {
       SYMBOL: this.symbol,
       INTERVAL: this.interval,
       BOLLINGER_LOWER: bollingerBands
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((b) => b.lower)
         .join(","),
       BOLLINGER_MIDDLE: bollingerBands
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((b) => b.middle)
         .join(","),
       BOLLINGER_UPPER: bollingerBands
-        .slice(0, this.inputArrayLength)
+        .slice(-1 * this.inputArrayLength)
         .map((b) => b.upper)
         .join(","),
-      ATR: atr.slice(0, this.inputArrayLength).join(","),
-      ROC: roc.slice(0, this.inputArrayLength).join(","),
-      CCI: cci.slice(0, this.inputArrayLength).join(","),
-      PSAR: psar.slice(0, this.inputArrayLength).join(","),
+      ATR: atr.slice(-1 * this.inputArrayLength).join(","),
+      ROC: roc.slice(-1 * this.inputArrayLength).join(","),
+      CCI: cci.slice(-1 * this.inputArrayLength).join(","),
+      PSAR: psar.slice(-1 * this.inputArrayLength).join(","),
     };
     this.logger.info("Analysis agent input", input);
 
