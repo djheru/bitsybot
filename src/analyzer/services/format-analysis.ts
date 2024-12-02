@@ -14,7 +14,7 @@ export function formatAnalysisRecord(record: AnalysisRecord): string {
   ).toFixed(1)}/10)
 --------------------------------
 
-*📊 AGENT ANALYSIS*
+*🤖 AGENT ANALYSIS*
 --------------------------------
 *🕯️ Candlestick Analysis* _(${record.candlestickAnalysis.confidence.toFixed(
     1
