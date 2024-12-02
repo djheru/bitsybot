@@ -1,4 +1,5 @@
 export const EntryPosition = {
+  type: "entry-position",
   human: `The final recommendation from the analysis is "BUY at a price of {CURRENT}" 
 
 Symbol: {SYMBOL}

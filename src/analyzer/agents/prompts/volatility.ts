@@ -1,4 +1,5 @@
 export const Volatility = {
+  type: "volatility",
   human: `Here is the current market data for your analysis:
 
 Symbol: {SYMBOL}

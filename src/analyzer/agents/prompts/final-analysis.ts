@@ -1,4 +1,5 @@
 export const FinalAnalysis = {
+  type: "final-analysis",
   human: `Here is the consolidated analysis from specialized trading agents:
 
 Symbol: {SYMBOL}

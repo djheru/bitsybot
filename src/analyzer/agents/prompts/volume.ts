@@ -1,4 +1,5 @@
 export const Volume = {
+  type: "volume",
   human: `Here is the current market data for your analysis:
 
 Indicators:

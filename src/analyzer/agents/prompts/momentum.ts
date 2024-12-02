@@ -1,4 +1,5 @@
 export const Momentum = {
+  type: "momentum",
   human: `Here is the current market data for your analysis:
 
 Symbol: {SYMBOL}

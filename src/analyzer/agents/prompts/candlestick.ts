@@ -1,4 +1,5 @@
 export const Candlestick = {
+  type: "candlestick",
   human: `Here is the current market data for candlestick pattern analysis:
 
 Symbol: {SYMBOL}

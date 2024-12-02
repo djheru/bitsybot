@@ -1,4 +1,5 @@
 export const Trend = {
+  type: "trend",
   human: `Here is the current market data for your analysis:
 
 Symbol: {SYMBOL}
