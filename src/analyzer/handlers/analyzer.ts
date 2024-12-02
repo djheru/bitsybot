@@ -3,8 +3,14 @@ import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { ChatOpenAI } from "@langchain/openai";
 import { AnalysisService } from "../services/analyze-market";
+import { AnalysisRepository } from "../services/db";
+import {
+  formatAnalysisRecord,
+  formatAnalysisRecordBlocks,
+} from "../services/format-analysis";
 import { TechnicalIndicatorService } from "../services/indicators";
 import { KrakenService } from "../services/kraken";
+import { SlackService } from "../services/slack";
 import {
   AppSecret,
   CalculatedIndicators,
@@ -95,26 +101,35 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       logger.info("analysis", { analysis });
 
       // Create record
-      // const dbTable = `${serviceName}-${environmentName}-table`;
-      // const repository = new AnalysisRepository(dbTable, logger);
-      // await repository.createAnalysisRecord(analysis);
+      const dbTable = `${serviceName}-${environmentName}-table`;
+      const repository = new AnalysisRepository(dbTable, logger);
+      await repository.createAnalysisRecord(analysis);
 
-      // const formattedMessage = formatAnalysisRecord(analysis);
+      const formattedMessage = formatAnalysisRecord(analysis);
+      const formattedBlocksMessage = formatAnalysisRecordBlocks(analysis);
 
-      // logger.info(formattedMessage);
+      logger.info("Formatted slack message", {
+        formattedMessage,
+        formattedBlocksMessage,
+      });
 
-      // // Send high confidence alert to Slack
-      // if (
-      //   analysis.finalAnalysis.confidence >= secret.CONFIDENCE_THRESHOLD &&
-      //   analysis.finalAnalysis.recommendation !== "HOLD"
-      // ) {
-      //   const slackService = new SlackService(
-      //     secret.SLACK_TOKEN,
-      //     secret.SLACK_CHANNEL,
-      //     logger
-      //   );
-      //   await slackService.sendHighConfidenceAlert(analysis, formattedMessage);
-      // }
+      // Send high confidence alert to Slack
+      if (
+        true
+        // analysis.confidence >= secret.CONFIDENCE_THRESHOLD &&
+        // analysis.recommendation !== "HOLD"
+      ) {
+        const slackService = new SlackService(
+          secret.SLACK_TOKEN,
+          secret.SLACK_CHANNEL,
+          logger
+        );
+        await slackService.sendHighConfidenceAlert(
+          analysis,
+          formattedMessage,
+          formattedBlocksMessage
+        );
+      }
 
       // const evaluator = new SignalEvaluator(logger, krakenService, repository);
       // const start = DateTime.utc().minus({ hours: 1 }).toISO();

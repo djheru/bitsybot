@@ -13,11 +13,6 @@ import {
 } from "../types";
 import { PromptTemplate } from "./prompts";
 
-export { FinalAnalysisAgent } from "./analysis-agent";
-export { ATRAgent } from "./atr-agent";
-export { MACDAgent } from "./macd-agent";
-export { RSIAgent } from "./rsi-agent";
-
 export class BaseAgent {
   public prompts: PromptTemplate = { system: "", human: "" };
   private parser: JsonOutputParser<IndicatorAnalysis>;

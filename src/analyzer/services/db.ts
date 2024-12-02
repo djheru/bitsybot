@@ -34,7 +34,7 @@ export class AnalysisRepository {
   private createKeys(analysisRecord: AnalysisRecord) {
     return {
       pk: `analysis#${analysisRecord.symbol}`,
-      sk: `${analysisRecord.timestamp}#${analysisRecord.finalRecommendation}`,
+      sk: `${analysisRecord.timestamp}#${analysisRecord.recommendation}`,
       gsipk1: `analysis#${analysisRecord.uuid}`,
       lsi1: `${analysisRecord.timestamp}#${analysisRecord.interval}`,
     };
