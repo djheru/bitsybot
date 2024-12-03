@@ -142,12 +142,13 @@ export class AppStack extends Stack {
 
     const scheduleRule = new Rule(this, `${this.id}-schedule-rule`, {
       schedule: Schedule.rate(Duration.minutes(15)),
+      eventBus: this.eventBus,
       description: "Rule to invoke Handler lambda every 15 minutes",
       enabled: true, // Can be controlled by environment
       targets: [
         new LambdaFunction(this.handlerFunction, {
           event: RuleTargetInput.fromObject({
-            symbol: "BTCUSDT",
+            symbol: "XBTUSDT",
             interval: 15,
           }),
         }),
@@ -155,7 +156,6 @@ export class AppStack extends Stack {
       eventPattern: {
         source: [this.props.serviceName],
         detailType: ["invokeHandler"],
-        detail: { symbol: ["XBTUSDT"], interval: [15] },
       },
     });
     // Add Event permissions to Lambda
