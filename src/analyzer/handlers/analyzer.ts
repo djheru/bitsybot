@@ -4,7 +4,7 @@ import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { ChatOpenAI } from "@langchain/openai";
 import { AnalysisService } from "../services/analyze-market";
 import { AnalysisRepository } from "../services/db";
-import { formatAnalysisRecord } from "../services/format-analysis";
+import { slackFormat } from "../services/format-analysis";
 import { TechnicalIndicatorService } from "../services/indicators";
 import { KrakenService } from "../services/kraken";
 import { SlackService } from "../services/slack";
@@ -102,17 +102,35 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       const repository = new AnalysisRepository(dbTable, logger);
       await repository.createAnalysisRecord(analysis);
 
-      const formattedMessage = formatAnalysisRecord(analysis);
+      const formattedMessage = slackFormat(analysis);
 
       logger.info("Formatted slack message", {
         formattedMessage,
       });
 
       // Send high confidence alert to Slack
-      if (
+      let shouldPublishSlack =
         analysis.confidence >= secret.CONFIDENCE_THRESHOLD &&
-        analysis.recommendation !== "HOLD"
-      ) {
+        analysis.recommendation !== "HOLD";
+
+      const recentAnalyses = await repository.getRecentAnalyses(
+        symbol,
+        interval,
+        1
+      );
+
+      if (recentAnalyses.length) {
+        const recentAnalysis = recentAnalyses[0];
+        const recentConfidence = recentAnalysis?.confidence || 0;
+        const recentRecommendation = recentAnalysis?.recommendation || "HOLD";
+
+        shouldPublishSlack =
+          shouldPublishSlack &&
+          analysis.recommendation !== recentRecommendation && // Don't publish if recommendation is the same
+          analysis.confidence !== recentConfidence; // Don't publish if confidence is the same
+      }
+
+      if (shouldPublishSlack) {
         const slackService = new SlackService(
           secret.SLACK_TOKEN,
           secret.SLACK_CHANNEL,

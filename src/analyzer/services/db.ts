@@ -7,7 +7,7 @@ import {
   QueryCommand,
   QueryCommandInput,
 } from "@aws-sdk/lib-dynamodb";
-import { AnalysisRecord, Signal } from "../types";
+import { AnalysisRecord, OHLCDataInterval, Signal } from "../types";
 
 export class AnalysisRepository {
   private readonly ddbDocClient: DynamoDBDocumentClient;
@@ -33,7 +33,7 @@ export class AnalysisRepository {
 
   private createKeys(analysisRecord: AnalysisRecord) {
     return {
-      pk: `analysis#${analysisRecord.symbol}`,
+      pk: `analysis#${analysisRecord.symbol}#${analysisRecord.interval}`,
       sk: `${analysisRecord.timestamp}#${analysisRecord.recommendation}`,
       gsipk1: `analysis#${analysisRecord.uuid}`,
       lsi1: `${analysisRecord.timestamp}#${analysisRecord.interval}`,
@@ -95,6 +95,7 @@ export class AnalysisRepository {
 
   async listByTimestamp(params: {
     symbol: string;
+    interval: OHLCDataInterval;
     start: string;
     end?: string;
     nextToken?: string;
@@ -108,6 +109,7 @@ export class AnalysisRepository {
     try {
       const {
         symbol,
+        interval,
         start,
         end,
         nextToken,
@@ -122,7 +124,7 @@ export class AnalysisRepository {
           ? "pk = :pk and sk between :start and :end"
           : `pk = :pk and ${direction === "asc" ? "sk >" : "sk <"} :start`,
         ExpressionAttributeValues: {
-          ":pk": `analysis#${symbol}`,
+          ":pk": `analysis#${symbol}#${interval}`,
           ":start": start,
           ...(end && { ":end": end }),
           ...(recommendation && { ":rec": recommendation }),
@@ -137,6 +139,7 @@ export class AnalysisRepository {
           : undefined,
       };
 
+      console.log("Query Params: %j", queryParams);
       const result = await this.ddbDocClient.send(
         new QueryCommand(queryParams)
       );
@@ -160,12 +163,14 @@ export class AnalysisRepository {
 
   async getRecentAnalyses(
     symbol: string,
+    interval: OHLCDataInterval,
     limit = 10
   ): Promise<AnalysisRecord[]> {
     return (
       await this.listByTimestamp({
         symbol,
-        start: new Date(0).toISOString(),
+        interval,
+        start: new Date().toISOString(),
         limit,
         direction: "desc",
       })

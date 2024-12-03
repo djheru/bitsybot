@@ -1,6 +1,6 @@
 import { AnalysisRecord } from "../types";
 
-export function formatAnalysisRecord(record: AnalysisRecord): string {
+export function slackFormat(record: AnalysisRecord): string {
   const timestamp = new Date(record.timestamp).toLocaleString();
 
   let formattedMessage = `
