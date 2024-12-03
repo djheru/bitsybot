@@ -142,7 +142,6 @@ export class AppStack extends Stack {
 
     const scheduleRule = new Rule(this, `${this.id}-schedule-rule`, {
       schedule: Schedule.rate(Duration.minutes(15)),
-      eventBus: this.eventBus,
       description: "Rule to invoke Handler lambda every 15 minutes",
       enabled: true, // Can be controlled by environment
       targets: [
