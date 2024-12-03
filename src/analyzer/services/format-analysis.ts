@@ -4,7 +4,15 @@ export function slackFormat(record: AnalysisRecord): string {
   const timestamp = new Date(record.timestamp).toLocaleString();
 
   let formattedMessage = `
-*🔔 HIGH CONFIDENCE TRADING SIGNAL*
+*🔔 ${
+    !record.confidence
+      ? "UNKNOWN"
+      : record.confidence > 7
+      ? "HIGH"
+      : record.confidence > 4
+      ? "MEDIUM"
+      : "LOW"
+  } CONFIDENCE TRADING SIGNAL*
 >*Symbol:* ${record.symbol}
 >*Interval:* ${record.interval} minutes
 >*Time:* ${timestamp}
