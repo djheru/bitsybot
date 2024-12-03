@@ -143,6 +143,7 @@ export class AppStack extends Stack {
       eventPattern: {
         source: [this.props.serviceName],
         detailType: ["invokeHandler"],
+        detail: { symbol: "BTCUSDT", interval: 15 },
       },
     });
     // Add Event permissions to Lambda

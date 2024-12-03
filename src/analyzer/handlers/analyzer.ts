@@ -17,10 +17,7 @@ import {
 const {
   ENVIRONMENT_NAME: environmentName = "",
   SERVICE_NAME: serviceName = "",
-  // USE_MOCK_DATA = "false",
 } = process.env;
-
-// const useMockData = USE_MOCK_DATA === "true";
 
 let logger: Logger;
 let metrics: Metrics;
@@ -35,6 +32,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       const {
         detail: { symbol = "BTCUSDT", interval: timeInterval = 15 } = {},
       } = event;
+
       const interval = isValidOHLCDataInterval(timeInterval)
         ? timeInterval
         : 15;
@@ -113,6 +111,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         analysis.confidence >= secret.CONFIDENCE_THRESHOLD &&
         analysis.recommendation !== "HOLD";
 
+      // Check the previous analysis to see if the recommendation or confidence has changed
       const recentAnalyses = await repository.getRecentAnalyses(
         symbol,
         interval,
