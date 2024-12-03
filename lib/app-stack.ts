@@ -5,7 +5,12 @@ import {
   StreamViewType,
   TableV2,
 } from "aws-cdk-lib/aws-dynamodb";
-import { EventBus, Rule, Schedule } from "aws-cdk-lib/aws-events";
+import {
+  EventBus,
+  Rule,
+  RuleTargetInput,
+  Schedule,
+} from "aws-cdk-lib/aws-events";
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Effect, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Architecture, Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
@@ -139,11 +144,18 @@ export class AppStack extends Stack {
       schedule: Schedule.rate(Duration.minutes(15)),
       description: "Rule to invoke Handler lambda every 15 minutes",
       enabled: true, // Can be controlled by environment
-      targets: [new LambdaFunction(this.handlerFunction)],
+      targets: [
+        new LambdaFunction(this.handlerFunction, {
+          event: RuleTargetInput.fromObject({
+            symbol: "BTCUSDT",
+            interval: 15,
+          }),
+        }),
+      ],
       eventPattern: {
         source: [this.props.serviceName],
         detailType: ["invokeHandler"],
-        detail: { symbol: ["BTCUSDT"], interval: [15] },
+        detail: { symbol: ["XBTUSDT"], interval: [15] },
       },
     });
     // Add Event permissions to Lambda
