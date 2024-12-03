@@ -29,9 +29,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
     try {
       logger.info("event", { event });
 
-      const {
-        detail: { symbol = "BTCUSDT", interval: timeInterval = 15 } = {},
-      } = event;
+      const { symbol = "BTCUSDT", interval: timeInterval = 15 } = event;
 
       const interval = isValidOHLCDataInterval(timeInterval)
         ? timeInterval
