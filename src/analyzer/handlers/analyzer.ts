@@ -51,8 +51,8 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       const model = new ChatOpenAI({
         // modelName: "o1-preview",
         // modelName: "o1-mini",
-        modelName: "gpt-4o",
-        // modelName: "gpt-4o-mini",
+        // modelName: "gpt-4o",
+        modelName: "gpt-4o-mini",
         apiKey: secret.OPENAI_API_KEY,
         temperature: 0.3,
       });
