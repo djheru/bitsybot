@@ -6,7 +6,8 @@ export interface AppSecret {
   CONFIDENCE_THRESHOLD: number;
   KRAKEN_API_KEY: string;
   KRAKEN_SECRET_KEY: string;
-  OPENAI_API_KEY: string;
+  LLM_API_KEY: string;
+  LLM_MODEL_NAME: string;
   SERVICE_NAME: string;
   SLACK_TOKEN: string;
   SLACK_CHANNEL: string;
