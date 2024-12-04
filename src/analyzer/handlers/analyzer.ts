@@ -128,7 +128,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       logger.info("Formatted slack messages", {
         formattedMessages,
       });
-      if (true || shouldPublishSlack) {
+      if (shouldPublishSlack) {
         await slackService.sendHighConfidenceAlert(formattedMessages);
       }
 
