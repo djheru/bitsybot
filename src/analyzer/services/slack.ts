@@ -46,7 +46,7 @@ export class SlackService {
 >${analysis.rationale}`;
 
     let message = `
-  ----------------------------------------------------------------
+  --------------------------------
 
 *${
       record.confidence && record.confidence < 8
@@ -70,7 +70,7 @@ export class SlackService {
 >*Final Recommendation:* ${record.recommendation} (${
       record?.confidence || 0
     }/10)
-  ----------------------------------------------------------------
+  --------------------------------
 
   `;
 
@@ -81,7 +81,7 @@ export class SlackService {
 >*Exit Price:* $${record.entryPosition.exitPrice.toLocaleString()}
 >*Stop Loss:* $${record.entryPosition.stopLoss.toLocaleString()}
 >${record.entryPosition.rationale}
-  ----------------------------------------------------------------
+  --------------------------------
 
 `;
     }
@@ -99,7 +99,7 @@ export class SlackService {
 *🌪 Volatility Agent* ${formatAnalysis(record.volatilityAnalysis)}
 
 *🔍 Volume Agent* ${formatAnalysis(record.volumeAnalysis)}  
-  ----------------------------------------------------------------
+  --------------------------------
 `;
 
     const finalAnalysis = `

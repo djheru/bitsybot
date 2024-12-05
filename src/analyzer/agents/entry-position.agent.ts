@@ -26,8 +26,7 @@ export class EntryPositionAgent {
     const { system, human } = Prompts.EntryPosition;
     this.parser = new JsonOutputParser<AnalysisEntryPosition>();
     const prompt = ChatPromptTemplate.fromMessages([
-      ["human", human],
-      ["system", system],
+      ["user", `${system} ${human}`],
     ]);
     this.chain = RunnableSequence.from([prompt, this.model, this.parser]);
   }

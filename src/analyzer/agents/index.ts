@@ -34,17 +34,17 @@ export class BaseAgent {
     const { system, human, type: analysisType = "base" } = this.prompts;
     this.analysisType = analysisType;
     const prompt = ChatPromptTemplate.fromMessages([
-      ["human", human],
-      ["system", system],
+      ["user", `${system} ${human}`],
     ]);
     this.chain = RunnableSequence.from([prompt, this.model, this.parser]);
     return this.chain;
   }
 
   async collate(data: AnalysisRecord): Promise<IndicatorAnalysis> {
-    this.logger.info("Collating analysis");
+    const chain = this.getChain();
+    this.logger.info(`Conducting ${this.analysisType} analysis`);
     const input = this.getAnalysisCollationInput(data);
-    this.logger.info("Agent input", input);
+    this.logger.info(`${this.analysisType} analysis agent input`, input);
 
     this.metrics.addDimension("symbol", this.symbol);
     this.metrics.addDimension("interval", `${this.interval} minutes`);
@@ -52,7 +52,7 @@ export class BaseAgent {
     this.metrics.addMetric(`${this.analysisType} agent invoked`, "Count", 1);
 
     try {
-      const response = await this.getChain().invoke(input);
+      const response = await chain.invoke(input);
       this.logger.info(`${this.analysisType} agent response`, response);
       this.metrics.addMetric(
         `${this.analysisType} analysis collation completed`,
@@ -72,9 +72,10 @@ export class BaseAgent {
   }
 
   async analyze(data: CalculatedIndicators): Promise<IndicatorAnalysis> {
-    this.logger.info("Conducting analysis");
+    const chain = this.getChain();
+    this.logger.info(`Conducting ${this.analysisType} analysis`);
     const input = this.getAnalysisInput(data);
-    this.logger.info("Agent input", input);
+    this.logger.info(`${this.analysisType} analysis agent input`, input);
 
     this.metrics.addDimension("symbol", this.symbol);
     this.metrics.addDimension("interval", `${this.interval} minutes`);
@@ -82,7 +83,7 @@ export class BaseAgent {
     this.metrics.addMetric(`${this.analysisType} agent invoked`, "Count", 1);
 
     try {
-      const response = await this.getChain().invoke(input);
+      const response = await chain.invoke(input);
       this.logger.info(`${this.analysisType} agent response`, response);
       this.metrics.addMetric(
         `${this.analysisType} analysis completed`,

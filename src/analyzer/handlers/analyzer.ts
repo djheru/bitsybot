@@ -51,11 +51,11 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       const model = new ChatOpenAI({
         // modelName: "o1-preview",
         // modelName: "o1-mini",
-        // modelName: "gpt-4o",
+        modelName: "gpt-4o",
         // modelName: "gpt-4o-mini",
-        modelName: secret.LLM_MODEL_NAME,
+        // modelName: secret.LLM_MODEL_NAME,
         apiKey: secret.LLM_API_KEY,
-        temperature: 0.2,
+        temperature: 0.1,
       });
 
       logger.info("Getting price data");
@@ -112,11 +112,22 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         ? recentAnalyses[0]
         : { confidence: 0, recommendation: "HOLD" };
 
+      console.log("confidence", [
+        analysis.confidence,
+        secret.CONFIDENCE_THRESHOLD,
+      ]);
+      console.log("recommendation", [analysis.recommendation]);
+      console.log("recommendation recent", [
+        analysis.recommendation,
+        recentRecommendation,
+      ]);
+      console.log("confidence recent", [analysis.confidence, recentConfidence]);
+
       const shouldPublishSlack = //true;
         analysis.confidence >= secret.CONFIDENCE_THRESHOLD &&
-        analysis.recommendation !== "HOLD" &&
-        analysis.recommendation !== recentRecommendation && // Don't publish if recommendation is the same
-        analysis.confidence !== recentConfidence; // Don't publish if confidence is the same
+        analysis.recommendation !== "HOLD"; // &&
+      // analysis.recommendation !== recentRecommendation &&
+      // analysis.confidence !== recentConfidence;
 
       const slackService = new SlackService(
         secret.SLACK_TOKEN,
