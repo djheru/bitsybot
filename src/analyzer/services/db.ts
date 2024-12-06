@@ -89,12 +89,10 @@ export class AnalysisRepository {
           ...this.createKeys(newEvaluationRecord, "evaluation"),
           ...newEvaluationRecord,
         },
-        // Optional: Add condition to prevent overwriting
-        ConditionExpression: "attribute_not_exists(gsipk1)",
       };
 
       await this.ddbDocClient.send(new PutCommand(params));
-      this.logger.info("Analysis record created", { uuid: record.uuid });
+      this.logger.info("Evaluation record created", { uuid: record.uuid });
 
       return newEvaluationRecord;
     } catch (error) {
