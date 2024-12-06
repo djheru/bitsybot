@@ -4,6 +4,7 @@ import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { ChatOpenAI } from "@langchain/openai";
 import { AnalysisService } from "../services/analyze-market";
 import { AnalysisRepository } from "../services/db";
+import { evaluatePerformance } from "../services/evaluate";
 import { TechnicalIndicatorService } from "../services/indicators";
 import { KrakenService } from "../services/kraken";
 import { SlackService } from "../services/slack";
@@ -28,7 +29,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
     try {
       logger.info("event", { event });
 
-      const { symbol = "BTCUSDT", interval: timeInterval = 15 } = event;
+      const { symbol = "XBTUSDT", interval: timeInterval = 15 } = event;
 
       const interval = isValidOHLCDataInterval(timeInterval)
         ? timeInterval
@@ -72,12 +73,8 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       });
 
       logger.info("Calculating technical indicators");
-      const indicatorService = new TechnicalIndicatorService(
-        symbol,
-        interval,
-        logger,
-        metrics
-      );
+      const indicatorService = new TechnicalIndicatorService();
+
       const indicatorResult: CalculatedIndicators =
         indicatorService.calculateIndicators(priceData);
       logger.info("indicatorResult", { indicatorResult });
@@ -112,22 +109,11 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         ? recentAnalyses[0]
         : { confidence: 0, recommendation: "HOLD" };
 
-      console.log("confidence", [
-        analysis.confidence,
-        secret.CONFIDENCE_THRESHOLD,
-      ]);
-      console.log("recommendation", [analysis.recommendation]);
-      console.log("recommendation recent", [
-        analysis.recommendation,
-        recentRecommendation,
-      ]);
-      console.log("confidence recent", [analysis.confidence, recentConfidence]);
-
       const shouldPublishSlack = //true;
         analysis.confidence >= secret.CONFIDENCE_THRESHOLD &&
-        analysis.recommendation !== "HOLD"; // &&
-      // analysis.recommendation !== recentRecommendation &&
-      // analysis.confidence !== recentConfidence;
+        analysis.recommendation !== "HOLD";
+      analysis.recommendation !== recentRecommendation &&
+        analysis.confidence !== recentConfidence;
 
       const slackService = new SlackService(
         secret.SLACK_TOKEN,
@@ -143,17 +129,15 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         await slackService.sendHighConfidenceAlert(formattedMessages);
       }
 
-      // const evaluator = new SignalEvaluator(logger, krakenService, repository);
-      // const start = DateTime.utc().minus({ hours: 1 }).toISO();
-      // const end = DateTime.utc().toISO();
-      // logger.info("Evaluating historical signals", { start, end, symbol });
-      // const summary = await evaluator.evaluateHistoricalSignals(
-      //   start,
-      //   end,
-      //   symbol
-      // );
+      const evaluation = await evaluatePerformance(
+        symbol,
+        interval,
+        priceData,
+        repository,
+        logger
+      );
 
-      // logger.info("Summary", { summary });
+      logger.info("Evaluation Summary", { evaluation });
 
       return {
         statusCode: 200,

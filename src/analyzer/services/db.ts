@@ -7,7 +7,13 @@ import {
   QueryCommand,
   QueryCommandInput,
 } from "@aws-sdk/lib-dynamodb";
-import { AnalysisRecord, OHLCDataInterval, Signal } from "../types";
+import { DateTime } from "luxon";
+import {
+  AnalysisRecord,
+  EvaluationResult,
+  OHLCDataInterval,
+  Signal,
+} from "../types";
 
 export class AnalysisRepository {
   private readonly ddbDocClient: DynamoDBDocumentClient;
@@ -31,12 +37,15 @@ export class AnalysisRepository {
     return Math.floor(ttlDate.getTime() / 1000);
   }
 
-  private createKeys(analysisRecord: AnalysisRecord) {
+  private createKeys(
+    record: AnalysisRecord | EvaluationResult,
+    prefix = "analysis"
+  ) {
     return {
-      pk: `analysis#${analysisRecord.symbol}#${analysisRecord.interval}`,
-      sk: `${analysisRecord.timestamp}#${analysisRecord.recommendation}`,
-      gsipk1: `analysis#${analysisRecord.uuid}`,
-      lsi1: `${analysisRecord.timestamp}#${analysisRecord.interval}`,
+      pk: `${prefix}#${record.symbol}#${record.interval}`,
+      sk: `${record.timestamp}#${record.recommendation}`,
+      gsipk1: `${prefix}#${record.uuid}`,
+      lsi1: `${record.timestamp}#${record.interval}`,
     };
   }
 
@@ -63,6 +72,36 @@ export class AnalysisRepository {
       return newAnalysisRecord;
     } catch (error) {
       this.logger.error("Failed to create analysis record", { error, record });
+      throw error;
+    }
+  }
+
+  async createEvaluationRecord(
+    record: EvaluationResult
+  ): Promise<EvaluationResult> {
+    try {
+      const ttl = this.calculateTTL(record.timestamp);
+      const newEvaluationRecord: EvaluationResult = { ...record, ttl };
+
+      const params: PutCommandInput = {
+        TableName: this.tableName,
+        Item: {
+          ...this.createKeys(newEvaluationRecord, "evaluation"),
+          ...newEvaluationRecord,
+        },
+        // Optional: Add condition to prevent overwriting
+        ConditionExpression: "attribute_not_exists(gsipk1)",
+      };
+
+      await this.ddbDocClient.send(new PutCommand(params));
+      this.logger.info("Analysis record created", { uuid: record.uuid });
+
+      return newEvaluationRecord;
+    } catch (error) {
+      this.logger.error("Failed to create evaluation record", {
+        error,
+        record,
+      });
       throw error;
     }
   }
@@ -139,7 +178,6 @@ export class AnalysisRepository {
           : undefined,
       };
 
-      console.log("Query Params: %j", queryParams);
       const result = await this.ddbDocClient.send(
         new QueryCommand(queryParams)
       );
@@ -163,14 +201,15 @@ export class AnalysisRepository {
 
   async getRecentAnalyses(
     symbol: string,
-    interval: OHLCDataInterval,
-    limit = 10
+    interval: OHLCDataInterval = 15,
+    limit = 10,
+    start: string = DateTime.now().toISO()
   ): Promise<AnalysisRecord[]> {
     return (
       await this.listByTimestamp({
         symbol,
         interval,
-        start: new Date().toISOString(),
+        start,
         limit,
         direction: "desc",
       })

@@ -270,3 +270,18 @@ export function isValidOHLCDataInterval(
 ): value is OHLCDataInterval {
   return allowedIntervals.has(value);
 }
+
+export type EvaluationOutcome = "success" | "failure" | "neutral";
+
+export interface EvaluationResult {
+  confidence?: number;
+  currentPrice: number;
+  details: string; // Explanation of the result
+  interval: OHLCDataInterval;
+  outcome: EvaluationOutcome;
+  recommendation?: string;
+  symbol: string;
+  timestamp: string;
+  uuid: string;
+  ttl?: number; // TTL in seconds since epoch
+}

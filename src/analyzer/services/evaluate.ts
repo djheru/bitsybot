@@ -1,61 +1,83 @@
-import { AnalysisRecord, PriceData } from "../types";
+import { Logger } from "@aws-lambda-powertools/logger";
+import { DateTime } from "luxon";
+import {
+  AnalysisRecord,
+  EvaluationOutcome,
+  EvaluationResult,
+  OHLCDataInterval,
+  PriceData,
+} from "../types";
+import { AnalysisRepository } from "./db";
 
-type EvaluationOutcome = "success" | "failure" | "neutral";
-
-interface EvaluationResult {
-  record: AnalysisRecord;
-  outcome: EvaluationOutcome;
-  details: string; // Explanation of the result
-}
-
-const getPriceHistory = (startTime: string, endTime: string) => {};
-
-async function evaluatePerformance(
-  records: AnalysisRecord[],
-  getPriceHistory: (
-    symbol: string,
-    startTime: string,
-    endTime: string
-  ) => Promise<PriceData>,
+export async function evaluatePerformance(
+  symbol: string,
+  interval: OHLCDataInterval,
+  priceData: PriceData,
+  repository: AnalysisRepository,
+  logger: Logger,
   timeframeHours: number = 4,
   sellThresholdPercent: number = 1
 ): Promise<EvaluationResult[]> {
   const results: EvaluationResult[] = [];
+  let outcome: EvaluationOutcome = "neutral";
+  let details = "";
 
-  for (const record of records) {
-    const startTime = new Date(record.timestamp).toISOString();
-    const endTime = new Date(
-      new Date(record.timestamp).getTime() + timeframeHours * 60 * 60 * 1000
-    ).toISOString();
+  // Check the previous analysis to see if the recommendation or confidence has changed
+  logger.info("evaluatePerformance", {
+    symbol,
+    interval,
+    timeframeHours,
+    sellThresholdPercent,
+  });
+  const recentAnalyses = await repository.getRecentAnalyses(
+    symbol,
+    interval,
+    16,
+    DateTime.now().minus({ hours: timeframeHours }).toISO()
+  );
 
-    const priceData = await getPriceHistory(record.symbol, startTime, endTime);
+  if (!recentAnalyses.length || recentAnalyses.length === 0) {
+    logger.error("No recent analyses found for evaluation");
+    return results;
+  }
 
-    let outcome: EvaluationOutcome = "neutral";
-    let details = "";
+  recentAnalyses.forEach((analysisForEvaluation) => {
+    const subsequentClosePrices = priceData.timestamp
+      .filter((timestamp) => {
+        return (
+          `${DateTime.fromMillis(timestamp * 1000).toISO()}` >
+          analysisForEvaluation.timestamp
+        );
+      })
+      .map((_, index) => priceData.close[index]);
 
-    if (record.recommendation === "BUY") {
-      const hitExit = priceData.close.some(
+    if (analysisForEvaluation.recommendation === "BUY") {
+      const hitExit = subsequentClosePrices.some(
         (close) =>
-          record.entryPosition && close >= record.entryPosition.exitPrice
+          analysisForEvaluation.entryPosition &&
+          close >= analysisForEvaluation.entryPosition.exitPrice
       );
-      const hitStopLoss = priceData.close.some(
+      const hitStopLoss = subsequentClosePrices.some(
         (close) =>
-          record.entryPosition && close <= record.entryPosition.stopLoss
+          analysisForEvaluation.entryPosition &&
+          close <= analysisForEvaluation.entryPosition.stopLoss
       );
 
       if (hitExit) {
         outcome = "success";
-        details = `Exit price of ${record?.entryPosition?.exitPrice} reached.`;
+        details = `Exit price of ${analysisForEvaluation?.entryPosition?.exitPrice} reached.`;
       } else if (hitStopLoss) {
         outcome = "failure";
-        details = `Stop loss of ${record?.entryPosition?.stopLoss} reached.`;
+        details = `Stop loss of ${analysisForEvaluation?.entryPosition?.stopLoss} reached.`;
       } else {
         details = `Neither exit price nor stop loss reached within ${timeframeHours} hours.`;
       }
-    } else if (record.recommendation === "SELL") {
-      const sellPrice = record.currentPrice;
+    } else if (analysisForEvaluation.recommendation === "SELL") {
+      const sellPrice = analysisForEvaluation.currentPrice;
       const targetPrice = sellPrice * (1 - sellThresholdPercent / 100);
-      const hitTarget = priceData.close.some((close) => close <= targetPrice);
+      const hitTarget = subsequentClosePrices.some(
+        (close) => close <= targetPrice
+      );
 
       if (hitTarget) {
         outcome = "success";
@@ -65,12 +87,37 @@ async function evaluatePerformance(
       }
     }
 
-    results.push({
-      record,
+    const formatResponse = ({
+      confidence,
+      currentPrice,
+      interval,
+      recommendation,
+      symbol,
+      timestamp,
+      uuid,
+    }: AnalysisRecord) => ({
+      confidence,
+      currentPrice,
+      interval,
+      recommendation,
+      symbol,
+      timestamp,
+      uuid,
+    });
+
+    const evaluationResult = {
+      ...formatResponse(analysisForEvaluation),
       outcome,
       details,
-    });
-  }
+    };
 
+    logger.info("Evaluation result", evaluationResult);
+
+    results.push(evaluationResult);
+  });
+
+  for (const result of results) {
+    await repository.createEvaluationRecord(result);
+  }
   return results;
 }

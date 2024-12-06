@@ -1,5 +1,6 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { WebClient } from "@slack/web-api";
+import { DateTime } from "luxon";
 import { AnalysisRecord, IndicatorAnalysis } from "../types";
 
 type FormattedMessage = [
@@ -46,8 +47,7 @@ export class SlackService {
 >${analysis.rationale}`;
 
     let message = `
-  --------------------------------
-
+----------------------------
 *${
       record.confidence && record.confidence < 8
         ? record.confidence < 4
@@ -65,12 +65,14 @@ export class SlackService {
     } CONFIDENCE TRADING SIGNAL*
 >*Symbol:* ${record.symbol}
 >*Interval:* ${record.interval} minutes
->*Time:* ${timestamp}
+>*Time:* ${DateTime.fromISO(record.timestamp)
+      .setZone("America/Phoenix")
+      .toFormat("MM/dd/yyyy hh:mm a")} MST
 >*Price:* $${record.currentPrice.toLocaleString()}
 >*Final Recommendation:* ${record.recommendation} (${
       record?.confidence || 0
     }/10)
-  --------------------------------
+----------------------------
 
   `;
 
@@ -81,14 +83,14 @@ export class SlackService {
 >*Exit Price:* $${record.entryPosition.exitPrice.toLocaleString()}
 >*Stop Loss:* $${record.entryPosition.stopLoss.toLocaleString()}
 >${record.entryPosition.rationale}
-  --------------------------------
+----------------------------
 
 `;
     }
 
     const agentAnalysis = `
 
-*🤖 MULTI-AGENT ANALYSIS*
+*🤖 MULTI-AGENT ANALYSIS 🤖*
 
 *🕯️ Candlestick Agent* ${formatAnalysis(record.candlestickAnalysis)}
 
@@ -99,12 +101,15 @@ export class SlackService {
 *🌪 Volatility Agent* ${formatAnalysis(record.volatilityAnalysis)}
 
 *🔍 Volume Agent* ${formatAnalysis(record.volumeAnalysis)}  
-  --------------------------------
+----------------------------
+
 `;
 
     const finalAnalysis = `
 
-*🎯 FINAL ANALYSIS* _(${record?.confidence || 0}/10)_
+*🎯 FINAL ANALYSIS: ${record?.recommendation}*  _(${
+      record?.confidence || 0
+    }/10)_
 >${record.rationale}
   `;
 

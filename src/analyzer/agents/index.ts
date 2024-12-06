@@ -53,7 +53,6 @@ export class BaseAgent {
 
     try {
       const response = await chain.invoke(input);
-      this.logger.info(`${this.analysisType} agent response`, response);
       this.metrics.addMetric(
         `${this.analysisType} analysis collation completed`,
         "Count",
@@ -84,7 +83,6 @@ export class BaseAgent {
 
     try {
       const response = await chain.invoke(input);
-      this.logger.info(`${this.analysisType} agent response`, response);
       this.metrics.addMetric(
         `${this.analysisType} analysis completed`,
         "Count",

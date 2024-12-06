@@ -1,11 +1,9 @@
-import { Logger } from "@aws-lambda-powertools/logger";
-import { Metrics } from "@aws-lambda-powertools/metrics";
 import * as TechnicalIndicators from "technicalindicators";
 import { ADXOutput } from "technicalindicators/declarations/directionalmovement/ADX";
 import type { MACDOutput } from "technicalindicators/declarations/indicators";
 import { StochasticOutput } from "technicalindicators/declarations/momentum/Stochastic";
 import { BollingerBandsOutput } from "technicalindicators/declarations/volatility/BollingerBands";
-import { CalculatedIndicators, OHLCDataInterval, PriceData } from "../types";
+import { CalculatedIndicators, PriceData } from "../types";
 export class TechnicalIndicatorService {
   // Constants for indicator inputs
   public ADX_PERIOD = 10;
@@ -23,13 +21,6 @@ export class TechnicalIndicatorService {
   public STOCHASTIC_D = 3;
   public STOCHASTIC_K = 10;
   public WILLIAMS_R = 9;
-
-  constructor(
-    private readonly symbol: string,
-    private readonly interval: OHLCDataInterval,
-    private readonly logger: Logger,
-    private readonly metrics: Metrics
-  ) {}
 
   // 1. Trend Following Indicator Tools
   getEMA(input: Pick<PriceData, "close">): number[] {
