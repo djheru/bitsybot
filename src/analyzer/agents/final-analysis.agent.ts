@@ -7,6 +7,7 @@ export class FinalAnalysisAgent extends BaseAgent {
 
   getAnalysisCollationInput({
     candlestickAnalysis,
+    ichimokuAnalysis,
     momentumAnalysis,
     trendAnalysis,
     volatilityAnalysis,
@@ -18,6 +19,9 @@ export class FinalAnalysisAgent extends BaseAgent {
       CANDLESTICK_RECOMMENDATION: candlestickAnalysis.recommendation,
       CANDLESTICK_CONFIDENCE: candlestickAnalysis.confidence,
       CANDLESTICK_RATIONALE: candlestickAnalysis.rationale,
+      ICHIMOKU_RECOMMENDATION: ichimokuAnalysis.recommendation,
+      ICHIMOKU_CONFIDENCE: ichimokuAnalysis.confidence,
+      ICHIMOKU_RATIONALE: ichimokuAnalysis.rationale,
       MOMENTUM_RECOMMENDATION: momentumAnalysis.recommendation,
       MOMENTUM_CONFIDENCE: momentumAnalysis.confidence,
       MOMENTUM_RATIONALE: momentumAnalysis.rationale,

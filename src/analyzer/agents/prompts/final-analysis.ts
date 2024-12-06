@@ -10,6 +10,11 @@ Candlestick Analysis:
   - Confidence: {CANDLESTICK_CONFIDENCE}
   - Rationale: {CANDLESTICK_RATIONALE}
 
+Ichimoku Cloud Analysis:
+  - Recommendation: {ICHIMOKU_RECOMMENDATION}
+  - Confidence: {ICHIMOKU_CONFIDENCE}
+  - Rationale: {ICHIMOKU_RATIONALE}
+
 Momentum Analysis:
   - Recommendation: {MOMENTUM_RECOMMENDATION}
   - Confidence: {MOMENTUM_CONFIDENCE}
@@ -48,7 +53,7 @@ Your output must strictly adhere to the following JSON format:
 
 Guidelines for Final Analysis:
 1. **Recommendation Synthesis**:
-   - Consolidate the insights from the candlestick, momentum, trend, volatility, and volume analyses.
+   - Consolidate the insights from the candlestick, Ichimoku Cloud, momentum, trend, volatility, and volume analyses.
    - Identify the dominant signal based on the recommendations and confidence levels from each agent.
 
 2. **Conflict Resolution**:

@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import { CandlestickIndicatorAgent } from "../agents/candlestick-indicator.agent";
 import { EntryPositionAgent } from "../agents/entry-position.agent";
 import { FinalAnalysisAgent } from "../agents/final-analysis.agent";
+import { IchimokuIndicatorAgent } from "../agents/ichimoku-indicator.agent";
 import { MomentumIndicatorAgent } from "../agents/momentum-indicator.agent";
 import { TrendIndicatorAgent } from "../agents/trend-indicator.agent";
 import { VolatilityIndicatorAgent } from "../agents/volatility-indicator.agent";
@@ -31,6 +32,7 @@ export class AnalysisService {
 
     const indicatorAgents = [
       CandlestickIndicatorAgent,
+      IchimokuIndicatorAgent,
       MomentumIndicatorAgent,
       TrendIndicatorAgent,
       VolatilityIndicatorAgent,
@@ -39,6 +41,7 @@ export class AnalysisService {
 
     const [
       candlestickAnalysis,
+      ichimokuAnalysis,
       momentumAnalysis,
       trendAnalysis,
       volatilityAnalysis,
@@ -63,6 +66,7 @@ export class AnalysisService {
       interval: this.interval,
       currentPrice,
       candlestickAnalysis,
+      ichimokuAnalysis,
       momentumAnalysis,
       trendAnalysis,
       volatilityAnalysis,

@@ -149,6 +149,16 @@ export const CalculatedIndicatorsSchema = z.object({
   doji: z.boolean(), // Boolean for Doji pattern presence
   dragonflyDoji: z.boolean(), // Boolean for Dragonfly Doji pattern presence
   gravestoneDoji: z.boolean(), // Boolean for Gravestone Doji pattern presence
+
+  // Ichimoku Cloud
+  ichimokuCloud: z.array(
+    z.object({
+      conversion: z.number(), // Conversion Line
+      base: z.number(), // Base Line
+      spanA: z.number(), // Span A
+      spanB: z.number(), // Span B
+    })
+  ),
 });
 
 // TypeScript interfaces derived from Zod schemas
@@ -243,6 +253,7 @@ export interface AnalysisRecord {
   rationale?: string;
 
   candlestickAnalysis: IndicatorAnalysis;
+  ichimokuAnalysis: IndicatorAnalysis;
   momentumAnalysis: IndicatorAnalysis;
   trendAnalysis: IndicatorAnalysis;
   volatilityAnalysis: IndicatorAnalysis;

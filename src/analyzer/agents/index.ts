@@ -34,7 +34,8 @@ export class BaseAgent {
     const { system, human, type: analysisType = "base" } = this.prompts;
     this.analysisType = analysisType;
     const prompt = ChatPromptTemplate.fromMessages([
-      ["user", `${system} ${human}`],
+      ["human", human],
+      ["system", system],
     ]);
     this.chain = RunnableSequence.from([prompt, this.model, this.parser]);
     return this.chain;

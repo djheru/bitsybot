@@ -77,6 +77,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
 
       const indicatorResult: CalculatedIndicators =
         indicatorService.calculateIndicators(priceData);
+
       logger.info("indicatorResult", { indicatorResult });
 
       logger.info("Analyzing indicator results");
@@ -125,7 +126,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       logger.info("Formatted slack messages", {
         formattedMessages,
       });
-      if (shouldPublishSlack) {
+      if (true || shouldPublishSlack) {
         await slackService.sendHighConfidenceAlert(formattedMessages);
       }
 

@@ -101,6 +101,8 @@ export class SlackService {
 *🌪 Volatility Agent* ${formatAnalysis(record.volatilityAnalysis)}
 
 *🔍 Volume Agent* ${formatAnalysis(record.volumeAnalysis)}  
+
+*🌥️ Ichimoku Cloud Agent* ${formatAnalysis(record.ichimokuAnalysis)}
 ----------------------------
 
 `;

@@ -21,6 +21,10 @@ export class TechnicalIndicatorService {
   public STOCHASTIC_D = 3;
   public STOCHASTIC_K = 10;
   public WILLIAMS_R = 9;
+  public ICHIMOKU_CONVERSION = 6;
+  public ICHIMOKU_BASE = 18;
+  public ICHIMOKU_SPAN = 36;
+  public ICHIMOKU_DISPLACEMENT = 18;
 
   // 1. Trend Following Indicator Tools
   getEMA(input: Pick<PriceData, "close">): number[] {
@@ -310,6 +314,18 @@ export class TechnicalIndicatorService {
     });
   }
 
+  // 6. Ichimoku Cloud indicator tools
+  getIchimokuCloud(input: Pick<PriceData, "high" | "low">) {
+    return TechnicalIndicators.ichimokucloud({
+      high: input.high,
+      low: input.low,
+      conversionPeriod: this.ICHIMOKU_CONVERSION,
+      basePeriod: this.ICHIMOKU_BASE,
+      spanPeriod: this.ICHIMOKU_SPAN,
+      displacement: this.ICHIMOKU_DISPLACEMENT,
+    });
+  }
+
   calculateIndicators(priceData: PriceData): CalculatedIndicators {
     return {
       close: priceData.close,
@@ -347,6 +363,8 @@ export class TechnicalIndicatorService {
       doji: this.getDoji(priceData),
       dragonflyDoji: this.getDragonflyDoji(priceData),
       gravestoneDoji: this.getGravestoneDoji(priceData),
+      // Ichimoku Cloud
+      ichimokuCloud: this.getIchimokuCloud(priceData),
     };
   }
 }
