@@ -15,8 +15,8 @@ export async function evaluatePerformance(
   priceData: PriceData,
   repository: AnalysisRepository,
   logger: Logger,
-  timeframeHours: number = 4,
-  sellThresholdPercent: number = 1
+  timeframeHours: number = 16,
+  sellThresholdPercent: number = 2
 ): Promise<EvaluationResult[]> {
   const results: EvaluationResult[] = [];
   let outcome: EvaluationOutcome = "neutral";
@@ -32,7 +32,7 @@ export async function evaluatePerformance(
   const recentAnalyses = await repository.getRecentAnalyses(
     symbol,
     interval,
-    16,
+    64,
     DateTime.now().minus({ hours: timeframeHours }).toISO()
   );
 
@@ -41,50 +41,119 @@ export async function evaluatePerformance(
     return results;
   }
 
-  recentAnalyses.forEach((analysisForEvaluation) => {
-    const subsequentClosePrices = priceData.timestamp
-      .filter((timestamp) => {
-        return (
-          `${DateTime.fromMillis(timestamp * 1000).toISO()}` >
-          analysisForEvaluation.timestamp
-        );
-      })
-      .map((_, index) => priceData.close[index]);
+  recentAnalyses.reverse().forEach((analysisForEvaluation) => {
+    if (analysisForEvaluation.recommendation === "HOLD") {
+      return;
+    }
+    let v = 0;
+    const subsequentPrices = priceData.timestamp.map((_, index) => ({
+      close: priceData.close[index],
+      high: priceData.high[index],
+      timestamp: priceData.timestamp[index],
+    }));
 
     if (analysisForEvaluation.recommendation === "BUY") {
-      const hitExit = subsequentClosePrices.some(
-        (close) =>
-          analysisForEvaluation.entryPosition &&
-          close >= analysisForEvaluation.entryPosition.exitPrice
-      );
-      const hitStopLoss = subsequentClosePrices.some(
-        (close) =>
-          analysisForEvaluation.entryPosition &&
-          close <= analysisForEvaluation.entryPosition.stopLoss
-      );
+      const { hitExitIndex, hitStopLossIndex } = subsequentPrices.reduce(
+        (acc, prices, idx) => {
+          console.log(DateTime.fromMillis(prices.timestamp * 1000).toISO());
+          if (
+            `${DateTime.fromMillis(prices.timestamp * 1000).toISO()}` <=
+            analysisForEvaluation.timestamp
+          ) {
+            return acc;
+          }
+          // Did the closing price hit the exit price during this time period
+          const hitExitPrice =
+            analysisForEvaluation.entryPosition &&
+            prices.high >= analysisForEvaluation.entryPosition.exitPrice;
 
-      if (hitExit) {
-        outcome = "success";
-        details = `Exit price of ${analysisForEvaluation?.entryPosition?.exitPrice} reached.`;
-      } else if (hitStopLoss) {
-        outcome = "failure";
-        details = `Stop loss of ${analysisForEvaluation?.entryPosition?.stopLoss} reached.`;
+          // Did the closing price hit the stop loss during this time period
+          const hitStopLoss =
+            analysisForEvaluation.entryPosition &&
+            prices.close <= analysisForEvaluation.entryPosition.stopLoss;
+
+          if (hitExitPrice && acc.hitExitIndex === -1) {
+            console.log("hit exit", {
+              idx,
+              prices,
+              currentPrice: analysisForEvaluation.currentPrice,
+              priceTime: DateTime.fromMillis(prices.timestamp * 1000).toISO(),
+              analysisTime: analysisForEvaluation.timestamp,
+            });
+            acc.hitExitIndex = idx;
+          } else if (hitStopLoss && acc.hitStopLossIndex === -1) {
+            console.log("hit stop loss", {
+              idx,
+              prices,
+              currentPrice: analysisForEvaluation.currentPrice,
+              priceTime: DateTime.fromMillis(prices.timestamp * 1000).toISO(),
+              analysisTime: analysisForEvaluation.timestamp,
+            });
+            acc.hitStopLossIndex = idx;
+          }
+          return acc;
+        },
+        { hitExitIndex: -1, hitStopLossIndex: -1 }
+      );
+      logger.info("exit and stop loss indexes", {
+        hitExitIndex,
+        hitStopLossIndex,
+      });
+      let detailsArray: string[] = [
+        JSON.stringify({ hitExitIndex, hitStopLossIndex }),
+      ];
+      if (hitExitIndex === -1) {
+        detailsArray.push(
+          `Did not hit exit price of ${analysisForEvaluation?.entryPosition?.exitPrice}.`
+        );
       } else {
-        details = `Neither exit price nor stop loss reached within ${timeframeHours} hours.`;
+        detailsArray.push(
+          `Hit exit price of ${analysisForEvaluation?.entryPosition?.exitPrice}.`
+        );
       }
+      if (hitStopLossIndex === -1) {
+        detailsArray.push(
+          `Did not hit stop loss of ${analysisForEvaluation?.entryPosition?.stopLoss}.`
+        );
+      } else {
+        detailsArray.push(
+          `Hit stop loss of ${analysisForEvaluation?.entryPosition?.stopLoss}.`
+        );
+      }
+
+      // hit exit before stop loss
+      if (hitExitIndex < hitStopLossIndex && hitExitIndex >= 0) {
+        outcome = "success";
+        detailsArray.push(
+          `Exit price of ${analysisForEvaluation?.entryPosition?.exitPrice} reached before stoploss of ${analysisForEvaluation?.entryPosition?.stopLoss} `
+        );
+      } else if (hitExitIndex > hitStopLossIndex && hitStopLossIndex >= 0) {
+        outcome = "failure";
+        detailsArray.push(
+          `Stoploss price of ${analysisForEvaluation?.entryPosition?.stopLoss} reached before exit price of ${analysisForEvaluation?.entryPosition?.exitPrice} `
+        );
+      } else {
+        outcome = "neutral";
+        detailsArray.push(
+          `Did not hit either the stoploss at ${analysisForEvaluation?.entryPosition?.stopLoss} or the exit price of ${analysisForEvaluation?.entryPosition?.exitPrice} `
+        );
+      }
+      detailsArray.push(`within ${timeframeHours} hours.`);
+      details = detailsArray.join("\n");
     } else if (analysisForEvaluation.recommendation === "SELL") {
       const sellPrice = analysisForEvaluation.currentPrice;
       const targetPrice = sellPrice * (1 - sellThresholdPercent / 100);
-      const hitTarget = subsequentClosePrices.some(
-        (close) => close <= targetPrice
+      const hitTarget = subsequentPrices.some(
+        (prices) => prices.close <= targetPrice
       );
 
       if (hitTarget) {
         outcome = "success";
-        details = `Price dropped to ${targetPrice} (${sellThresholdPercent}% decrease).`;
+        details = `Price dropped to target of ${targetPrice} (${sellThresholdPercent}% decrease) `;
       } else {
-        details = `Target price of ${targetPrice} not reached within ${timeframeHours} hours.`;
+        details = `Drop target price of ${targetPrice} not reached `;
       }
+      details += `within ${timeframeHours} hours.`;
     }
 
     const formatResponse = ({
@@ -112,8 +181,9 @@ export async function evaluatePerformance(
     };
 
     logger.info("Evaluation result", evaluationResult);
-
-    results.push(evaluationResult);
+    if (evaluationResult.recommendation !== "HOLD") {
+      results.push(evaluationResult);
+    }
   });
 
   for (const result of results) {

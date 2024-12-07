@@ -29,6 +29,9 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
     try {
       logger.info("event", { event });
 
+      const dbTable = `${serviceName}-${environmentName}-table`;
+      const repository = new AnalysisRepository(dbTable, logger);
+
       const { symbol = "XBTUSDT", interval: timeInterval = 15 } = event;
 
       const interval = isValidOHLCDataInterval(timeInterval)
@@ -68,6 +71,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         secret.TOTAL_PERIODS
       );
       const priceData = await krakenService.fetchPriceData();
+
       logger.info("priceData", {
         priceData: `${priceData.close.length} records returned`,
       });
@@ -92,8 +96,6 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       logger.info("analysis", { analysis });
 
       // Create record
-      const dbTable = `${serviceName}-${environmentName}-table`;
-      const repository = new AnalysisRepository(dbTable, logger);
       await repository.createAnalysisRecord(analysis);
 
       // Check the previous analysis to see if the recommendation or confidence has changed
@@ -110,7 +112,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         ? recentAnalyses[0]
         : { confidence: 0, recommendation: "HOLD" };
 
-      const shouldPublishSlack = //true;
+      const shouldPublishSlack =
         analysis.confidence >= secret.CONFIDENCE_THRESHOLD &&
         analysis.recommendation !== "HOLD";
       analysis.recommendation !== recentRecommendation &&
@@ -126,7 +128,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       logger.info("Formatted slack messages", {
         formattedMessages,
       });
-      if (true || shouldPublishSlack) {
+      if (shouldPublishSlack) {
         await slackService.sendHighConfidenceAlert(formattedMessages);
       }
 

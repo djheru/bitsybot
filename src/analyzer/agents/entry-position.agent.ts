@@ -43,10 +43,12 @@ export class EntryPositionAgent {
       CURRENT: close[close.length - 1],
       CLOSE: close.slice(-1 * this.inputArrayLength).join(","),
       ATR: atr.slice(-1 * this.inputArrayLength).join(","),
+      ATR_BUFFER: 1.75,
       BB_LOWER: bollingerBands
         .slice(-1 * this.inputArrayLength)
         .map((b) => b.lower)
         .join(","),
+      BB_BUFFER: 3,
     };
     this.logger.info("Analysis agent input", input);
 

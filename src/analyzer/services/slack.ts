@@ -23,14 +23,40 @@ export class SlackService {
     formattedMessage: FormattedMessage
   ): Promise<void> {
     try {
-      for (const text of formattedMessage) {
-        await this.client.chat.postMessage({
-          token: this.slackToken,
-          channel: this.channelId,
-          text,
-          mrkdwn: true,
-        });
+      const [mainMessage, agentAnalysis, finalAnalysis] = formattedMessage;
+      const mainMessageResponse = await this.client.chat.postMessage({
+        token: this.slackToken,
+        channel: this.channelId,
+        text: mainMessage,
+        mrkdwn: true,
+      });
+
+      if (!mainMessageResponse.ok) {
+        throw new Error(
+          `Failed to post main message: ${mainMessageResponse.error}`
+        );
       }
+
+      // Extract the `ts` (timestamp) from the main message to create a thread
+      const threadTs = mainMessageResponse.ts;
+
+      // Post agent analysis as a reply in the thread
+      await this.client.chat.postMessage({
+        token: this.slackToken,
+        channel: this.channelId,
+        thread_ts: threadTs, // Reference the main message
+        text: agentAnalysis,
+        mrkdwn: true,
+      });
+
+      // Post final analysis as another reply in the thread
+      await this.client.chat.postMessage({
+        token: this.slackToken,
+        channel: this.channelId,
+        thread_ts: threadTs, // Reference the main message
+        text: finalAnalysis,
+        mrkdwn: true,
+      });
     } catch (error) {
       this.logger.error("Failed to send Slack message", { error });
       throw error;
