@@ -123,11 +123,13 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         secret.SLACK_CHANNEL,
         logger
       );
+
       const formattedMessages = slackService.formatMessages(analysis);
 
       logger.info("Formatted slack messages", {
         formattedMessages,
       });
+
       if (shouldPublishSlack) {
         await slackService.sendHighConfidenceAlert(formattedMessages);
       }

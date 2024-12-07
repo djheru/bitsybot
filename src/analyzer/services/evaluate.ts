@@ -15,7 +15,7 @@ export async function evaluatePerformance(
   priceData: PriceData,
   repository: AnalysisRepository,
   logger: Logger,
-  timeframeHours: number = 16,
+  timeframeHours: number = 4,
   sellThresholdPercent: number = 2
 ): Promise<EvaluationResult[]> {
   const results: EvaluationResult[] = [];
@@ -32,7 +32,7 @@ export async function evaluatePerformance(
   const recentAnalyses = await repository.getRecentAnalyses(
     symbol,
     interval,
-    64,
+    timeframeHours * 4,
     DateTime.now().minus({ hours: timeframeHours }).toISO()
   );
 
@@ -41,21 +41,22 @@ export async function evaluatePerformance(
     return results;
   }
 
+  const subsequentPrices = priceData.timestamp.map((_, index) => ({
+    close: priceData.close[index],
+    high: priceData.high[index],
+    timestamp: priceData.timestamp[index],
+  }));
+
+  // Sort recentAnalyses ASC like priceData
   recentAnalyses.reverse().forEach((analysisForEvaluation) => {
     if (analysisForEvaluation.recommendation === "HOLD") {
       return;
     }
     let v = 0;
-    const subsequentPrices = priceData.timestamp.map((_, index) => ({
-      close: priceData.close[index],
-      high: priceData.high[index],
-      timestamp: priceData.timestamp[index],
-    }));
 
     if (analysisForEvaluation.recommendation === "BUY") {
       const { hitExitIndex, hitStopLossIndex } = subsequentPrices.reduce(
         (acc, prices, idx) => {
-          console.log(DateTime.fromMillis(prices.timestamp * 1000).toISO());
           if (
             `${DateTime.fromMillis(prices.timestamp * 1000).toISO()}` <=
             analysisForEvaluation.timestamp
@@ -73,72 +74,54 @@ export async function evaluatePerformance(
             prices.close <= analysisForEvaluation.entryPosition.stopLoss;
 
           if (hitExitPrice && acc.hitExitIndex === -1) {
-            console.log("hit exit", {
-              idx,
-              prices,
-              currentPrice: analysisForEvaluation.currentPrice,
-              priceTime: DateTime.fromMillis(prices.timestamp * 1000).toISO(),
-              analysisTime: analysisForEvaluation.timestamp,
-            });
             acc.hitExitIndex = idx;
           } else if (hitStopLoss && acc.hitStopLossIndex === -1) {
-            console.log("hit stop loss", {
-              idx,
-              prices,
-              currentPrice: analysisForEvaluation.currentPrice,
-              priceTime: DateTime.fromMillis(prices.timestamp * 1000).toISO(),
-              analysisTime: analysisForEvaluation.timestamp,
-            });
             acc.hitStopLossIndex = idx;
           }
           return acc;
         },
         { hitExitIndex: -1, hitStopLossIndex: -1 }
       );
-      logger.info("exit and stop loss indexes", {
-        hitExitIndex,
-        hitStopLossIndex,
-      });
-      let detailsArray: string[] = [
-        JSON.stringify({ hitExitIndex, hitStopLossIndex }),
-      ];
-      if (hitExitIndex === -1) {
-        detailsArray.push(
-          `Did not hit exit price of ${analysisForEvaluation?.entryPosition?.exitPrice}.`
-        );
-      } else {
-        detailsArray.push(
-          `Hit exit price of ${analysisForEvaluation?.entryPosition?.exitPrice}.`
-        );
-      }
-      if (hitStopLossIndex === -1) {
-        detailsArray.push(
-          `Did not hit stop loss of ${analysisForEvaluation?.entryPosition?.stopLoss}.`
-        );
-      } else {
-        detailsArray.push(
-          `Hit stop loss of ${analysisForEvaluation?.entryPosition?.stopLoss}.`
-        );
-      }
 
-      // hit exit before stop loss
-      if (hitExitIndex < hitStopLossIndex && hitExitIndex >= 0) {
+      let detailsArray: string[] = [];
+
+      detailsArray.push(
+        hitExitIndex === -1
+          ? `Did not hit exit price of ${analysisForEvaluation?.entryPosition?.exitPrice}.`
+          : `Hit exit price of ${analysisForEvaluation?.entryPosition?.exitPrice}.`
+      );
+
+      detailsArray.push(
+        hitStopLossIndex === -1
+          ? `Did not hit stop loss of ${analysisForEvaluation?.entryPosition?.stopLoss}.`
+          : `Hit stop loss of ${analysisForEvaluation?.entryPosition?.stopLoss}.`
+      );
+
+      if (
+        // hit exit before stop loss
+        hitExitIndex >= 0 &&
+        (hitExitIndex < hitStopLossIndex || hitStopLossIndex === -1)
+      ) {
         outcome = "success";
         detailsArray.push(
           `Exit price of ${analysisForEvaluation?.entryPosition?.exitPrice} reached before stoploss of ${analysisForEvaluation?.entryPosition?.stopLoss} `
         );
-      } else if (hitExitIndex > hitStopLossIndex && hitStopLossIndex >= 0) {
+      } else if (
+        // hit stop loss before exit
+        hitStopLossIndex >= 0 &&
+        (hitStopLossIndex < hitExitIndex || hitExitIndex === -1)
+      ) {
         outcome = "failure";
         detailsArray.push(
           `Stoploss price of ${analysisForEvaluation?.entryPosition?.stopLoss} reached before exit price of ${analysisForEvaluation?.entryPosition?.exitPrice} `
         );
-      } else {
+      } else if (hitExitIndex === -1 && hitStopLossIndex === -1) {
+        // neither hit
         outcome = "neutral";
         detailsArray.push(
           `Did not hit either the stoploss at ${analysisForEvaluation?.entryPosition?.stopLoss} or the exit price of ${analysisForEvaluation?.entryPosition?.exitPrice} `
         );
       }
-      detailsArray.push(`within ${timeframeHours} hours.`);
       details = detailsArray.join("\n");
     } else if (analysisForEvaluation.recommendation === "SELL") {
       const sellPrice = analysisForEvaluation.currentPrice;
@@ -180,7 +163,6 @@ export async function evaluatePerformance(
       details,
     };
 
-    logger.info("Evaluation result", evaluationResult);
     if (evaluationResult.recommendation !== "HOLD") {
       results.push(evaluationResult);
     }

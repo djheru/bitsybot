@@ -20,7 +20,7 @@ Please determine the following trading parameters to define the entry position:
    - Use the ATR history values: {ATR}.
    - Use the Bollinger Band lower limits if necessary: {BB_LOWER}.
    - Add a buffer below the calculated stop loss to account for minor price dips:
-       - Buffer = {ATR_BUFFER} × ATR or {BOLLINGER_BUFFER}% below the lower Bollinger Band limit.
+       - Buffer = {ATR_BUFFER} × ATR or {BB_BUFFER}% below the lower Bollinger Band limit.
    - Adjust further based on recent support levels or market volatility to prevent premature triggering.
 
 Your response must strictly adhere to the following JSON format:
@@ -46,8 +46,8 @@ Guidelines for Calculation:
 3. **Stop Loss**:
    - Use the ATR value to set a volatility-based stop loss.
    - Incorporate a **buffer** below the calculated stop loss to reduce the chance of premature triggering:
-     - Multiply the ATR value by ATR Buffer (e.g., 1.5) for a wider stop loss.
-     - Alternatively, add a margin (e.g., {BOLLINGER_BUFFER}% of price) below the Bollinger Band lower limit.
+     - Multiply the ATR value by ATR Buffer (e.g., {ATR_BUFFER}) for a wider stop loss.
+     - Alternatively, add a margin (e.g., {BB_BUFFER}% of price) below the Bollinger Band lower limit.
    - Adjust further based on recent support levels or extreme market volatility.
 
 4. **Output**:
