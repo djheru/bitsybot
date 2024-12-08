@@ -117,6 +117,7 @@ export class SlackService {
     const agentAnalysis = `
 
 *🤖 MULTI-AGENT ANALYSIS 🤖*
+----------------------------
 
 *🕯️ Candlestick Agent* ${formatAnalysis(record.candlestickAnalysis)}
 
