@@ -14,7 +14,10 @@ import {
 import { LambdaFunction } from "aws-cdk-lib/aws-events-targets";
 import { Effect, PolicyStatement, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Architecture, Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import {
+  NodejsFunction,
+  NodejsFunctionProps,
+} from "aws-cdk-lib/aws-lambda-nodejs";
 import { ISecret, Secret } from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
 import { Environment } from "../bin/app";
@@ -28,7 +31,8 @@ export class AppStack extends Stack {
   public eventBus: EventBus;
   public invokeHandlerRule: Rule;
   public dbTable: TableV2;
-  public handlerFunction: NodejsFunction;
+  public analyzerFunction: NodejsFunction;
+  public evaluatorFunction: NodejsFunction;
   public appSecret: ISecret;
 
   constructor(
@@ -43,7 +47,8 @@ export class AppStack extends Stack {
   buildResources() {
     this.importSecret();
     this.buildDynamoDBTable();
-    this.buildHandlerFunction();
+    this.buildAnalyzerFunction();
+    this.buildEvaluatorFunction();
     this.buildEventBus();
   }
 
@@ -77,8 +82,8 @@ export class AppStack extends Stack {
     });
   }
 
-  buildHandlerFunction() {
-    this.handlerFunction = new NodejsFunction(this, "analyzer", {
+  buildFunction(name: string, props?: NodejsFunctionProps) {
+    const fcnProps = {
       architecture: Architecture.ARM_64,
       bundling: {
         sourceMap: true, // Enable source maps
@@ -88,7 +93,7 @@ export class AppStack extends Stack {
         sourcesContent: true, // Include source contents in source maps
       },
       runtime: Runtime.NODEJS_20_X,
-      description: "Analyze market data",
+      description: "BitsyBot Handler",
       environment: {
         DB_TABLE: this.dbTable.tableName,
         NODE_OPTIONS: "--enable-source-maps",
@@ -97,20 +102,21 @@ export class AppStack extends Stack {
         NODE_ENV:
           this.props.environmentName === "prod" ? "production" : "development",
         POWERTOOLS_METRICS_NAMESPACE: `${this.props.serviceName}-${this.props.environmentName}`,
-        POWERTOOLS_SERVICE_NAME: `${this.props.serviceName}-${this.props.environmentName}-handler`,
+        POWERTOOLS_SERVICE_NAME: `${this.props.serviceName}-${this.props.environmentName}-${name}`,
         SECRET_ARN: this.appSecret.secretArn,
         SERVICE_NAME: this.props.serviceName,
       },
       memorySize: 256,
-      functionName: `${this.props.serviceName}-${this.props.environmentName}-analyzer`,
+      functionName: `${this.props.serviceName}-${this.props.environmentName}-${name}`,
       timeout: Duration.minutes(15),
       tracing: Tracing.ACTIVE,
-    });
+      ...props,
+    };
+    const fcn = new NodejsFunction(this, name, fcnProps);
+    this.appSecret.grantRead(fcn);
+    this.dbTable.grantReadWriteData(fcn);
 
-    this.appSecret.grantRead(this.handlerFunction);
-    this.dbTable.grantReadWriteData(this.handlerFunction);
-
-    this.handlerFunction.addToRolePolicy(
+    fcn.addToRolePolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
         actions: ["cloudwatch:PutMetricData"],
@@ -122,6 +128,21 @@ export class AppStack extends Stack {
         },
       })
     );
+    return fcn;
+  }
+
+  buildAnalyzerFunction() {
+    this.analyzerFunction = this.buildFunction("analyzer", {
+      description:
+        "Analyze market data and issue BUY/SELL recommendations informed by various technical indicators.",
+    });
+  }
+
+  buildEvaluatorFunction() {
+    this.evaluatorFunction = this.buildFunction("evaluator", {
+      description:
+        "Evaluate the performance of trading recommendations and provide feedback to improve the trading strategy.",
+    });
   }
 
   buildEventBus() {
@@ -138,14 +159,24 @@ export class AppStack extends Stack {
       },
       eventBus: this.eventBus,
     });
-    this.invokeHandlerRule.addTarget(new LambdaFunction(this.handlerFunction));
+
+    this.invokeHandlerRule.addTarget(new LambdaFunction(this.analyzerFunction));
+    this.invokeHandlerRule.addTarget(
+      new LambdaFunction(this.evaluatorFunction)
+    );
 
     const scheduleRule = new Rule(this, `${this.id}-schedule-rule`, {
       schedule: Schedule.rate(Duration.minutes(15)),
       description: "Rule to invoke Handler lambda every 15 minutes",
       enabled: true, // Can be controlled by environment
       targets: [
-        new LambdaFunction(this.handlerFunction, {
+        new LambdaFunction(this.analyzerFunction, {
+          event: RuleTargetInput.fromObject({
+            symbol: "XBTUSDT",
+            interval: 15,
+          }),
+        }),
+        new LambdaFunction(this.evaluatorFunction, {
           event: RuleTargetInput.fromObject({
             symbol: "XBTUSDT",
             interval: 15,
@@ -157,8 +188,12 @@ export class AppStack extends Stack {
         detailType: ["invokeHandler"],
       },
     });
-    // Add Event permissions to Lambda
-    this.handlerFunction.addPermission("AllowEventBridgeInvoke", {
+    // Add Event permissions to Lambdas
+    this.analyzerFunction.addPermission("AllowEventBridgeInvoke", {
+      principal: new ServicePrincipal("events.amazonaws.com"),
+      sourceArn: scheduleRule.ruleArn,
+    });
+    this.evaluatorFunction.addPermission("AllowEventBridgeInvoke", {
       principal: new ServicePrincipal("events.amazonaws.com"),
       sourceArn: scheduleRule.ruleArn,
     });

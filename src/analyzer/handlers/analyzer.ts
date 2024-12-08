@@ -4,7 +4,6 @@ import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { ChatOpenAI } from "@langchain/openai";
 import { AnalysisService } from "../services/analyze-market";
 import { AnalysisRepository } from "../services/db";
-import { evaluatePerformance } from "../services/evaluate";
 import { TechnicalIndicatorService } from "../services/indicators";
 import { KrakenService } from "../services/kraken";
 import { SlackService } from "../services/slack";
@@ -28,9 +27,6 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
   return async (event: any): Promise<any> => {
     try {
       logger.info("event", { event });
-
-      const dbTable = `${serviceName}-${environmentName}-table`;
-      const repository = new AnalysisRepository(dbTable, logger);
 
       const { symbol = "XBTUSDT", interval: timeInterval = 15 } = event;
 
@@ -96,6 +92,8 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       logger.info("analysis", { analysis });
 
       // Create record
+      const dbTable = `${serviceName}-${environmentName}-table`;
+      const repository = new AnalysisRepository(dbTable, logger);
       await repository.createAnalysisRecord(analysis);
 
       // Check the previous analysis to see if the recommendation or confidence has changed
@@ -133,16 +131,6 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       if (shouldPublishSlack) {
         await slackService.sendHighConfidenceAlert(formattedMessages);
       }
-
-      const evaluation = await evaluatePerformance(
-        symbol,
-        interval,
-        priceData,
-        repository,
-        logger
-      );
-
-      logger.info("Evaluation Summary", { evaluation });
 
       return {
         statusCode: 200,
