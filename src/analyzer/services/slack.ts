@@ -75,7 +75,7 @@ export class SlackService {
     let message = `
 ----------------------------
 *${
-      record.confidence && record.confidence < 8
+      record.confidence && record.confidence < 7
         ? record.confidence < 4
           ? ":bellhop_bell:"
           : ":bell:"
