@@ -65,6 +65,8 @@ export class KrakenService {
 
       this.metrics.addMetric("priceDataFetched", MetricUnit.Count, 1);
 
+      console.log(data.result);
+
       const dataKey = Object.keys(data.result)
         .filter((key) => key !== "last")
         .pop();
