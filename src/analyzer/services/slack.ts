@@ -83,9 +83,9 @@ export class SlackService {
     } ${
       !record.confidence
         ? "UNKNOWN"
-        : record.confidence > 7
+        : record.confidence >= 7
         ? "HIGH"
-        : record.confidence > 4
+        : record.confidence >= 4
         ? "MEDIUM"
         : "LOW"
     } CONFIDENCE TRADING SIGNAL*
