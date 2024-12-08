@@ -45,6 +45,7 @@ export class AnalysisRepository {
       pk: `${prefix}#${record.symbol}#${record.interval}`,
       sk: `${record.timestamp}#${record.recommendation}`,
       gsipk1: `${prefix}#${record.uuid}`,
+      gsisk1: `${record.timestamp}#${record.recommendation}`,
       lsi1: `${record.timestamp}#${record.interval}`,
     };
   }
@@ -77,11 +78,17 @@ export class AnalysisRepository {
   }
 
   async updateAnalysisRecordWithEvaluation(
-    record: EvaluationResult,
-    uuid: string
+    record: EvaluationResult
   ): Promise<AnalysisRecord> {
     try {
-      const analysisRecord = await this.getAnalysisRecord(uuid);
+      const { symbol, interval, recommendation = "HOLD", timestamp } = record;
+      const analysisRecord = await this.getAnalysisRecord({
+        symbol,
+        interval,
+        recommendation: recommendation as Signal,
+        timestamp,
+      });
+
       const updatedRecord: AnalysisRecord = {
         ...analysisRecord,
         evaluation: record,
@@ -96,13 +103,15 @@ export class AnalysisRepository {
       };
 
       await this.ddbDocClient.send(new PutCommand(params));
-      this.logger.info("Analysis record updated with evaluation", { uuid });
+      this.logger.info("Analysis record updated with evaluation", {
+        uuid: record.uuid,
+      });
 
       return updatedRecord;
     } catch (error) {
       this.logger.error("Failed to update analysis record with evaluation", {
         error,
-        uuid,
+        ...record,
       });
       throw error;
     }
@@ -126,7 +135,7 @@ export class AnalysisRepository {
       await this.ddbDocClient.send(new PutCommand(params));
       this.logger.info("Evaluation record created", { uuid: record.uuid });
 
-      await this.updateAnalysisRecordWithEvaluation(record, record.uuid);
+      await this.updateAnalysisRecordWithEvaluation(record);
 
       return newEvaluationRecord;
     } catch (error) {
@@ -138,28 +147,38 @@ export class AnalysisRepository {
     }
   }
 
-  async getAnalysisRecord(uuid: string): Promise<AnalysisRecord> {
+  async getAnalysisRecord({
+    symbol,
+    interval,
+    timestamp,
+    recommendation,
+  }: {
+    symbol: string;
+    interval: OHLCDataInterval;
+    recommendation: Signal;
+    timestamp: string;
+  }): Promise<AnalysisRecord> {
     try {
       const params: QueryCommandInput = {
         TableName: this.tableName,
-        IndexName: "gsi1",
-        KeyConditionExpression: "gsipk1 = :gsipk1",
+        KeyConditionExpression: "pk = :pk AND sk = :sk",
         ExpressionAttributeValues: {
-          ":gsipk1": `analysis#${uuid}`,
+          ":pk": `analysis#${symbol}#${interval}`,
+          ":sk": `${timestamp}#${recommendation}`,
         },
       };
 
       const result = await this.ddbDocClient.send(new QueryCommand(params));
 
       if (!result.Items?.length) {
-        const error = new Error(`Analysis record not found: ${uuid}`);
-        this.logger.error("Analysis record not found", { uuid });
+        const error = new Error(`Analysis record not found`);
+        this.logger.error("Analysis record not found", { params });
         throw error;
       }
 
       return result.Items[0] as AnalysisRecord;
     } catch (error) {
-      this.logger.error("Failed to get analysis record", { error, uuid });
+      this.logger.error("Failed to get analysis record", { error });
       throw error;
     }
   }

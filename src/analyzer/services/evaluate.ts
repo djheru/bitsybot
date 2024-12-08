@@ -15,7 +15,7 @@ export async function evaluatePerformance(
   priceData: PriceData,
   repository: AnalysisRepository,
   logger: Logger,
-  timeframeHours: number = 4,
+  timeframeHours: number = 8,
   sellThresholdPercent: number = 2
 ): Promise<EvaluationResult[]> {
   const results: EvaluationResult[] = [];
@@ -165,6 +165,10 @@ export async function evaluatePerformance(
 
     if (evaluationResult.recommendation !== "HOLD") {
       results.push(evaluationResult);
+    } else {
+      logger.info("Skipping HOLD recommendation from evaluation", {
+        uuid: analysisForEvaluation.uuid,
+      });
     }
   });
 
