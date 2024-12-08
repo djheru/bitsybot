@@ -48,6 +48,10 @@ export class EntryPositionAgent {
         .slice(-1 * this.inputArrayLength)
         .map((b) => b.lower)
         .join(","),
+      BB_UPPER: bollingerBands
+        .slice(-1 * this.inputArrayLength)
+        .map((b) => b.upper)
+        .join(","),
       BB_BUFFER: 3,
     };
     this.logger.info("Analysis agent input", input);
