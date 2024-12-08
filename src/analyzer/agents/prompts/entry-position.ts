@@ -15,8 +15,11 @@ Please determine the following trading parameters to define the entry position:
 2. Exit Price (Take Profit):
    - Use a Risk-to-Reward (R:R) ratio of 3:1 or higher to target greater profitability.
    - Evaluate key resistance levels and consider the potential for sustained momentum beyond those levels.
-   - Use the Bollinger Band upper limits if needed: {BB_UPPER}.
+   - Consider the Bollinger Band upper limits: {BB_UPPER}.
+   - Adjust for strong momentum signals from RSI, allowing for more aggressive targets if indicators confirm bullish momentum: {RSI}.
+   - Adjust for strong momentum signals from ROC, allowing for more aggressive targets if indicators confirm bullish momentum: {ROC}.
    - Adjust the exit price upwards, provided there is strong confirmation of bullish momentum and sufficient volume to support higher price targets.
+   - Prioritize balancing profit potential with the likelihood of achieving the target, ensuring realistic but ambitious price levels.
 
 3. Stop Loss:
    - Use the ATR history values: {ATR}.

@@ -35,6 +35,8 @@ export class EntryPositionAgent {
     close,
     atr,
     bollingerBands,
+    roc,
+    rsi,
   }: CalculatedIndicators): Promise<AnalysisEntryPosition> {
     this.logger.info("Analyzing entry position");
     const input = {
@@ -53,6 +55,8 @@ export class EntryPositionAgent {
         .map((b) => b.upper)
         .join(","),
       BB_BUFFER: 3,
+      ROC: roc.slice(-1 * this.inputArrayLength).join(","),
+      RSI: rsi.slice(-1 * this.inputArrayLength).join(","),
     };
     this.logger.info("Analysis agent input", input);
 
