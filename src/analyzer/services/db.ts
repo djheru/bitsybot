@@ -76,6 +76,38 @@ export class AnalysisRepository {
     }
   }
 
+  async updateAnalysisRecordWithEvaluation(
+    record: EvaluationResult,
+    uuid: string
+  ): Promise<AnalysisRecord> {
+    try {
+      const analysisRecord = await this.getAnalysisRecord(uuid);
+      const updatedRecord: AnalysisRecord = {
+        ...analysisRecord,
+        evaluation: record,
+      };
+
+      const params: PutCommandInput = {
+        TableName: this.tableName,
+        Item: {
+          ...this.createKeys(updatedRecord),
+          ...updatedRecord,
+        },
+      };
+
+      await this.ddbDocClient.send(new PutCommand(params));
+      this.logger.info("Analysis record updated with evaluation", { uuid });
+
+      return updatedRecord;
+    } catch (error) {
+      this.logger.error("Failed to update analysis record with evaluation", {
+        error,
+        uuid,
+      });
+      throw error;
+    }
+  }
+
   async createEvaluationRecord(
     record: EvaluationResult
   ): Promise<EvaluationResult> {
@@ -93,6 +125,8 @@ export class AnalysisRepository {
 
       await this.ddbDocClient.send(new PutCommand(params));
       this.logger.info("Evaluation record created", { uuid: record.uuid });
+
+      await this.updateAnalysisRecordWithEvaluation(record, record.uuid);
 
       return newEvaluationRecord;
     } catch (error) {

@@ -262,6 +262,7 @@ export interface AnalysisRecord {
   entryPosition?: AnalysisEntryPosition;
 
   ttl?: number; // TTL in seconds since epoch
+  evaluation?: EvaluationResult;
 }
 
 // Define allowed intervals as a constant array and infer the type

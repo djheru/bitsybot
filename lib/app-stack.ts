@@ -80,6 +80,11 @@ export class AppStack extends Stack {
       indexName: "lsi1",
       sortKey: { name: "lsi1", type: AttributeType.STRING },
     });
+    this.dbTable.addGlobalSecondaryIndex({
+      indexName: "gsi1",
+      partitionKey: { name: "gsi1pk", type: AttributeType.STRING },
+      sortKey: { name: "gsi1sk", type: AttributeType.STRING },
+    });
   }
 
   buildFunction(name: string, props?: NodejsFunctionProps) {
