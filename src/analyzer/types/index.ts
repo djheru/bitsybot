@@ -205,6 +205,17 @@ export type KrakenOHLCVRow = [
   count: number // Number of trades
 ];
 
+export type KrakenOrderBookRow = [
+  price: string, // Price level
+  volume: string, // Volume at that price
+  timestamp: number // Time of the order
+];
+
+export type KrakenOrderBook = {
+  asks: KrakenOrderBookRow[];
+  bids: KrakenOrderBookRow[];
+};
+
 // Types for agent outputs
 export interface IndicatorAnalysis {
   recommendation?: Signal;

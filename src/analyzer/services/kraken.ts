@@ -3,6 +3,8 @@ import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { DateTime } from "luxon";
 import {
   KrakenOHLCVRow,
+  KrakenOrderBook,
+  KrakenOrderBookRow,
   OHLCDataInterval,
   OrderBookData,
   PriceData,
@@ -128,10 +130,14 @@ export class KrakenService {
     return this.lastPriceData;
   }
 
-  async fetchOrderBookData(pair: string) {
+  async fetchOrderBookData(
+    pair: string,
+    count: number = 10
+  ): Promise<OrderBookData> {
     const url = "https://api.kraken.com/0/public/Depth";
     const params = {
       pair,
+      count: count.toString(),
     };
     const urlParams = new URLSearchParams(params);
 
@@ -145,7 +151,7 @@ export class KrakenService {
 
     if (data.error && data.error.length > 0) {
       this.logger.error("Error from Kraken API:", data.error);
-      return;
+      return this.lastOrderBook;
     }
 
     this.metrics.addMetric("orderBookFetched", MetricUnit.Count, 1);
@@ -154,8 +160,22 @@ export class KrakenService {
       return this.lastOrderBook;
     }
 
-    const orderBookData = data.result[params.pair] as OrderBookData;
-    this.logger.info("Order book data", { orderBookData });
-    return orderBookData;
+    const orderBookData = data.result[params.pair] as KrakenOrderBook;
+    this.lastOrderBook = this.formatOrderBookData(orderBookData);
+    return this.lastOrderBook;
+  }
+
+  formatOrderBookData(orderBookData: KrakenOrderBook): OrderBookData {
+    const mapper = ([price, volume, timestamp]: KrakenOrderBookRow) => ({
+      price: parseFloat(price),
+      volume: parseFloat(volume),
+      timestamp,
+    });
+    const result: OrderBookData = {
+      asks: orderBookData.asks.map(mapper),
+      bids: orderBookData.bids.map(mapper),
+    };
+
+    return result;
   }
 }

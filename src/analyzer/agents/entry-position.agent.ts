@@ -9,6 +9,7 @@ import {
   AnalysisEntryPosition,
   CalculatedIndicators,
   OHLCDataInterval,
+  OrderBookData,
 } from "../types";
 import { Prompts } from "./prompts";
 
@@ -32,13 +33,10 @@ export class EntryPositionAgent {
     this.chain = RunnableSequence.from([prompt, this.model, this.parser]);
   }
 
-  async analyze({
-    close,
-    atr,
-    bollingerBands,
-    roc,
-    rsi,
-  }: CalculatedIndicators): Promise<AnalysisEntryPosition> {
+  async analyze(
+    { close, atr, bollingerBands, roc, rsi }: CalculatedIndicators,
+    orderBookData: OrderBookData
+  ): Promise<AnalysisEntryPosition> {
     this.logger.info("Analyzing entry position");
     const input = {
       SYMBOL: this.symbol,
@@ -58,6 +56,14 @@ export class EntryPositionAgent {
       BB_BUFFER: 3,
       ROC: roc.slice(-1 * this.inputArrayLength).join(","),
       RSI: rsi.slice(-1 * this.inputArrayLength).join(","),
+      ORDER_BOOK_ASKS: orderBookData.asks
+        .slice(0, 5)
+        .map((a) => `  - price: $${a.price} - volume: ${a.volume}`)
+        .join("\n"),
+      ORDER_BOOK_BIDS: orderBookData.bids
+        .slice(0, 5)
+        .map((b) => `  - price: $${b.price} - volume: ${b.volume}`)
+        .join("\n"),
     };
     this.logger.info("Analysis agent input", input);
 

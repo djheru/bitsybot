@@ -87,12 +87,11 @@ export class AnalysisService {
 
     let finalAnalysisRecord = { ...analysisRecord, ...finalAnalysis };
 
-    const orderBookData = await this.krakenService.fetchOrderBookData(
-      this.symbol
-    );
-
-    this.logger.info("Order book data", { orderBookData });
     if (finalAnalysisRecord.recommendation === "BUY") {
+      const orderBookData = await this.krakenService.fetchOrderBookData(
+        this.symbol
+      );
+      this.logger.info("Order book data", { orderBookData });
       const entryPositionAgent = new EntryPositionAgent(
         this.symbol,
         this.interval,
@@ -102,7 +101,8 @@ export class AnalysisService {
       );
 
       const entryPositionAnalysis = await entryPositionAgent.analyze(
-        technicalData
+        technicalData,
+        orderBookData
       );
 
       finalAnalysisRecord = {

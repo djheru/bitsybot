@@ -74,7 +74,9 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       const indicatorResult: CalculatedIndicators =
         indicatorService.calculateIndicators(priceData);
 
-      logger.info("indicatorResult", { indicatorResult });
+      logger.info("indicatorResult", {
+        indicatorResults: Object.keys(indicatorResult),
+      });
 
       logger.info("Analyzing indicator results");
       const analysisService = new AnalysisService(
