@@ -19,6 +19,15 @@ export interface AppSecret {
   TIMEFRAME_INTERVAL: number;
   TOTAL_PERIODS: number;
 }
+
+export const OrderBookSchema = z.object({
+  asks: z.array(
+    z.object({ price: z.number(), volume: z.number(), timestamp: z.number() })
+  ),
+  bids: z.array(
+    z.object({ price: z.number(), volume: z.number(), timestamp: z.number() })
+  ),
+});
 // Zod schema for runtime validation
 export const PriceDataSchema = z
   .object({
@@ -162,6 +171,7 @@ export const CalculatedIndicatorsSchema = z.object({
 });
 
 // TypeScript interfaces derived from Zod schemas
+export type OrderBookData = z.infer<typeof OrderBookSchema>;
 export type PriceData = z.infer<typeof PriceDataSchema>;
 export type AnalysisSummary = z.infer<typeof AnalysisSummarySchema>;
 export type AnalysisState = z.infer<typeof AnalysisStateSchema>;

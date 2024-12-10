@@ -15,6 +15,7 @@ import {
   CalculatedIndicators,
   OHLCDataInterval,
 } from "../types";
+import { KrakenService } from "./kraken";
 
 export class AnalysisService {
   constructor(
@@ -22,7 +23,8 @@ export class AnalysisService {
     private readonly interval: OHLCDataInterval,
     private readonly model: ChatOpenAI,
     private readonly logger: Logger,
-    private readonly metrics: Metrics
+    private readonly metrics: Metrics,
+    private readonly krakenService: KrakenService
   ) {}
 
   async analyzeMarket(technicalData: CalculatedIndicators) {
@@ -85,6 +87,11 @@ export class AnalysisService {
 
     let finalAnalysisRecord = { ...analysisRecord, ...finalAnalysis };
 
+    const orderBookData = await this.krakenService.fetchOrderBookData(
+      this.symbol
+    );
+
+    this.logger.info("Order book data", { orderBookData });
     if (finalAnalysisRecord.recommendation === "BUY") {
       const entryPositionAgent = new EntryPositionAgent(
         this.symbol,

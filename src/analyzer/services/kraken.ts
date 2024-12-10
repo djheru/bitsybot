@@ -1,10 +1,15 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { DateTime } from "luxon";
-import { KrakenOHLCVRow, OHLCDataInterval, PriceData } from "../types";
+import {
+  KrakenOHLCVRow,
+  OHLCDataInterval,
+  OrderBookData,
+  PriceData,
+} from "../types";
 
 export class KrakenService {
-  public lastResult: PriceData = {
+  public lastPriceData: PriceData = {
     timestamp: [],
     open: [],
     high: [],
@@ -14,7 +19,12 @@ export class KrakenService {
     volume: [],
     count: [],
   };
-  public lastResultDate: DateTime;
+  public lastPriceDataDate: DateTime;
+
+  public lastOrderBook: OrderBookData = {
+    asks: [],
+    bids: [],
+  };
 
   constructor(
     private readonly pair: string,
@@ -22,33 +32,36 @@ export class KrakenService {
     private readonly logger: Logger,
     private readonly metrics: Metrics,
     private readonly totalPeriods: number,
-    lastResult?: PriceData
+    lastPriceData?: PriceData
   ) {
-    if (lastResult) {
-      this.lastResult = lastResult;
+    if (lastPriceData) {
+      this.lastPriceData = lastPriceData;
     }
   }
 
-  async fetchPriceData(params?: {
+  async fetchPriceData(fetchPriceDataParams?: {
     pair?: string;
     interval?: OHLCDataInterval;
-    totalPeriods?: number;
+    totalPeriods?: number; // limit
   }): Promise<PriceData> {
-    if (this.lastResult.timestamp.length > 0) {
-      return this.lastResult;
+    if (this.lastPriceData.timestamp.length > 0) {
+      return this.lastPriceData;
     }
     try {
-      const queryInterval = params?.interval || this.interval || 15;
+      const queryInterval =
+        fetchPriceDataParams?.interval || this.interval || 15;
       const queryTotalPeriods =
-        params?.totalPeriods || this.totalPeriods || 250;
+        fetchPriceDataParams?.totalPeriods || this.totalPeriods || 250;
       const url = "https://api.kraken.com/0/public/OHLC";
       const now = Date.now() / 1000;
       const since = now - queryInterval * 60 * queryTotalPeriods;
-      const urlParams = new URLSearchParams({
-        pair: params?.pair || this.pair,
-        interval: `${params?.interval || this.interval}`, // Interval in minutes (e.g., 15 for 15-minute intervals)
+
+      const params = {
+        pair: fetchPriceDataParams?.pair || this.pair,
+        interval: `${fetchPriceDataParams?.interval || this.interval}`, // Interval in minutes (e.g., 15 for 15-minute intervals)
         since: since.toString(),
-      });
+      };
+      const urlParams = new URLSearchParams(params);
 
       const response = await fetch(`${url}?${urlParams}`);
 
@@ -60,25 +73,18 @@ export class KrakenService {
 
       if (data.error && data.error.length > 0) {
         this.logger.error("Error from Kraken API:", data.error);
-        return this.lastResult;
+        return this.lastPriceData;
       }
 
       this.metrics.addMetric("priceDataFetched", MetricUnit.Count, 1);
-
-      console.log(data.result);
-
-      const dataKey = Object.keys(data.result)
-        .filter((key) => key !== "last")
-        .pop();
-
-      if (!dataKey) {
+      if (!data.result || !data.result[params.pair]) {
         this.logger.error("No OHLC data found");
-        return this.lastResult;
+        return this.lastPriceData;
       }
 
-      const ohlcvData = data.result[dataKey] as KrakenOHLCVRow[];
-      this.lastResult = this.formatPriceData(ohlcvData);
-      return this.lastResult;
+      const ohlcvData = data.result[params.pair] as KrakenOHLCVRow[];
+      this.lastPriceData = this.formatPriceData(ohlcvData);
+      return this.lastPriceData;
     } catch (error) {
       console.error("Error fetching OHLC data:", error);
       throw error;
@@ -118,7 +124,38 @@ export class KrakenService {
     return result;
   }
 
-  getLastResult(): PriceData {
-    return this.lastResult;
+  getLastPriceData(): PriceData {
+    return this.lastPriceData;
+  }
+
+  async fetchOrderBookData(pair: string) {
+    const url = "https://api.kraken.com/0/public/Depth";
+    const params = {
+      pair,
+    };
+    const urlParams = new URLSearchParams(params);
+
+    const response = await fetch(`${url}?${urlParams}`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.error && data.error.length > 0) {
+      this.logger.error("Error from Kraken API:", data.error);
+      return;
+    }
+
+    this.metrics.addMetric("orderBookFetched", MetricUnit.Count, 1);
+    if (!data.result || !data.result[params.pair]) {
+      this.logger.error("No OHLC data found");
+      return this.lastOrderBook;
+    }
+
+    const orderBookData = data.result[params.pair] as OrderBookData;
+    this.logger.info("Order book data", { orderBookData });
+    return orderBookData;
   }
 }

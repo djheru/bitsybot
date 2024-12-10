@@ -86,7 +86,8 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         interval,
         model,
         logger,
-        metrics
+        metrics,
+        krakenService
       );
       const analysis = await analysisService.analyzeMarket(indicatorResult);
       logger.info("analysis", { analysis });
