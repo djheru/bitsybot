@@ -15,7 +15,7 @@ import { Prompts } from "./prompts";
 export class EntryPositionAgent {
   private parser: JsonOutputParser<AnalysisEntryPosition>;
   private chain: RunnableSequence;
-  private inputArrayLength = 14;
+  private inputArrayLength = 24;
   constructor(
     private readonly symbol: string,
     private readonly interval: OHLCDataInterval,
@@ -26,7 +26,8 @@ export class EntryPositionAgent {
     const { system, human } = Prompts.EntryPosition;
     this.parser = new JsonOutputParser<AnalysisEntryPosition>();
     const prompt = ChatPromptTemplate.fromMessages([
-      ["user", `${system} ${human}`],
+      ["human", human],
+      ["system", system],
     ]);
     this.chain = RunnableSequence.from([prompt, this.model, this.parser]);
   }

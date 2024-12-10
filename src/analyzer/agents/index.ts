@@ -17,7 +17,7 @@ export class BaseAgent {
   public prompts: PromptTemplate = { system: "", human: "" };
   private parser: JsonOutputParser<IndicatorAnalysis>;
   private chain: RunnableSequence;
-  protected inputArrayLength = 14; // Adjustable for slice length
+  protected inputArrayLength = 24; // Adjustable for slice length
   protected analysisType: string;
 
   constructor(

@@ -49,11 +49,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       metrics.addMetric("handlerInvoked", MetricUnit.Count, 1);
 
       const model = new ChatOpenAI({
-        // modelName: "o1-preview",
-        // modelName: "o1-mini",
-        modelName: "gpt-4o",
-        // modelName: "gpt-4o-mini",
-        // modelName: secret.LLM_MODEL_NAME,
+        modelName: secret.LLM_MODEL_NAME,
         apiKey: secret.LLM_API_KEY,
         temperature: 0.1,
       });
