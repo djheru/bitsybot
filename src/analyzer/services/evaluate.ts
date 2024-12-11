@@ -8,6 +8,7 @@ import {
   PriceData,
 } from "../types";
 import { AnalysisRepository } from "./db";
+import { EvaluationSummarizer } from "./evaluation-summarizer";
 
 export async function evaluatePerformance(
   symbol: string,
@@ -16,7 +17,7 @@ export async function evaluatePerformance(
   repository: AnalysisRepository,
   logger: Logger,
   timeframeHours: number = 8,
-  sellThresholdPercent: number = 2
+  sellThresholdPercent: number = 1.2
 ): Promise<EvaluationResult[]> {
   const results: EvaluationResult[] = [];
   let outcome: EvaluationOutcome = "neutral";
@@ -126,13 +127,20 @@ export async function evaluatePerformance(
     } else if (analysisForEvaluation.recommendation === "SELL") {
       const sellPrice = analysisForEvaluation.currentPrice;
       const targetPrice = sellPrice * (1 - sellThresholdPercent / 100);
+      const triggerPrice = sellPrice * (1 + sellThresholdPercent / 100);
       const hitTarget = subsequentPrices.some(
         (prices) => prices.close <= targetPrice
+      );
+      const hitHigher = subsequentPrices.some(
+        (prices) => prices.close >= triggerPrice
       );
 
       if (hitTarget) {
         outcome = "success";
         details = `Price dropped to target of ${targetPrice} (${sellThresholdPercent}% decrease) `;
+      } else if (hitHigher) {
+        outcome = "failure";
+        details = `Price increased to trigger of ${triggerPrice} (${sellThresholdPercent}% increase) `;
       } else {
         details = `Drop target price of ${targetPrice} not reached `;
       }
@@ -175,5 +183,9 @@ export async function evaluatePerformance(
   for (const result of results) {
     await repository.createEvaluationRecord(result);
   }
+
+  const summarizer = new EvaluationSummarizer(logger);
+  const summary = await summarizer.summarizeEvaluations(results);
+  logger.info("Evaluation Summary", { summary });
   return results;
 }

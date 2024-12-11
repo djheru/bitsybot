@@ -183,17 +183,18 @@ export class AnalysisRepository {
     }
   }
 
-  async listByTimestamp(params: {
+  async listByTimestamp<T = AnalysisRecord>(params: {
     symbol: string;
     interval: OHLCDataInterval;
     start: string;
     end?: string;
     nextToken?: string;
     limit?: number;
+    prefix?: string;
     direction?: "asc" | "desc";
     recommendation?: Signal;
   }): Promise<{
-    records: AnalysisRecord[];
+    records: T[];
     nextToken?: string;
   }> {
     try {
@@ -204,6 +205,7 @@ export class AnalysisRepository {
         end,
         nextToken,
         limit = 10,
+        prefix = "analysis",
         direction = "asc",
         recommendation,
       } = params;
@@ -214,7 +216,7 @@ export class AnalysisRepository {
           ? "pk = :pk and sk between :start and :end"
           : `pk = :pk and ${direction === "asc" ? "sk >" : "sk <"} :start`,
         ExpressionAttributeValues: {
-          ":pk": `analysis#${symbol}#${interval}`,
+          ":pk": `${prefix}#${symbol}#${interval}`,
           ":start": start,
           ...(end && { ":end": end }),
           ...(recommendation && { ":rec": recommendation }),
@@ -234,7 +236,7 @@ export class AnalysisRepository {
       );
 
       return {
-        records: (result.Items || []) as AnalysisRecord[],
+        records: (result.Items || []) as T[],
         nextToken: result.LastEvaluatedKey
           ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString(
               "base64"
@@ -257,7 +259,7 @@ export class AnalysisRepository {
     start: string = DateTime.now().toISO()
   ): Promise<AnalysisRecord[]> {
     return (
-      await this.listByTimestamp({
+      await this.listByTimestamp<AnalysisRecord>({
         symbol,
         interval,
         start,
