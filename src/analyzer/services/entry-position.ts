@@ -28,6 +28,7 @@ export function calculateEntryPosition({
   riskRewardRatio = 3,
 }: CalculateEntryPositionParams): AnalysisEntryPosition {
   const currentPrice = close[close.length - 1];
+  const bollingerUpper = bollingerBands.map((b) => b.upper);
   const bollingerLower = bollingerBands.map((b) => b.lower);
   const orderBookAsks = orderBookData.asks;
 
@@ -38,9 +39,28 @@ export function calculateEntryPosition({
     bollingerLower[bollingerLower.length - 1] * (1 - bollingerBuffer / 100);
   const stopLoss = Math.min(atrStopLoss, bollingerStopLoss);
 
+  // Dynamic R:R Adjustment
+  const recentROC = roc ? roc[roc.length - 1] : 0;
+  const recentRSI = rsi ? rsi[rsi.length - 1] : 50;
+
+  // Adjust R:R based on momentum
+  let adjustedRiskRewardRatio = riskRewardRatio;
+  if (recentROC < 0 || recentRSI < 50) {
+    adjustedRiskRewardRatio -= 0.5; // Reduce R:R when momentum is weaker
+  }
+  if (recentRSI > 70 || recentROC > 0.5) {
+    adjustedRiskRewardRatio += 0.5; // Increase R:R when momentum is stronger
+  }
+  adjustedRiskRewardRatio = Math.max(1.5, adjustedRiskRewardRatio); // Ensure a minimum R:R ratio
+
   // Exit Price Calculation
   const risk = currentPrice - stopLoss;
-  const exitPrice = currentPrice + risk * riskRewardRatio;
+  let exitPrice = currentPrice + risk * adjustedRiskRewardRatio;
+
+  // Cap Exit Price at Resistance Levels
+  const bollingerCap = bollingerUpper[bollingerUpper.length - 1];
+  const orderBookCap = orderBookAsks[0]?.price || Number.MAX_VALUE;
+  exitPrice = Math.min(exitPrice, bollingerCap, orderBookCap);
 
   // Entry Price Calculation
   const entryPrice = orderBookAsks[0]?.price || currentPrice;
@@ -56,14 +76,17 @@ Stop Loss is calculated as the lower of:
   - ATR-based stop (${atrStopLoss.toFixed(4)}),
   - Bollinger Band lower limit with buffer (${bollingerStopLoss.toFixed(4)}).
 Final Stop Loss: ${stopLoss.toFixed(4)}.
-Exit Price is determined using a Risk-to-Reward ratio of ${riskRewardRatio}:1, yielding ${exitPrice.toFixed(
+Exit Price is calculated using:
+  - Risk-to-Reward ratio: ${adjustedRiskRewardRatio}:1,
+  - Capped at Bollinger Band upper limit (${bollingerCap.toFixed(4)}),
+  - Capped at nearest significant order book resistance (${orderBookCap.toFixed(
     4
-  )}.
+  )}).
+Final Exit Price: ${exitPrice.toFixed(4)}.
   `;
 
   // Optional: Add ROC and RSI insights
   if (roc) {
-    const recentROC = roc[roc.length - 1];
     rationale += `
       Recent Rate of Change (ROC): ${recentROC.toFixed(2)}%.
       ${
@@ -74,7 +97,6 @@ Exit Price is determined using a Risk-to-Reward ratio of ${riskRewardRatio}:1, y
     `;
   }
   if (rsi) {
-    const recentRSI = rsi[rsi.length - 1];
     rationale += `
       Recent Relative Strength Index (RSI): ${recentRSI.toFixed(2)}.
       ${
