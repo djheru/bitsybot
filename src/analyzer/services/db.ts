@@ -165,7 +165,7 @@ export class AnalysisRepository {
           recommendation: signal,
           uuid: evaluationSummary.uuid,
           formattedSummary: evaluationSummary.formattedSummary,
-          stats: evaluationSummary[signal],
+          ...evaluationSummary[signal],
           total: evaluationSummary.total,
           from: evaluationSummary.range.from,
           to: evaluationSummary.range.to,
