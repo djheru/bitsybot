@@ -1,13 +1,31 @@
 import { Logger } from "@aws-lambda-powertools/logger";
-import { EvaluationResult } from "../types";
+import { randomUUID } from "crypto";
+import { DateTime } from "luxon";
+import { EvaluationResult, EvaluationSummaryResult } from "../types";
 
 export class EvaluationSummarizer {
   constructor(private readonly logger: Logger) {}
 
-  async summarizeEvaluations(evaluations: EvaluationResult[]) {
+  summarizeEvaluations(
+    evaluations: EvaluationResult[]
+  ): EvaluationSummaryResult {
     try {
+      const range = {
+        from: evaluations[0].timestamp,
+        to: evaluations[evaluations.length - 1].timestamp,
+      };
+      const total = evaluations.length;
       const summary = this.analyzeEvaluations(evaluations);
-      return { ...summary, formattedSummary: this.formatSummary(summary) };
+      return {
+        symbol: evaluations[0].symbol,
+        interval: evaluations[0].interval,
+        timestamp: DateTime.now().toISO(),
+        uuid: randomUUID(),
+        ...summary,
+        formattedSummary: this.formatSummary(summary, total),
+        range,
+        total,
+      };
     } catch (error) {
       this.logger.error("Failed to summarize evaluations", { error });
       throw error;
@@ -16,17 +34,19 @@ export class EvaluationSummarizer {
 
   private analyzeEvaluations(evaluations: EvaluationResult[]) {
     const results = {
-      buy: { success: 0, failure: 0, neutral: 0 },
-      sell: { success: 0, failure: 0, neutral: 0 },
-      total: evaluations.length,
+      BUY: { success: 0, failure: 0, neutral: 0 },
+      SELL: { success: 0, failure: 0, neutral: 0 },
+      HOLD: { success: 0, failure: 0, neutral: 0 },
     };
 
     for (const record of evaluations) {
       const { recommendation, outcome } = record;
       if (recommendation === "BUY") {
-        results.buy[outcome as keyof typeof results.buy]++;
+        results.BUY[outcome as keyof typeof results.BUY]++;
       } else if (recommendation === "SELL") {
-        results.sell[outcome as keyof typeof results.sell]++;
+        results.SELL[outcome as keyof typeof results.SELL]++;
+      } else {
+        results.HOLD[outcome as keyof typeof results.HOLD]++;
       }
     }
 
@@ -34,9 +54,10 @@ export class EvaluationSummarizer {
   }
 
   private formatSummary(
-    summary: ReturnType<EvaluationSummarizer["analyzeEvaluations"]>
+    summary: ReturnType<EvaluationSummarizer["analyzeEvaluations"]>,
+    total: number
   ) {
-    const { buy, sell, total } = summary;
+    const { BUY: buy, SELL: sell, HOLD: hold } = summary;
 
     const formattedSummary = `
 Evaluations Summary:

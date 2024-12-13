@@ -42,6 +42,13 @@ export async function evaluatePerformance(
     return results;
   }
 
+  const range = {
+    from: recentAnalyses[0].timestamp,
+    to: recentAnalyses[recentAnalyses.length - 1].timestamp,
+  };
+
+  logger.info(`Evaluating ${recentAnalyses.length} recent analyses`, { range });
+
   const subsequentPrices = priceData.timestamp.map((_, index) => ({
     close: priceData.close[index],
     high: priceData.high[index],
@@ -145,6 +152,30 @@ export async function evaluatePerformance(
         details = `Drop target price of ${targetPrice} not reached `;
       }
       details += `within ${timeframeHours} hours.`;
+    } else if (analysisForEvaluation.recommendation === "HOLD") {
+      const sellPrice = analysisForEvaluation.currentPrice;
+      const lowTriggerPrice = sellPrice * (1 - sellThresholdPercent / 100);
+      const highTriggerPrice = sellPrice * (1 + sellThresholdPercent / 100);
+
+      const wentHigher = subsequentPrices.some(
+        (prices) => prices.close >= highTriggerPrice
+      );
+
+      const wentLower = subsequentPrices.some(
+        (prices) => prices.close <= lowTriggerPrice
+      );
+
+      if (wentHigher) {
+        outcome = "neutral";
+        details = `Price went higher than ${highTriggerPrice} (${sellThresholdPercent}% increase) `;
+      } else if (wentLower) {
+        outcome = "failure";
+        details = `Price went lower than ${lowTriggerPrice} (${sellThresholdPercent}% decrease) `;
+      } else {
+        outcome = "success";
+        details = `Price stayed within ${sellThresholdPercent}% range `;
+      }
+      details += `within ${timeframeHours} hours.`;
     }
 
     const formatResponse = ({
@@ -187,5 +218,6 @@ export async function evaluatePerformance(
   const summarizer = new EvaluationSummarizer(logger);
   const summary = await summarizer.summarizeEvaluations(results);
   logger.info("Evaluation Summary", { summary });
+  await repository.createEvaluationSummary(summary);
   return results;
 }

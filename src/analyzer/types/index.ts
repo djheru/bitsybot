@@ -312,9 +312,37 @@ export interface EvaluationResult {
   details: string; // Explanation of the result
   interval: OHLCDataInterval;
   outcome: EvaluationOutcome;
-  recommendation?: string;
+  recommendation?: Signal;
   symbol: string;
   timestamp: string;
   uuid: string;
   ttl?: number; // TTL in seconds since epoch
+}
+
+export interface EvaluationSummaryResult {
+  symbol: string;
+  interval: OHLCDataInterval;
+  timestamp: string;
+  uuid: string;
+  BUY: {
+    success: number;
+    failure: number;
+    neutral: number;
+  };
+  SELL: {
+    success: number;
+    failure: number;
+    neutral: number;
+  };
+  HOLD: {
+    success: number;
+    failure: number;
+    neutral: number;
+  };
+  total: number;
+  range: {
+    from: string;
+    to: string;
+  };
+  formattedSummary: string;
 }

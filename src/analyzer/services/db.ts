@@ -11,9 +11,18 @@ import { DateTime } from "luxon";
 import {
   AnalysisRecord,
   EvaluationResult,
+  EvaluationSummaryResult,
   OHLCDataInterval,
   Signal,
 } from "../types";
+
+type KeyRecord = {
+  symbol: string;
+  interval: OHLCDataInterval;
+  timestamp: string;
+  recommendation?: Signal | undefined;
+  uuid: string;
+};
 
 export class AnalysisRepository {
   private readonly ddbDocClient: DynamoDBDocumentClient;
@@ -37,10 +46,7 @@ export class AnalysisRepository {
     return Math.floor(ttlDate.getTime() / 1000);
   }
 
-  private createKeys(
-    record: AnalysisRecord | EvaluationResult,
-    prefix = "analysis"
-  ) {
+  private createKeys(record: KeyRecord, prefix = "analysis") {
     return {
       pk: `${prefix}#${record.symbol}#${record.interval}`,
       sk: `${record.timestamp}#${record.recommendation}`,
@@ -142,6 +148,46 @@ export class AnalysisRepository {
       this.logger.error("Failed to create evaluation record", {
         error,
         record,
+      });
+      throw error;
+    }
+  }
+
+  async createEvaluationSummary(evaluationSummary: EvaluationSummaryResult) {
+    try {
+      const signals: Signal[] = ["BUY", "HOLD", "SELL"];
+
+      for (const signal of signals) {
+        const item = {
+          symbol: evaluationSummary.symbol,
+          interval: evaluationSummary.interval,
+          timestamp: evaluationSummary.timestamp,
+          recommendation: signal,
+          uuid: evaluationSummary.uuid,
+          formattedSummary: evaluationSummary.formattedSummary,
+          stats: evaluationSummary[signal],
+          total: evaluationSummary.total,
+          from: evaluationSummary.range.from,
+          to: evaluationSummary.range.to,
+        };
+        const params: PutCommandInput = {
+          TableName: this.tableName,
+          Item: {
+            ...this.createKeys(item, "evaluation-summary"),
+            ...item,
+          },
+        };
+
+        await this.ddbDocClient.send(new PutCommand(params));
+        this.logger.info(`${signal} evaluation summary created`, {
+          range: evaluationSummary.range,
+          formattedSummary: evaluationSummary.formattedSummary,
+        });
+      }
+    } catch (error) {
+      this.logger.error("Failed to create evaluation summary", {
+        error,
+        evaluationSummary,
       });
       throw error;
     }
