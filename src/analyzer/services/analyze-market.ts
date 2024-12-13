@@ -15,6 +15,7 @@ import {
   CalculatedIndicators,
   OHLCDataInterval,
 } from "../types";
+import { calculateEntryPosition } from "./entry-position";
 import { KrakenService } from "./kraken";
 
 export class AnalysisService {
@@ -91,7 +92,16 @@ export class AnalysisService {
       const orderBookData = await this.krakenService.fetchOrderBookData(
         this.symbol
       );
-      this.logger.info("Order book data", { orderBookData });
+      const entryPositionCalcuations = calculateEntryPosition({
+        riskRewardRatio: 3,
+        orderBookData,
+        ...technicalData,
+      });
+
+      this.logger.info("entryPositionCalcuations", {
+        entryPositionCalcuations,
+      });
+
       const entryPositionAgent = new EntryPositionAgent(
         this.symbol,
         this.interval,
@@ -102,7 +112,8 @@ export class AnalysisService {
 
       const entryPositionAnalysis = await entryPositionAgent.analyze(
         technicalData,
-        orderBookData
+        orderBookData,
+        entryPositionCalcuations
       );
 
       finalAnalysisRecord = {

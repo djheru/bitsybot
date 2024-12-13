@@ -35,7 +35,8 @@ export class EntryPositionAgent {
 
   async analyze(
     { close, atr, bollingerBands, roc, rsi }: CalculatedIndicators,
-    orderBookData: OrderBookData
+    orderBookData: OrderBookData,
+    calculatedEntry: AnalysisEntryPosition
   ): Promise<AnalysisEntryPosition> {
     this.logger.info("Analyzing entry position");
     const input = {
@@ -64,6 +65,10 @@ export class EntryPositionAgent {
         .slice(0, 5)
         .map((b) => `  - price: $${b.price} - volume: ${b.volume}`)
         .join("\n"),
+      BASE_ENTRY_PRICE: calculatedEntry.entryPrice,
+      BASE_EXIT_PRICE: calculatedEntry.entryPrice,
+      BASE_STOPLOSS_PRICE: calculatedEntry.entryPrice,
+      BASE_RATIONALE: calculatedEntry.rationale,
     };
     this.logger.info("Analysis agent input", input);
 

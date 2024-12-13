@@ -64,7 +64,10 @@ export class SlackService {
   }
 
   formatMessages(record: AnalysisRecord): FormattedMessage {
-    const timestamp = new Date(record.timestamp).toLocaleString();
+    const chart =
+      record.recommendation === "BUY"
+        ? ":chart_with_upwards_trend:"
+        : ":chart_with_downwards_trend:";
 
     const formatAnalysis = (
       analysis: IndicatorAnalysis
@@ -77,9 +80,9 @@ export class SlackService {
 *${
       record.confidence && record.confidence < 7
         ? record.confidence < 4
-          ? ":bellhop_bell:"
-          : ":bell:"
-        : ":rotating_light:"
+          ? ":bellhop_bell:" + chart
+          : ":bell:" + chart
+        : ":rotating_light:" + chart
     } ${
       !record.confidence
         ? "UNKNOWN"

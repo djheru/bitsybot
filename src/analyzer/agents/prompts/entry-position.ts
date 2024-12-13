@@ -10,7 +10,23 @@ Order Book Asks:
 Order Book Bids:
 {ORDER_BOOK_BIDS}
 
-Please determine the following trading parameters to define the entry position:
+Please determine the following trading parameters to define the entry position. 
+Below are the base recommendations for the entry, exit, and stop loss prices, along with a base rationale. Use these as a guide to your own analysis. 
+
+Base Recommendations for Trading Parameters:
+
+Entry Price Base Recommendation: {BASE_ENTRY_PRICE}
+Exit Price Base Recommendation: {BASE_EXIT_PRICE}
+Stop Loss Base Recommendation: {BASE_STOPLOSS_PRICE}
+Rationale for Base Recommendations:
+{BASE_RATIONALE}
+
+---
+
+Using the base recommendations above, I would like you to calculate your best guess at a profitable entry position.
+The base recommendations are a starting point, but use your own reasoning and analysis to adjust the values as needed and generate a custom recommendation that will provide better results. I know you can do it!
+
+Use the guidelines below to calculate the entry, exit, and stop loss prices for the trade.
 
 1. Entry Price:
    - Use the current market price history: {CLOSE}.

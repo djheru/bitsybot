@@ -1,6 +1,6 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
-import { DateTime } from "luxon";
+import * as crypto from "crypto";
 import {
   KrakenOHLCVRow,
   KrakenOrderBook,
@@ -21,8 +21,6 @@ export class KrakenService {
     volume: [],
     count: [],
   };
-  public lastPriceDataDate: DateTime;
-
   public lastOrderBook: OrderBookData = {
     asks: [],
     bids: [],
@@ -177,5 +175,25 @@ export class KrakenService {
     };
 
     return result;
+  }
+
+  getSignature(urlPath: string, data: any, secret: string) {
+    let encoded;
+    if (typeof data === "string") {
+      encoded = JSON.parse(data);
+    } else if (typeof data === "object") {
+      const urlParams = new URLSearchParams(data);
+      encoded = data.nonce + urlParams.toString();
+    } else {
+      throw new Error("Invalid data type");
+    }
+
+    const sha256Hash = crypto.createHash("sha256").update(encoded).digest();
+    const message = urlPath + sha256Hash.toString("binary");
+    const secretBuffer = Buffer.from(secret, "base64");
+    const hmac = crypto.createHmac("sha512", secretBuffer);
+    hmac.update(message, "binary");
+    const signature = hmac.digest("base64");
+    return signature;
   }
 }
