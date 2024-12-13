@@ -80,9 +80,9 @@ export class SlackService {
 *${
       record.confidence && record.confidence < 7
         ? record.confidence < 4
-          ? ":bellhop_bell:" + chart
-          : ":bell:" + chart
-        : ":rotating_light:" + chart
+          ? ":bellhop_bell:" + chart + ":bellhop_bell:"
+          : ":bell:" + chart + ":bell:"
+        : ":rotating_light:" + chart + ":rotating_light:"
     } ${
       !record.confidence
         ? "UNKNOWN"
