@@ -116,6 +116,8 @@ export class AnalysisService {
         entryPositionCalcuations
       );
 
+      this.logger.info("entryPositionAnalysis", { entryPositionAnalysis });
+
       finalAnalysisRecord = {
         ...finalAnalysisRecord,
         entryPosition: { ...entryPositionAnalysis },
