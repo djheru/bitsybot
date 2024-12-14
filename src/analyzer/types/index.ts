@@ -120,8 +120,8 @@ export const CalculatedIndicatorsSchema = z.object({
   rsi: z.array(z.number()), // RSI values
   stochastic: z.array(
     z.object({
-      k: z.number(), // %K Line
-      d: z.number(), // %D Line
+      k: z.number().optional(), // %K Line
+      d: z.number().optional(), // %D Line
     })
   ),
   williamsR: z.array(z.number()), // Williams %R values
