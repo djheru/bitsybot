@@ -1,17 +1,5 @@
 import { AnalysisEntryPosition, CalculatedIndicators } from "../types";
 
-interface PositionCalculationParams {
-  currentPrice: number;
-  atr: number;
-  rsi: number;
-  vwap: number;
-  bollingerBands: {
-    upper: number;
-    middle: number;
-    lower: number;
-  };
-}
-
 function parseTechnicalData(technicalData: CalculatedIndicators) {
   return {
     currentPrice: technicalData.close[technicalData.close.length - 1],
