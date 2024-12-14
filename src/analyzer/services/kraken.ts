@@ -1,7 +1,9 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import * as crypto from "crypto";
+import querystring from "querystring";
 import {
+  AccountBalances,
   KrakenOHLCVRow,
   KrakenOrderBook,
   KrakenOrderBookRow,
@@ -11,6 +13,7 @@ import {
 } from "../types";
 
 export class KrakenService {
+  public baseUrl: string = "https://api.kraken.com";
   public lastPriceData: PriceData = {
     timestamp: [],
     open: [],
@@ -24,6 +27,11 @@ export class KrakenService {
   public lastOrderBook: OrderBookData = {
     asks: [],
     bids: [],
+  };
+
+  public lastAccountBalance: AccountBalances = {
+    USDT: { balance: 0, holdTrade: 0 },
+    XXBT: { balance: 0, holdTrade: 0 },
   };
 
   constructor(
@@ -52,7 +60,8 @@ export class KrakenService {
         fetchPriceDataParams?.interval || this.interval || 15;
       const queryTotalPeriods =
         fetchPriceDataParams?.totalPeriods || this.totalPeriods || 250;
-      const url = "https://api.kraken.com/0/public/OHLC";
+      const uriPath = "/0/public/OHLC";
+      const url = `${this.baseUrl}${uriPath}`;
       const now = Date.now() / 1000;
       const since = now - queryInterval * 60 * queryTotalPeriods;
 
@@ -132,7 +141,8 @@ export class KrakenService {
     pair: string,
     count: number = 10
   ): Promise<OrderBookData> {
-    const url = "https://api.kraken.com/0/public/Depth";
+    const uriPath = "/0/public/Depth";
+    const url = `${this.baseUrl}${uriPath}`;
     const params = {
       pair,
       count: count.toString(),
@@ -177,13 +187,71 @@ export class KrakenService {
     return result;
   }
 
+  async fetchExtendedBalance(
+    apiKey: string,
+    apiSecretKey: string
+  ): Promise<AccountBalances> {
+    const nonce = Date.now().toString();
+    const uriPath = "/0/private/BalanceEx";
+    const url = `${this.baseUrl}${uriPath}`;
+    const data = { nonce };
+    const payload = JSON.stringify(data);
+    const signature = this.getSignature(uriPath, payload, apiSecretKey);
+
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "API-Key": apiKey,
+      "API-Sign": signature,
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers,
+      body: payload,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+
+    this.logger.info("Balance response", { responseData });
+
+    if (responseData.error && responseData.error.length > 0) {
+      this.logger.error("Error from Kraken API:", responseData.error);
+      return this.lastAccountBalance;
+    }
+    this.metrics.addMetric("balanceFetched", MetricUnit.Count, 1);
+
+    if (!responseData.result) {
+      this.logger.error("No balance data found");
+      return this.lastAccountBalance;
+    }
+
+    if (responseData.result.USDT) {
+      const { balance = 0, hold_trade: holdTrade = 0 } =
+        responseData.result.USDT;
+      this.lastAccountBalance.USDT = { balance, holdTrade };
+    }
+
+    if (responseData.result.XXBT) {
+      const { balance = 0, hold_trade: holdTrade = 0 } =
+        responseData.result.XXBT;
+      this.lastAccountBalance.XXBT = { balance, holdTrade };
+    }
+    return this.lastAccountBalance;
+  }
+
   getSignature(urlPath: string, data: any, secret: string) {
     let encoded;
     if (typeof data === "string") {
-      encoded = JSON.parse(data);
+      const jsonData = JSON.parse(data);
+      encoded = jsonData.nonce + data;
     } else if (typeof data === "object") {
-      const urlParams = new URLSearchParams(data);
-      encoded = data.nonce + urlParams.toString();
+      const dataStr = querystring.stringify(data);
+      encoded = data.nonce + dataStr;
     } else {
       throw new Error("Invalid data type");
     }
@@ -194,6 +262,7 @@ export class KrakenService {
     const hmac = crypto.createHmac("sha512", secretBuffer);
     hmac.update(message, "binary");
     const signature = hmac.digest("base64");
+    this.logger.info("Signature", { signature });
     return signature;
   }
 }

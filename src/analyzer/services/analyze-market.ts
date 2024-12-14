@@ -10,12 +10,12 @@ import { TrendIndicatorAgent } from "../agents/trend-indicator.agent";
 import { VolatilityIndicatorAgent } from "../agents/volatility-indicator.agent";
 import { VolumeIndicatorAgent } from "../agents/volume-indicator.agent";
 import {
+  AccountBalances,
   AnalysisRecord,
   CalculatedIndicators,
   OHLCDataInterval,
 } from "../types";
 import { calculateEntryPosition } from "./calculate-entry-position";
-import { KrakenService } from "./kraken";
 
 export class AnalysisService {
   constructor(
@@ -23,11 +23,13 @@ export class AnalysisService {
     private readonly interval: OHLCDataInterval,
     private readonly model: ChatOpenAI,
     private readonly logger: Logger,
-    private readonly metrics: Metrics,
-    private readonly krakenService: KrakenService
+    private readonly metrics: Metrics
   ) {}
 
-  async analyzeMarket(technicalData: CalculatedIndicators) {
+  async analyzeMarket(
+    technicalData: CalculatedIndicators,
+    accountBalances: AccountBalances
+  ) {
     const uuid = randomUUID();
     const timestamp = new Date().toISOString();
     const currentPrice = technicalData.close[technicalData.close.length - 1];
@@ -87,8 +89,11 @@ export class AnalysisService {
 
     let finalAnalysisRecord = { ...analysisRecord, ...finalAnalysis };
 
-    if (finalAnalysisRecord.recommendation === "BUY") {
-      const entryPosition = calculateEntryPosition(technicalData);
+    if (true || finalAnalysisRecord.recommendation === "BUY") {
+      const entryPosition = calculateEntryPosition(
+        technicalData,
+        accountBalances
+      );
       this.logger.info("calculateBuyPosition", { entryPosition });
 
       finalAnalysisRecord = {

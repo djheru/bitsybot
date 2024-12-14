@@ -1,4 +1,5 @@
 import {
+  AccountBalances,
   AnalysisEntryPosition,
   CalculatedIndicators,
   CalculatedIndicatorsSchema,
@@ -10,6 +11,7 @@ function parseTechnicalData(data: CalculatedIndicators) {
     currentPrice: validatedData.close[validatedData.close.length - 1],
     atr: validatedData.atr[validatedData.atr.length - 1],
     rsi: validatedData.rsi[validatedData.rsi.length - 1],
+    roc: validatedData.roc[validatedData.roc.length - 1],
     vwap: validatedData.vwap[validatedData.vwap.length - 1],
     bollingerBands: {
       lower:
@@ -26,10 +28,11 @@ function parseTechnicalData(data: CalculatedIndicators) {
 }
 
 export function calculateEntryPosition(
-  technicalData: CalculatedIndicators
+  technicalData: CalculatedIndicators,
+  accountBalances: AccountBalances
 ): AnalysisEntryPosition {
   const params = parseTechnicalData(technicalData);
-  const { currentPrice, atr, rsi, vwap, bollingerBands } = params;
+  const { atr, bollingerBands, currentPrice, roc, rsi, vwap } = params;
 
   const atrPercent = (atr / currentPrice) * 100;
   const volatilityState =
@@ -66,11 +69,17 @@ export function calculateEntryPosition(
   const vwapStop = vwap * 0.997; // 0.3% below VWAP (reduced from 0.5%)
   const bbStop = bollingerBands.lower;
 
+  console.log("stopLevels: %j", { atrStop, vwapStop, bbStop });
+
   // // Use the most conservative (highest) stop loss
   // const stopLoss = Math.max(atrStop, vwapStop, bbStop);
 
-  // Use the average of the three values as the stop loss
-  const stopLoss = (atrStop + vwapStop + bbStop) / 3;
+  // Use the average of the two lowest values as the stop loss
+  const stopLoss =
+    [atrStop, vwapStop, bbStop]
+      .sort((a, b) => a - b)
+      .slice(0, 2)
+      .reduce((a, b) => a + b) / 2;
 
   // 3. Exit Price Calculation
   let targetMultiplier;
@@ -88,13 +97,21 @@ export function calculateEntryPosition(
   const rewardPercent = (reward / entryPrice) * 100;
   const rrRatio = rewardPercent / riskPercent;
 
+  // **Position Sizing**
+  const tetherBalance =
+    accountBalances["USDT"]!.balance - accountBalances["USDT"]!.holdTrade;
+  const riskAmount = tetherBalance * (riskPercent / 100); // Amount willing to lose
+  const positionSize = riskAmount / (currentPrice - stopLoss); // Size in BTC
+
+  // **Stop-Loss Percentage Decrease**
+  const stopLossPercentage = ((currentPrice - stopLoss) / currentPrice) * 100;
+
   // Validation checks
-  if (riskPercent > 1.0) {
-    // Reduced from 1.5%
+  if (riskPercent > 1.5) {
     throw new Error(
       `Risk percentage (${riskPercent.toFixed(
         2
-      )}%) exceeds maximum threshold of 1.0%`
+      )}%) exceeds maximum threshold of 1.5%`
     );
   }
 
@@ -105,43 +122,56 @@ export function calculateEntryPosition(
   }
 
   const rationale = [
-    "Entry Analysis:",
-    `• Entry Price: ${entryPrice.toFixed(2)} (market entry)`,
-    `• Current VWAP: ${vwap.toFixed(2)} (${(
+    `
+
+    :dart: * Target Analysis:*`,
+    `>* *Exit Price:* ${exitPrice.toFixed(2)} (${rewardPercent.toFixed(
+      2
+    )}% reward)`,
+    `>* *R:R Ratio:* ${rrRatio.toFixed(2)}:1`,
+    `>* *Multiplier:* ${targetMultiplier}x (RSI: ${rsi.toFixed(1)})
+    `,
+    `:octagonal_sign: * Stop Loss Analysis*`,
+    `>* *Trailing Stop Percentage*: ${stopLossPercentage.toFixed(2)}%`,
+    `>* *Stop Price*: ${stopLoss.toFixed(2)} (${riskPercent.toFixed(2)}% risk)`,
+    `>    _Calculated as Average (mean) of the 2 lowest values of the following:_`,
+    `>    * *ATR-based:* ${atrStop.toFixed(2)} (${atrMultiplier}x ATR)`,
+    `>    * *VWAP-based:* ${vwapStop.toFixed(2)}`,
+    `>    * *BB-based:* ${bbStop.toFixed(2)}
+    `,
+    ":abacus: * Technical Context:*",
+    `>* *ATR:* ${atr.toFixed(2)} (${atrPercent.toFixed(2)}% of price)`,
+    `>* *BB Range:* ${bollingerBands.lower.toFixed(
+      2
+    )} - ${bollingerBands.upper.toFixed(2)}`,
+    `>* *ROC:* ${roc.toFixed(2)}% - ${
+      roc > 0
+        ? "Momentum indicates bullish conditions."
+        : "Momentum indicates bearish conditions."
+    }`,
+    `>* *RSI:* ${rsi.toFixed(1)} - ${
+      rsi > 70
+        ? "Market is potentially overbought."
+        : rsi < 30
+        ? "Market is potentially oversold."
+        : "Market momentum is neutral."
+    }`,
+    `>* *Volatility:* ${volatilityState} (ATR: ${atrPercent.toFixed(2)}%)`,
+    `>* *VWAP:* ${vwap.toFixed(2)} (${(
       ((entryPrice - vwap) / vwap) *
       100
     ).toFixed(2)}% from VWAP)`,
-    `• Volatility: ${volatilityState} (ATR: ${atrPercent.toFixed(2)}%)`,
-    "",
-    "Stop Loss Analysis:",
-    `• Stop Price: ${stopLoss.toFixed(2)} (${riskPercent.toFixed(2)}% risk)`,
-    `Average (mean) of the following:`,
-    `• ATR-based: ${atrStop.toFixed(2)} (${atrMultiplier}x ATR)`,
-    `• VWAP-based: ${vwapStop.toFixed(2)}`,
-    `• BB-based: ${bbStop.toFixed(2)}`,
-    "",
-    "Target Analysis:",
-    `• Exit Price: ${exitPrice.toFixed(2)} (${rewardPercent.toFixed(
-      2
-    )}% reward)`,
-    `• R:R Ratio: ${rrRatio.toFixed(2)}:1`,
-    `• Multiplier: ${targetMultiplier}x (RSI: ${rsi.toFixed(1)})`,
-    "",
-    "Technical Context:",
-    `• BB Range: ${bollingerBands.lower.toFixed(
-      2
-    )} - ${bollingerBands.upper.toFixed(2)}`,
-    `• ATR: ${atr.toFixed(2)} (${atrPercent.toFixed(2)}% of price)`,
-    `• RSI: ${rsi.toFixed(1)}`,
   ].join("\n");
 
   return {
     entryPrice,
-    stopLoss,
     exitPrice,
-    riskPercent,
-    rewardPercent,
-    rrRatio,
+    positionSize,
     rationale,
+    rewardPercent,
+    riskPercent,
+    rrRatio,
+    stopLoss,
+    stopLossPercentage,
   };
 }

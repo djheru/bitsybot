@@ -64,6 +64,11 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       );
       const priceData = await krakenService.fetchPriceData();
 
+      const accountBalances = await krakenService.fetchExtendedBalance(
+        secret.KRAKEN_API_KEY,
+        secret.KRAKEN_SECRET_KEY
+      );
+
       logger.info("priceData", {
         priceData: `${priceData.close.length} records returned`,
       });
@@ -84,10 +89,12 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         interval,
         model,
         logger,
-        metrics,
-        krakenService
+        metrics
       );
-      const analysis = await analysisService.analyzeMarket(indicatorResult);
+      const analysis = await analysisService.analyzeMarket(
+        indicatorResult,
+        accountBalances
+      );
       logger.info("analysis", { analysis });
 
       // Create record
@@ -127,7 +134,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         formattedMessages,
       });
 
-      if (shouldPublishSlack) {
+      if (true || shouldPublishSlack) {
         await slackService.sendHighConfidenceAlert(formattedMessages);
       }
 

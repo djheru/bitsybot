@@ -2,6 +2,12 @@ import { z } from "zod";
 
 export type Signal = "BUY" | "SELL" | "HOLD";
 
+type AccountBalanceAssets = "USDT" | "XXBT";
+
+export type AccountBalances = {
+  [key in AccountBalanceAssets]: { balance: number; holdTrade: number };
+};
+
 export interface AppSecret {
   CONFIDENCE_THRESHOLD: number;
   KRAKEN_API_KEY: string;
@@ -258,6 +264,8 @@ export interface AnalysisEntryPosition {
   entryPrice: number;
   exitPrice: number;
   stopLoss: number;
+  stopLossPercentage?: number;
+  positionSize?: number;
   rationale: string;
   recommendation?: Signal;
   confidence?: number;
