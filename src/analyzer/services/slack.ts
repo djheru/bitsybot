@@ -106,8 +106,7 @@ export class SlackService {
   `;
 
     if (record.entryPosition) {
-      message += `
-*💰 ENTRY POSITION DETAILS*
+      message += `*💰 ENTRY POSITION DETAILS*
 >*Entry Price:* $${record.entryPosition.entryPrice.toLocaleString()}
 >*Exit Price:* $${record.entryPosition.exitPrice.toLocaleString()}
 >*Stop Loss Price:* $${record.entryPosition.stopLoss.toLocaleString()}

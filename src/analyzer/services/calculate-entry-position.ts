@@ -123,8 +123,7 @@ export function calculateEntryPosition(
 
   const rationale = [
     `
-
-    :dart: * Target Analysis:*`,
+:dart: * Target Analysis:*`,
     `>* *Exit Price:* ${exitPrice.toFixed(2)} (${rewardPercent.toFixed(
       2
     )}% reward)`,
