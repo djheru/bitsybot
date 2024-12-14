@@ -258,9 +258,12 @@ export interface AnalysisEntryPosition {
   entryPrice: number;
   exitPrice: number;
   stopLoss: number;
+  rationale: string;
   recommendation?: Signal;
   confidence?: number;
-  rationale: string;
+  riskPercent?: number;
+  rewardPercent?: number;
+  rrRatio?: number;
 }
 export interface AnalysisRecord {
   uuid: string;

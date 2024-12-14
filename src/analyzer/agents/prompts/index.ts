@@ -1,6 +1,5 @@
 import { Signal } from "../../types";
 import { Candlestick } from "./candlestick";
-import { EntryPosition } from "./entry-position";
 import { FinalAnalysis } from "./final-analysis";
 import { IchimokuCloud } from "./ichimoku";
 import { Momentum } from "./momentum";
@@ -10,7 +9,6 @@ import { Volume } from "./volume";
 
 export type EnabledPrompts =
   | "Candlestick"
-  | "EntryPosition"
   | "FinalAnalysis"
   | "IchimokuCloud"
   | "Momentum"
@@ -30,7 +28,6 @@ export type AnalysisPrompts = {
 
 export const Prompts: AnalysisPrompts = {
   Candlestick,
-  EntryPosition,
   FinalAnalysis,
   IchimokuCloud,
   Momentum,

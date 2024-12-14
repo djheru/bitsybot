@@ -3,7 +3,6 @@ import { Metrics } from "@aws-lambda-powertools/metrics";
 import { ChatOpenAI } from "@langchain/openai";
 import { randomUUID } from "crypto";
 import { CandlestickIndicatorAgent } from "../agents/candlestick-indicator.agent";
-import { EntryPositionAgent } from "../agents/entry-position.agent";
 import { FinalAnalysisAgent } from "../agents/final-analysis.agent";
 import { IchimokuIndicatorAgent } from "../agents/ichimoku-indicator.agent";
 import { MomentumIndicatorAgent } from "../agents/momentum-indicator.agent";
@@ -15,7 +14,7 @@ import {
   CalculatedIndicators,
   OHLCDataInterval,
 } from "../types";
-import { calculateEntryPosition } from "./entry-position";
+import { calculateEntryPosition } from "./calculate-entry-position";
 import { KrakenService } from "./kraken";
 
 export class AnalysisService {
@@ -89,38 +88,12 @@ export class AnalysisService {
     let finalAnalysisRecord = { ...analysisRecord, ...finalAnalysis };
 
     if (finalAnalysisRecord.recommendation === "BUY") {
-      const orderBookData = await this.krakenService.fetchOrderBookData(
-        this.symbol
-      );
-      const entryPositionCalcuations = calculateEntryPosition({
-        riskRewardRatio: 3,
-        orderBookData,
-        ...technicalData,
-      });
-
-      this.logger.info("entryPositionCalcuations", {
-        entryPositionCalcuations,
-      });
-
-      const entryPositionAgent = new EntryPositionAgent(
-        this.symbol,
-        this.interval,
-        this.model,
-        this.logger,
-        this.metrics
-      );
-
-      const entryPositionAnalysis = await entryPositionAgent.analyze(
-        technicalData,
-        orderBookData,
-        entryPositionCalcuations
-      );
-
-      this.logger.info("entryPositionAnalysis", { entryPositionAnalysis });
+      const entryPosition = calculateEntryPosition(technicalData);
+      this.logger.info("calculateBuyPosition", { entryPosition });
 
       finalAnalysisRecord = {
         ...finalAnalysisRecord,
-        entryPosition: { ...entryPositionAnalysis },
+        entryPosition,
       };
     }
 
