@@ -103,7 +103,7 @@ export class SlackService {
     }/10)
 ----------------------------
 
-  `;
+`;
 
     if (record.entryPosition) {
       message += `*💰 ENTRY POSITION DETAILS*

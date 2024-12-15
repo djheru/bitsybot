@@ -27,6 +27,46 @@ function parseTechnicalData(data: CalculatedIndicators) {
   };
 }
 
+function calculatePositionSize({
+  tetherBalance,
+  currentPrice,
+  stopLoss,
+  riskPercent,
+}: {
+  tetherBalance: number;
+  currentPrice: number;
+  stopLoss: number;
+  riskPercent: number;
+}) {
+  if (tetherBalance <= 0) {
+    throw new Error("Insufficient USDT balance for trading.");
+  }
+
+  if (stopLoss >= currentPrice) {
+    throw new Error("Invalid stop-loss: must be below the current price.");
+  }
+
+  const riskAmount = tetherBalance * (riskPercent / 100);
+  const riskPerUnit = currentPrice - stopLoss;
+  let positionSize = riskAmount / riskPerUnit;
+
+  // Cap Position Size to Available Funds
+  const maxPositionSize = tetherBalance / currentPrice;
+  positionSize = Math.min(positionSize, maxPositionSize);
+
+  // Validate Minimum Trade Size
+  const minimumTradeSize = 0.0001; // Example for BTC
+  if (positionSize < minimumTradeSize) {
+    throw new Error(
+      `Position size (${positionSize.toFixed(
+        8
+      )}) is below the minimum trade size of ${minimumTradeSize}.`
+    );
+  }
+
+  return { positionSize, riskAmount, tetherBalance };
+}
+
 export function calculateEntryPosition(
   technicalData: CalculatedIndicators,
   accountBalances: AccountBalances
@@ -98,10 +138,13 @@ export function calculateEntryPosition(
   const rrRatio = rewardPercent / riskPercent;
 
   // **Position Sizing**
-  const tetherBalance =
-    accountBalances["USDT"]!.balance - accountBalances["USDT"]!.holdTrade;
-  const riskAmount = tetherBalance * (riskPercent / 100); // Amount willing to lose
-  const positionSize = riskAmount / (currentPrice - stopLoss); // Size in BTC
+  const { positionSize, riskAmount, tetherBalance } = calculatePositionSize({
+    tetherBalance:
+      accountBalances["USDT"]!.balance - accountBalances["USDT"]!.holdTrade,
+    currentPrice,
+    stopLoss,
+    riskPercent,
+  });
 
   // **Stop-Loss Percentage Decrease**
   const stopLossPercentage = ((currentPrice - stopLoss) / currentPrice) * 100;
