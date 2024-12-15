@@ -78,7 +78,9 @@ export class SlackService {
     const chart =
       record.recommendation === "BUY"
         ? ":chart_with_upwards_trend:"
-        : ":chart_with_downwards_trend:";
+        : record.recommendation === "SELL"
+        ? ":chart_with_downwards_trend:"
+        : ":hourglass_flowing_sand:";
 
     const formatAnalysis = (
       analysis: IndicatorAnalysis
@@ -108,12 +110,23 @@ export class SlackService {
 >*Time:* ${DateTime.fromISO(record.timestamp)
       .setZone("America/Phoenix")
       .toFormat("MM/dd/yyyy hh:mm a")} MST
->*Price:* $${record.currentPrice.toLocaleString()}
+>*Price:* $${record.currentPrice.toFixed(4)}
 >*Final Recommendation:* ${record.recommendation} (${
       record?.confidence || 0
-    }/10)
-----------------------------
+    }/10)`;
 
+    if (
+      // display position size in top message if present
+      record.entryPosition &&
+      record.entryPosition.positionSize
+    ) {
+      message += `
+>*Position Size:* ${record.entryPosition.positionSize.toFixed(6)} BTC`;
+    }
+
+    message += `
+
+----------------------------
 `;
     let entryPositionAnalysis = "";
 
@@ -123,17 +136,17 @@ export class SlackService {
 *💰 ENTRY POSITION DETAILS 💰*
 ----------------------------
 
->*Entry Price:* $${record.entryPosition.entryPrice.toLocaleString()}
+>*Entry Price:* $${record.entryPosition.entryPrice.toFixed(4)}
 >*Position Size:* ${
         record.entryPosition.positionSize
           ? record.entryPosition.positionSize.toFixed(6)
           : "N/A"
       }
->*Exit Price:* $${record.entryPosition.exitPrice.toLocaleString()}
->*Stop Loss Price:* $${record.entryPosition.stopLoss.toLocaleString()}
+>*Exit Price:* $${record.entryPosition.exitPrice.toFixed(4)}
+>*Stop Loss Price:* $${record.entryPosition.stopLoss.toFixed(4)}
 >*Stop Loss Percent:* ${
         record.entryPosition.stopLossPercentage
-          ? record.entryPosition.stopLossPercentage.toLocaleString() + "%"
+          ? record.entryPosition.stopLossPercentage.toFixed(2) + "%"
           : "N/A"
       }
 

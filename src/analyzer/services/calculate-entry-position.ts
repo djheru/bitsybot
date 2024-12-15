@@ -218,7 +218,7 @@ export function calculateEntryPosition(
     [atrStop, vwapStop, bbStop]
       .sort((a, b) => a - b)
       .slice(0, 2)
-      .reduce((a, b) => a + b) / 2;
+      .reduce((a, b) => a + b, 0) / 2;
 
   // 3. Exit Price Calculation
   let targetMultiplier;
@@ -306,7 +306,7 @@ export function calculateEntryPosition(
         ? "Market is potentially oversold."
         : "Market momentum is neutral."
     }`,
-    `>* *Volatility:* ${volatilityState} (ATR: ${atrPercent.toFixed(2)}%)`,
+    `>* *Volatility:* _${volatilityState}_ (ATR: ${atrPercent.toFixed(2)}%)`,
     `>* *VWAP:* ${vwap.toFixed(2)} (${(
       ((entryPrice - vwap) / vwap) *
       100
