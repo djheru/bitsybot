@@ -127,6 +127,9 @@ export function calculateEntryPosition(
     `>* *Exit Price:* ${exitPrice.toFixed(2)} (${rewardPercent.toFixed(
       2
     )}% reward)`,
+    `>* *Position Size:* ${positionSize.toFixed(2)}`,
+    `>* *Tether Balance:* ${tetherBalance.toFixed(2)}`,
+    `>* *Risk Amount:* ${riskAmount.toFixed(2)}`,
     `>* *R:R Ratio:* ${rrRatio.toFixed(2)}:1`,
     `>* *Multiplier:* ${targetMultiplier}x (RSI: ${rsi.toFixed(1)})
     `,

@@ -108,6 +108,11 @@ export class SlackService {
     if (record.entryPosition) {
       message += `*💰 ENTRY POSITION DETAILS*
 >*Entry Price:* $${record.entryPosition.entryPrice.toLocaleString()}
+>*Position Size:* ${
+        record.entryPosition.positionSize
+          ? record.entryPosition.positionSize.toFixed(6)
+          : "N/A"
+      }
 >*Exit Price:* $${record.entryPosition.exitPrice.toLocaleString()}
 >*Stop Loss Price:* $${record.entryPosition.stopLoss.toLocaleString()}
 >*Stop Loss Percent:* ${
@@ -115,6 +120,7 @@ export class SlackService {
           ? record.entryPosition.stopLossPercentage.toLocaleString() + "%"
           : "N/A"
       }
+
 >${record.entryPosition.rationale}
 ----------------------------
 
