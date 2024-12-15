@@ -42,14 +42,16 @@ export class SlackService {
       // Extract the `ts` (timestamp) from the main message to create a thread
       const threadTs = mainMessageResponse.ts;
 
-      // Post entry analysis as a reply in the thread
-      await this.client.chat.postMessage({
-        token: this.slackToken,
-        channel: this.channelId,
-        thread_ts: threadTs, // Reference the main message
-        text: entryPositionAnalysis,
-        mrkdwn: true,
-      });
+      if (entryPositionAnalysis) {
+        // Post entry analysis as a reply in the thread
+        await this.client.chat.postMessage({
+          token: this.slackToken,
+          channel: this.channelId,
+          thread_ts: threadTs, // Reference the main message
+          text: entryPositionAnalysis,
+          mrkdwn: true,
+        });
+      }
 
       // Post agent analysis as a reply in the thread
       await this.client.chat.postMessage({
