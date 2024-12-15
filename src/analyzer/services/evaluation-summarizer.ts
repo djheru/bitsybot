@@ -34,21 +34,53 @@ export class EvaluationSummarizer {
 
   private analyzeEvaluations(evaluations: EvaluationResult[]) {
     const results = {
-      BUY: { success: 0, failure: 0, neutral: 0 },
-      SELL: { success: 0, failure: 0, neutral: 0 },
-      HOLD: { success: 0, failure: 0, neutral: 0 },
+      BUY: {
+        success: 0,
+        failure: 0,
+        neutral: 0,
+        successRate: 0,
+        failureRate: 0,
+        total: 0,
+      },
+      SELL: {
+        success: 0,
+        failure: 0,
+        neutral: 0,
+        successRate: 0,
+        failureRate: 0,
+        total: 0,
+      },
+      HOLD: {
+        success: 0,
+        failure: 0,
+        neutral: 0,
+        successRate: 0,
+        failureRate: 0,
+        total: 0,
+      },
     };
 
     for (const record of evaluations) {
       const { recommendation, outcome } = record;
       if (recommendation === "BUY") {
         results.BUY[outcome as keyof typeof results.BUY]++;
+        results.BUY.total++;
       } else if (recommendation === "SELL") {
         results.SELL[outcome as keyof typeof results.SELL]++;
+        results.SELL.total++;
       } else {
         results.HOLD[outcome as keyof typeof results.HOLD]++;
+        results.HOLD.total++;
       }
     }
+
+    results.BUY.successRate =
+      results.BUY.total > 0 ? results.BUY.success / results.BUY.total : -1;
+    results.SELL.successRate =
+      results.SELL.total > 0 ? results.SELL.success / results.SELL.total : -1;
+    results.HOLD.successRate = results.HOLD.total
+      ? results.HOLD.success / results.HOLD.total
+      : -1;
 
     return results;
   }

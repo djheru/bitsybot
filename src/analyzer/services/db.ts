@@ -49,7 +49,7 @@ export class AnalysisRepository {
   private createKeys(record: KeyRecord, prefix = "analysis") {
     return {
       pk: `${prefix}#${record.symbol}#${record.interval}`,
-      sk: `${record.timestamp}#${record.recommendation}`,
+      sk: `${record.timestamp}#${record.recommendation || "COMBINED"}`,
       gsipk1: `${prefix}#${record.uuid}`,
       gsisk1: `${record.timestamp}#${record.recommendation}`,
       lsi1: `${record.timestamp}#${record.interval}`,
@@ -155,35 +155,24 @@ export class AnalysisRepository {
 
   async createEvaluationSummary(evaluationSummary: EvaluationSummaryResult) {
     try {
-      const signals: Signal[] = ["BUY", "HOLD", "SELL"];
+      const item = {
+        ...evaluationSummary,
+        from: evaluationSummary.range.from,
+        to: evaluationSummary.range.to,
+      };
+      const params = {
+        TableName: this.tableName,
+        Item: {
+          ...this.createKeys(item, "evaluation-summary"),
+          ...item,
+        },
+      };
 
-      for (const signal of signals) {
-        const item = {
-          symbol: evaluationSummary.symbol,
-          interval: evaluationSummary.interval,
-          timestamp: evaluationSummary.timestamp,
-          recommendation: signal,
-          uuid: evaluationSummary.uuid,
-          formattedSummary: evaluationSummary.formattedSummary,
-          ...evaluationSummary[signal],
-          total: evaluationSummary.total,
-          from: evaluationSummary.range.from,
-          to: evaluationSummary.range.to,
-        };
-        const params: PutCommandInput = {
-          TableName: this.tableName,
-          Item: {
-            ...this.createKeys(item, "evaluation-summary"),
-            ...item,
-          },
-        };
-
-        await this.ddbDocClient.send(new PutCommand(params));
-        this.logger.info(`${signal} evaluation summary created`, {
-          range: evaluationSummary.range,
-          formattedSummary: evaluationSummary.formattedSummary,
-        });
-      }
+      await this.ddbDocClient.send(new PutCommand(params));
+      this.logger.info(`Evaluation summary created`, {
+        range: evaluationSummary.range,
+        formattedSummary: evaluationSummary.formattedSummary,
+      });
     } catch (error) {
       this.logger.error("Failed to create evaluation summary", {
         error,

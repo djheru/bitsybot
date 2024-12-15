@@ -339,16 +339,25 @@ export interface EvaluationSummaryResult {
     success: number;
     failure: number;
     neutral: number;
+    successRate: number;
+    failureRate: number;
+    total: number;
   };
   SELL: {
     success: number;
     failure: number;
     neutral: number;
+    successRate: number;
+    failureRate: number;
+    total: number;
   };
   HOLD: {
     success: number;
     failure: number;
     neutral: number;
+    successRate: number;
+    failureRate: number;
+    total: number;
   };
   total: number;
   range: {
