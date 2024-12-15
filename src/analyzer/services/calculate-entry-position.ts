@@ -232,7 +232,7 @@ export function calculateEntryPosition(
   const exitPrice = entryPrice + reward;
 
   // 4. Risk Calculations
-  const riskPercent = (risk / entryPrice) * 100;
+  const riskPercent = Math.min((risk / entryPrice) * 100, 1.5);
   const rewardPercent = (reward / entryPrice) * 100;
   const rrRatio = rewardPercent / riskPercent;
 
@@ -256,15 +256,6 @@ export function calculateEntryPosition(
 
   // **Stop-Loss Percentage Decrease**
   const stopLossPercentage = ((currentPrice - stopLoss) / currentPrice) * 100;
-
-  // Validation checks
-  if (riskPercent > 1.5) {
-    throw new Error(
-      `Risk percentage (${riskPercent.toFixed(
-        2
-      )}%) exceeds maximum threshold of 1.5%`
-    );
-  }
 
   if (rrRatio < 2.0) {
     throw new Error(

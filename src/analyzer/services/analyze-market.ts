@@ -89,7 +89,7 @@ export class AnalysisService {
 
     let finalAnalysisRecord = { ...analysisRecord, ...finalAnalysis };
 
-    if (finalAnalysisRecord.recommendation === "BUY") {
+    if (true || finalAnalysisRecord.recommendation === "BUY") {
       const entryPosition = calculateEntryPosition(
         technicalData,
         accountBalances

@@ -5,6 +5,7 @@ import { AnalysisRecord, IndicatorAnalysis } from "../types";
 
 type FormattedMessage = [
   message: string,
+  entryPositionAnalysis: string,
   agentAnalysis: string,
   finalAnalysis: string
 ];
@@ -23,7 +24,8 @@ export class SlackService {
     formattedMessage: FormattedMessage
   ): Promise<void> {
     try {
-      const [mainMessage, agentAnalysis, finalAnalysis] = formattedMessage;
+      const [mainMessage, entryPositionAnalysis, agentAnalysis, finalAnalysis] =
+        formattedMessage;
       const mainMessageResponse = await this.client.chat.postMessage({
         token: this.slackToken,
         channel: this.channelId,
@@ -39,6 +41,15 @@ export class SlackService {
 
       // Extract the `ts` (timestamp) from the main message to create a thread
       const threadTs = mainMessageResponse.ts;
+
+      // Post entry analysis as a reply in the thread
+      await this.client.chat.postMessage({
+        token: this.slackToken,
+        channel: this.channelId,
+        thread_ts: threadTs, // Reference the main message
+        text: entryPositionAnalysis,
+        mrkdwn: true,
+      });
 
       // Post agent analysis as a reply in the thread
       await this.client.chat.postMessage({
@@ -104,9 +115,14 @@ export class SlackService {
 ----------------------------
 
 `;
+    let entryPositionAnalysis = "";
 
     if (record.entryPosition) {
-      message += `*💰 ENTRY POSITION DETAILS*
+      entryPositionAnalysis += `
+
+*💰 ENTRY POSITION DETAILS 💰*
+----------------------------
+
 >*Entry Price:* $${record.entryPosition.entryPrice.toLocaleString()}
 >*Position Size:* ${
         record.entryPosition.positionSize
@@ -155,6 +171,6 @@ export class SlackService {
 >${record.rationale}
   `;
 
-    return [message, agentAnalysis, finalAnalysis];
+    return [message, entryPositionAnalysis, agentAnalysis, finalAnalysis];
   }
 }
