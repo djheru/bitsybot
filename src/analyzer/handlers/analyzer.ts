@@ -64,14 +64,16 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       );
       const priceData = await krakenService.fetchPriceData();
 
+      logger.info("priceData", {
+        priceData: `${priceData.close.length} records returned`,
+      });
+
       const accountBalances = await krakenService.fetchExtendedBalance(
         secret.KRAKEN_API_KEY,
         secret.KRAKEN_SECRET_KEY
       );
 
-      logger.info("priceData", {
-        priceData: `${priceData.close.length} records returned`,
-      });
+      logger.info("accountBalances", { accountBalances });
 
       logger.info("Calculating technical indicators");
       const indicatorService = new TechnicalIndicatorService();
