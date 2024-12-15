@@ -75,11 +75,15 @@ export class EvaluationSummarizer {
     }
 
     results.BUY.successRate =
-      results.BUY.total > 0 ? results.BUY.success / results.BUY.total : -1;
+      results.BUY.total > 0
+        ? (results.BUY.success / results.BUY.total) * 100
+        : -1;
     results.SELL.successRate =
-      results.SELL.total > 0 ? results.SELL.success / results.SELL.total : -1;
+      results.SELL.total > 0
+        ? (results.SELL.success / results.SELL.total) * 100
+        : -1;
     results.HOLD.successRate = results.HOLD.total
-      ? results.HOLD.success / results.HOLD.total
+      ? (results.HOLD.success / results.HOLD.total) * 100
       : -1;
 
     return results;
