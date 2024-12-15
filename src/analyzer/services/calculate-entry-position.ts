@@ -27,7 +27,7 @@ function parseTechnicalData(data: CalculatedIndicators) {
   };
 }
 
-function calculatePositionSize({
+function calculatePositionSize2({
   tetherBalance,
   currentPrice,
   stopLoss,
@@ -38,6 +38,12 @@ function calculatePositionSize({
   stopLoss: number;
   riskPercent: number;
 }) {
+  console.log("calculatePositionSize: %j", {
+    tetherBalance,
+    currentPrice,
+    stopLoss,
+    riskPercent,
+  });
   if (tetherBalance <= 0) {
     throw new Error("Insufficient USDT balance for trading.");
   }
@@ -47,24 +53,117 @@ function calculatePositionSize({
   }
 
   const riskAmount = tetherBalance * (riskPercent / 100);
+  console.log("riskAmount: %j", riskAmount);
   const riskPerUnit = currentPrice - stopLoss;
-  let positionSize = riskAmount / riskPerUnit;
+  console.log("riskPerUnit: %j", riskPerUnit);
 
-  // Cap Position Size to Available Funds
-  const maxPositionSize = tetherBalance / currentPrice;
+  let positionSize = riskAmount / riskPerUnit;
+  console.log("positionSize: %j", positionSize);
+
+  // Cap Position Size to 10% Available Funds
+  const maxPositionSize = (tetherBalance * 0.1) / currentPrice;
   positionSize = Math.min(positionSize, maxPositionSize);
 
   // Validate Minimum Trade Size
-  const minimumTradeSize = 0.0001; // Example for BTC
+  const minimumTradeSize = 0.00005; // Example for BTC
   if (positionSize < minimumTradeSize) {
     throw new Error(
       `Position size (${positionSize.toFixed(
-        8
+        5
       )}) is below the minimum trade size of ${minimumTradeSize}.`
     );
   }
 
   return { positionSize, riskAmount, tetherBalance };
+}
+
+interface PositionSizingParams {
+  tetherBalance: number; // Available USDT balance
+  currentPrice: number; // Entry price
+  stopLoss: number; // Stop loss price
+  maxRiskPercent: number; // Maximum risk per trade (e.g., 1%)
+  maxPositionPercent: number; // Maximum position size as % of balance (e.g., 10%)
+  volatilityState: "LOW" | "MODERATE" | "HIGH" | "EXTREME";
+}
+
+interface PositionSizingResult {
+  positionSize: number; // Size in BTC
+  positionValue: number; // Size in USDT
+  riskAmount: number; // Amount at risk in USDT
+  riskPercent: number; // Actual risk percentage
+  effectiveLeverage: number; // Position value / risk amount
+}
+
+function calculatePositionSize({
+  tetherBalance,
+  currentPrice,
+  stopLoss,
+  maxRiskPercent = 1,
+  maxPositionPercent = 10,
+  volatilityState,
+}: PositionSizingParams): PositionSizingResult {
+  // Validation
+  if (tetherBalance <= 0) {
+    throw new Error("Insufficient USDT balance");
+  }
+  if (stopLoss >= currentPrice) {
+    throw new Error("Stop loss must be below entry price for long positions");
+  }
+
+  // Calculate risk per unit
+  const riskPerUnit = currentPrice - stopLoss;
+  if (riskPerUnit <= 0) {
+    throw new Error("Invalid risk per unit");
+  }
+
+  // Adjust max risk based on volatility
+  const volatilityAdjustment = {
+    LOW: 1.0,
+    MODERATE: 0.8,
+    HIGH: 0.6,
+    EXTREME: 0.4,
+  };
+  const adjustedMaxRisk =
+    maxRiskPercent * volatilityAdjustment[volatilityState];
+
+  // Calculate maximum risk amount in USDT
+  const maxRiskAmount = tetherBalance * (adjustedMaxRisk / 100);
+
+  // Calculate position size based on risk
+  let positionSize = maxRiskAmount / riskPerUnit;
+
+  // Calculate position value in USDT
+  let positionValue = positionSize * currentPrice;
+
+  // Cap position size based on maxPositionPercent
+  const maxPositionValue = tetherBalance * (maxPositionPercent / 100);
+  if (positionValue > maxPositionValue) {
+    positionSize = maxPositionValue / currentPrice;
+    positionValue = maxPositionValue;
+  }
+
+  // Apply minimum trade size
+  const minTradeSize = 0.00005; // BTC
+  if (positionSize < minTradeSize) {
+    throw new Error(
+      `Position size (${positionSize.toFixed(
+        5
+      )} BTC) below minimum (${minTradeSize} BTC)`
+    );
+  }
+
+  // Calculate actual risk
+  const actualRiskAmount = positionSize * riskPerUnit;
+  const actualRiskPercent = (actualRiskAmount / tetherBalance) * 100;
+  const effectiveLeverage = positionValue / actualRiskAmount;
+
+  return {
+    positionSize: Number(positionSize.toFixed(5)),
+    positionValue: Number(positionValue.toFixed(2)),
+    riskAmount: Number(actualRiskAmount.toFixed(2)),
+    riskPercent: Number(actualRiskPercent.toFixed(2)),
+    effectiveLeverage: Number(effectiveLeverage.toFixed(2)),
+  };
 }
 
 export function calculateEntryPosition(
@@ -138,12 +237,21 @@ export function calculateEntryPosition(
   const rrRatio = rewardPercent / riskPercent;
 
   // **Position Sizing**
-  const { positionSize, riskAmount, tetherBalance } = calculatePositionSize({
-    tetherBalance:
-      accountBalances["USDT"]!.balance - accountBalances["USDT"]!.holdTrade,
-    currentPrice,
+  const availableBalance =
+    accountBalances["USDT"]!.balance - accountBalances["USDT"]!.holdTrade;
+
+  const {
+    positionSize,
+    riskAmount,
+    positionValue,
+    riskPercent: actualRiskPercent,
+  } = calculatePositionSize({
+    tetherBalance: availableBalance,
+    currentPrice: entryPrice,
     stopLoss,
-    riskPercent,
+    maxRiskPercent: 1,
+    maxPositionPercent: 10,
+    volatilityState,
   });
 
   // **Stop-Loss Percentage Decrease**
@@ -170,15 +278,21 @@ export function calculateEntryPosition(
     `>* *Exit Price:* ${exitPrice.toFixed(2)} (${rewardPercent.toFixed(
       2
     )}% reward)`,
-    `>* *Position Size:* ${positionSize.toFixed(2)}`,
-    `>* *Tether Balance:* ${tetherBalance.toFixed(2)}`,
-    `>* *Risk Amount:* ${riskAmount.toFixed(2)}`,
+    `>* *Position Size:* ${positionSize.toFixed(
+      5
+    )} BTC (${positionValue.toFixed(2)} USDT)`,
+    `>* *Tether Balance:* ${availableBalance.toFixed(2)}`,
+    `>* *Risk Amount:* ${riskAmount.toFixed(
+      2
+    )} USDT (${actualRiskPercent.toFixed(2)}%)`,
     `>* *R:R Ratio:* ${rrRatio.toFixed(2)}:1`,
     `>* *Multiplier:* ${targetMultiplier}x (RSI: ${rsi.toFixed(1)})
     `,
     `:octagonal_sign: * Stop Loss Analysis*`,
     `>* *Trailing Stop Percentage*: ${stopLossPercentage.toFixed(2)}%`,
-    `>* *Stop Price*: ${stopLoss.toFixed(2)} (${riskPercent.toFixed(2)}% risk)`,
+    `>* *Stop Price*: ${stopLoss.toFixed(2)} (${actualRiskPercent.toFixed(
+      2
+    )}% risk)`,
     `>    _Calculated as Average (mean) of the 2 lowest values of the following:_`,
     `>    * *ATR-based:* ${atrStop.toFixed(2)} (${atrMultiplier}x ATR)`,
     `>    * *VWAP-based:* ${vwapStop.toFixed(2)}`,
