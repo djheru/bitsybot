@@ -22,7 +22,7 @@ export class EvaluationSummarizer {
         timestamp: DateTime.now().toISO(),
         uuid: randomUUID(),
         ...summary,
-        formattedSummary: this.formatSummary(summary, total),
+        formattedSummary: this.formatSummary(summary, total, range),
         range,
         total,
       };
@@ -64,13 +64,19 @@ export class EvaluationSummarizer {
       const { recommendation, outcome } = record;
       if (recommendation === "BUY") {
         results.BUY[outcome as keyof typeof results.BUY]++;
-        results.BUY.total++;
+        if (outcome !== "neutral") {
+          results.BUY.total++;
+        }
       } else if (recommendation === "SELL") {
         results.SELL[outcome as keyof typeof results.SELL]++;
-        results.SELL.total++;
+        if (outcome !== "neutral") {
+          results.SELL.total++;
+        }
       } else {
         results.HOLD[outcome as keyof typeof results.HOLD]++;
-        results.HOLD.total++;
+        if (outcome !== "neutral") {
+          results.HOLD.total++;
+        }
       }
     }
 
@@ -91,24 +97,33 @@ export class EvaluationSummarizer {
 
   private formatSummary(
     summary: ReturnType<EvaluationSummarizer["analyzeEvaluations"]>,
-    total: number
+    total: number,
+    range: { from: string; to: string }
   ) {
     const { BUY: buy, SELL: sell, HOLD: hold } = summary;
 
     const formattedSummary = `
-Evaluations Summary:
----------------------
-Total Evaluations: ${total}
+🕋 *Evaluations Summary* 🕋
+-----------------------------------
+*Total Evaluations:* ${total}
+*From:* ${DateTime.fromISO(range.from, { zone: "America/Phoenix" }).toFormat(
+      "MM/dd/yyyy HH:mm:ss a"
+    )}
+*To:* ${DateTime.fromISO(range.to, { zone: "America/Phoenix" }).toFormat(
+      "MM/dd/yyyy HH:mm:ss a"
+    )}
 
-BUY Recommendations:
-  - Success: ${buy.success}
-  - Failure: ${buy.failure}
-  - Neutral: ${buy.neutral}
+*BUY Recommendations:*
+> - Success: ${buy.success}
+> - Failure: ${buy.failure}
+> - Neutral: ${buy.neutral}
+> - Success Rate: ${buy.successRate.toFixed(2)}%
 
-SELL Recommendations:
-  - Success: ${sell.success}
-  - Failure: ${sell.failure}
-  - Neutral: ${sell.neutral}
+*SELL Recommendations:*
+> - Success: ${sell.success}
+> - Failure: ${sell.failure}
+> - Neutral: ${sell.neutral}
+> - Success Rate: ${sell.successRate.toFixed(2)}%
     `;
     return formattedSummary;
   }

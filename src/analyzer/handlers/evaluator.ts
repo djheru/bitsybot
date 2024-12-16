@@ -4,6 +4,7 @@ import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { AnalysisRepository } from "../services/db";
 import { evaluatePerformance } from "../services/evaluate";
 import { KrakenService } from "../services/kraken";
+import { SlackService } from "../services/slack";
 import { AppSecret, isValidOHLCDataInterval } from "../types";
 
 const {
@@ -55,6 +56,12 @@ export const evaluator = (_logger: Logger, _metrics: Metrics) => {
         priceData: `${priceData.close.length} records returned`,
       });
 
+      const slackService = new SlackService(
+        secret.SLACK_TOKEN,
+        secret.SLACK_CHANNEL,
+        logger
+      );
+
       // Check the previous analysis to see if the recommendation or confidence has changed
       const dbTable = `${serviceName}-${environmentName}-table`;
       const repository = new AnalysisRepository(dbTable, logger);
@@ -63,6 +70,7 @@ export const evaluator = (_logger: Logger, _metrics: Metrics) => {
         interval,
         priceData,
         repository,
+        slackService,
         logger
       );
 

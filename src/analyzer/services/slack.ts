@@ -20,6 +20,27 @@ export class SlackService {
     this.client = new WebClient(slackToken);
   }
 
+  async sendSummaryEvaluationsMessage(formattedSummary: string) {
+    try {
+      const response = await this.client.chat.postMessage({
+        token: this.slackToken,
+        channel: this.channelId,
+        text: formattedSummary,
+        mrkdwn: true,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to post summary message: ${response.error}`);
+      }
+      this.logger.info("Successfully sent evaluation summary Slack message", {
+        response,
+      });
+    } catch (error) {
+      this.logger.error("Failed to send evaluation Slack message", { error });
+      throw error;
+    }
+  }
+
   async sendHighConfidenceAlert(
     formattedMessage: FormattedMessage
   ): Promise<void> {
@@ -71,7 +92,7 @@ export class SlackService {
         mrkdwn: true,
       });
     } catch (error) {
-      this.logger.error("Failed to send Slack message", { error });
+      this.logger.error("Failed to send analysis Slack message", { error });
       throw error;
     }
   }

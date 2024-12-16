@@ -9,12 +9,14 @@ import {
 } from "../types";
 import { AnalysisRepository } from "./db";
 import { EvaluationSummarizer } from "./evaluation-summarizer";
+import { SlackService } from "./slack";
 
 export async function evaluatePerformance(
   symbol: string,
   interval: OHLCDataInterval,
   priceData: PriceData,
   repository: AnalysisRepository,
+  slackService: SlackService,
   logger: Logger,
   timeframeHours: number = 8,
   sellThresholdPercent: number = 1.2
@@ -219,5 +221,6 @@ export async function evaluatePerformance(
   const summary = await summarizer.summarizeEvaluations(results);
   logger.info("Evaluation Summary", { summary });
   await repository.createEvaluationSummary(summary);
+  await slackService.sendSummaryEvaluationsMessage(summary.formattedSummary);
   return results;
 }
