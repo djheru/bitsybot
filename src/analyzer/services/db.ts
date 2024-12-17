@@ -139,7 +139,11 @@ export class AnalysisRepository {
       };
 
       await this.ddbDocClient.send(new PutCommand(params));
-      this.logger.info("Evaluation record created", { uuid: record.uuid });
+      this.logger.info("Evaluation record created", {
+        uuid: record.uuid,
+        pk: params!.Item!.pk,
+        sk: params!.Item!.sk,
+      });
 
       await this.updateAnalysisRecordWithEvaluation(record);
 

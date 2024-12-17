@@ -222,9 +222,9 @@ export function calculateEntryPosition(
 
   // 3. Exit Price Calculation
   let targetMultiplier;
-  if (rsi < 35) targetMultiplier = 3.0; // Reduced from 3.5
-  else if (rsi < 45) targetMultiplier = 2.5; // Reduced from 3.0
-  else if (rsi > 65) targetMultiplier = 2.0; // Kept same
+  if (rsi < 35) targetMultiplier = 2.6; // Reduced from 3.5
+  else if (rsi < 45) targetMultiplier = 2.2; // Reduced from 3.0
+  else if (rsi > 65) targetMultiplier = 1.8;
   else targetMultiplier = 2.25; // Reduced from 2.5
 
   const risk = entryPrice - stopLoss;

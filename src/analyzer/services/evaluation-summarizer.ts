@@ -117,13 +117,17 @@ export class EvaluationSummarizer {
 > - Success: ${buy.success}
 > - Failure: ${buy.failure}
 > - Neutral: ${buy.neutral}
-> - Success Rate: ${buy.successRate.toFixed(2)}%
+> - Success Rate: ${
+      buy.successRate === -1 ? "N/A" : buy.successRate.toFixed(2) + "%"
+    }
 
 *SELL Recommendations:*
 > - Success: ${sell.success}
 > - Failure: ${sell.failure}
 > - Neutral: ${sell.neutral}
-> - Success Rate: ${sell.successRate.toFixed(2)}%
+> - Success Rate: ${
+      sell.successRate === -1 ? "N/A" : sell.successRate.toFixed(2) + "%"
+    }
     `;
     return formattedSummary;
   }

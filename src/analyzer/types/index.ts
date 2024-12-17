@@ -328,6 +328,8 @@ export interface EvaluationResult {
   timestamp: string;
   uuid: string;
   ttl?: number; // TTL in seconds since epoch
+  maxClose?: number;
+  minClose?: number;
 }
 
 export interface EvaluationSummaryResult {
