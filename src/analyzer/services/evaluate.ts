@@ -18,6 +18,7 @@ export async function evaluatePerformance(
   repository: AnalysisRepository,
   slackService: SlackService,
   logger: Logger,
+  publishSummary = false,
   timeframeHours: number = 24,
   sellThresholdPercent: number = 1.2
 ): Promise<EvaluationResult[]> {
@@ -276,6 +277,8 @@ export async function evaluatePerformance(
   const summary = await summarizer.summarizeEvaluations(results);
   logger.info("Evaluation Summary", { summary });
   await repository.createEvaluationSummary(summary);
-  await slackService.sendSummaryEvaluationsMessage(summary.formattedSummary);
+  if (publishSummary) {
+    await slackService.sendSummaryEvaluationsMessage(summary.formattedSummary);
+  }
   return results;
 }
