@@ -9,6 +9,7 @@
     "watch": "tsc -w",
     "test": "jest",
     "cdk": "cdk",
+    "check-success": "node scripts/check-success.js",
     "put-event": "aws events put-events --entries file://events/example.json",
     "local": "cdk synth && clear && sam local invoke -t ./cdk.out/assembly-bitsybot-prod-Application/bitsybotprodApplicationbitsybotprodCF6A3396.template.json analyzer -e events/example.json",
     "evaluate": "cdk synth && clear && sam local invoke -t ./cdk.out/assembly-bitsybot-prod-Application/bitsybotprodApplicationbitsybotprodCF6A3396.template.json evaluator -e events/example.json"
