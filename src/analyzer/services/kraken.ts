@@ -4,9 +4,11 @@ import * as crypto from "crypto";
 import querystring from "querystring";
 import {
   AccountBalances,
+  AppSecret,
   KrakenOHLCVRow,
   KrakenOrderBook,
   KrakenOrderBookRow,
+  MarketServiceProps,
   OHLCDataInterval,
   OrderBookData,
   PriceData,
@@ -34,17 +36,20 @@ export class KrakenService {
     XXBT: { balance: 0, holdTrade: 0 },
   };
 
-  constructor(
-    private readonly pair: string,
-    private interval: OHLCDataInterval,
-    private readonly logger: Logger,
-    private readonly metrics: Metrics,
-    private readonly totalPeriods: number,
-    lastPriceData?: PriceData
-  ) {
-    if (lastPriceData) {
-      this.lastPriceData = lastPriceData;
-    }
+  public pair: string;
+  public interval: OHLCDataInterval;
+  public logger: Logger;
+  public metrics: Metrics;
+  public totalPeriods: number;
+  public secret: AppSecret;
+
+  constructor(props: MarketServiceProps) {
+    this.pair = props.pair;
+    this.interval = props.interval;
+    this.logger = props.logger;
+    this.metrics = props.metrics;
+    this.totalPeriods = props.totalPeriods;
+    this.secret = props.secret;
   }
 
   async fetchPriceData(fetchPriceDataParams?: {
@@ -129,7 +134,6 @@ export class KrakenService {
         result.count.push(count);
       }
     );
-
     return result;
   }
 
@@ -187,7 +191,7 @@ export class KrakenService {
     return result;
   }
 
-  async fetchExtendedBalance(
+  async fetchBalance(
     apiKey: string,
     apiSecretKey: string
   ): Promise<AccountBalances> {

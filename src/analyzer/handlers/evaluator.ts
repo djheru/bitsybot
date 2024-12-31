@@ -43,14 +43,15 @@ export const evaluator = (_logger: Logger, _metrics: Metrics) => {
       metrics.addMetric("handlerInvoked", MetricUnit.Count, 1);
 
       logger.info("Getting price data");
-      const krakenService = new KrakenService(
-        symbol,
+      const marketService = new KrakenService({
+        pair: symbol,
         interval,
         logger,
         metrics,
-        secret.TOTAL_PERIODS
-      );
-      const priceData = await krakenService.fetchPriceData();
+        totalPeriods: secret.TOTAL_PERIODS,
+        secret,
+      });
+      const priceData = await marketService.fetchPriceData();
 
       logger.info("priceData", {
         priceData: `${priceData.close.length} records returned`,

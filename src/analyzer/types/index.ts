@@ -1,3 +1,5 @@
+import { Logger } from "@aws-lambda-powertools/logger";
+import { Metrics } from "@aws-lambda-powertools/metrics";
 import { z } from "zod";
 
 export type Signal = "BUY" | "SELL" | "HOLD";
@@ -10,8 +12,8 @@ export type AccountBalances = {
 
 export interface AppSecret {
   CONFIDENCE_THRESHOLD: number;
-  KRAKEN_API_KEY: string;
-  KRAKEN_SECRET_KEY: string;
+  MARKET_API_KEY: string;
+  MARKET_SECRET_KEY: string;
   LLM_API_KEY: string;
   LLM_MODEL_NAME: string;
   SERVICE_NAME: string;
@@ -24,6 +26,7 @@ export interface AppSecret {
   STRIPE_WEBHOOK_SECRET: string;
   TIMEFRAME_INTERVAL: number;
   TOTAL_PERIODS: number;
+  LIVE_OR_PAPER: "live" | "paper";
 }
 
 export const OrderBookSchema = z.object({
@@ -197,6 +200,15 @@ export function validateAnalysisSummary(summary: unknown): AnalysisSummary {
 
 export function validateAnalysisState(state: unknown): AnalysisState {
   return AnalysisStateSchema.parse(state);
+}
+
+export interface MarketServiceProps {
+  pair: string;
+  interval: OHLCDataInterval;
+  logger: Logger;
+  metrics: Metrics;
+  totalPeriods: number;
+  secret: AppSecret;
 }
 
 // Output type for the Kraken API

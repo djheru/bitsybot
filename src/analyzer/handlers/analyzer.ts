@@ -2,6 +2,7 @@ import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
 import { ChatOpenAI } from "@langchain/openai";
+import { AlpacaService } from "../services/alpaca";
 import { AnalysisService } from "../services/analyze-market";
 import { AnalysisRepository } from "../services/db";
 import { TechnicalIndicatorService } from "../services/indicators";
@@ -55,22 +56,31 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       });
 
       logger.info("Getting price data");
-      const krakenService = new KrakenService(
-        symbol,
+      const marketService = new KrakenService({
+        pair: symbol,
         interval,
         logger,
         metrics,
-        secret.TOTAL_PERIODS
-      );
-      const priceData = await krakenService.fetchPriceData();
+        totalPeriods: secret.TOTAL_PERIODS,
+        secret,
+      });
+      const alpacaService = new AlpacaService({
+        pair: symbol,
+        interval,
+        logger,
+        metrics,
+        totalPeriods: secret.TOTAL_PERIODS,
+        secret,
+      });
+      const priceData = await alpacaService.fetchPriceData();
 
       logger.info("priceData", {
         priceData: `${priceData.close.length} records returned`,
       });
 
-      const accountBalances = await krakenService.fetchExtendedBalance(
-        secret.KRAKEN_API_KEY,
-        secret.KRAKEN_SECRET_KEY
+      const accountBalances = await marketService.fetchBalance(
+        secret.MARKET_API_KEY,
+        secret.MARKET_SECRET_KEY
       );
 
       logger.info("accountBalances", { accountBalances });

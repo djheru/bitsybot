@@ -65,7 +65,7 @@ describe("Indicators Module - ", () => {
     const mockLogger = new Logger();
     const mockMetrics = new Metrics();
 
-    const krakenService = new KrakenService(
+    const marketService = new KrakenService(
       "XBTUSDT",
       15,
       mockLogger,
@@ -73,7 +73,7 @@ describe("Indicators Module - ", () => {
       250
     );
 
-    data = krakenService.formatPriceData(candles);
+    data = marketService.formatPriceData(candles);
   });
 
   describe("trend-following indicators", () => {
