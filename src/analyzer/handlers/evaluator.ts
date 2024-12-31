@@ -1,9 +1,9 @@
 import { Logger } from "@aws-lambda-powertools/logger";
 import { Metrics, MetricUnit } from "@aws-lambda-powertools/metrics";
 import { getSecret } from "@aws-lambda-powertools/parameters/secrets";
+import { AlpacaService } from "../services/alpaca";
 import { AnalysisRepository } from "../services/db";
 import { evaluatePerformance } from "../services/evaluate";
-import { KrakenService } from "../services/kraken";
 import { SlackService } from "../services/slack";
 import { AppSecret, isValidOHLCDataInterval } from "../types";
 
@@ -43,7 +43,7 @@ export const evaluator = (_logger: Logger, _metrics: Metrics) => {
       metrics.addMetric("handlerInvoked", MetricUnit.Count, 1);
 
       logger.info("Getting price data");
-      const marketService = new KrakenService({
+      const marketService = new AlpacaService({
         pair: symbol,
         interval,
         logger,

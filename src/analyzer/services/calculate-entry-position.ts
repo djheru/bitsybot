@@ -238,7 +238,7 @@ export function calculateEntryPosition(
 
   // **Position Sizing**
   const availableBalance =
-    accountBalances["USDT"]!.balance - accountBalances["USDT"]!.holdTrade;
+    accountBalances["BTCUSD"]!.balance - accountBalances["BTCUSD"]!.holdTrade;
 
   const {
     positionSize,

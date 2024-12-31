@@ -5,6 +5,9 @@ import { Metrics } from "@aws-lambda-powertools/metrics";
 import { DateTime } from "luxon";
 import {
   AccountBalances,
+  AlpacaOrderBook,
+  AlpacaOrderBookRow,
+  AlpacaPosition,
   AppSecret,
   MarketServiceProps,
   OHLCDataInterval,
@@ -31,8 +34,7 @@ export class AlpacaService {
   };
 
   public lastAccountBalance: AccountBalances = {
-    USDT: { balance: 0, holdTrade: 0 },
-    XXBT: { balance: 0, holdTrade: 0 },
+    BTCUSD: { balance: 0, holdTrade: 0 },
   };
 
   public pair: string;
@@ -63,7 +65,7 @@ export class AlpacaService {
     pair?: string;
     interval?: OHLCDataInterval;
     totalPeriods?: number; // limit
-  }): Promise<any> {
+  }): Promise<PriceData> {
     try {
       const queryInterval =
         fetchPriceDataParams?.interval || this.interval || 15;
@@ -116,10 +118,51 @@ export class AlpacaService {
     return this.lastPriceData;
   }
 
-  // async fetchOrderBookData(
-  //   pair: string,
-  //   count: number = 10
-  // ): Promise<OrderBookData> {}
+  async fetchOrderBookData(
+    pair: string,
+    count: number = 10
+  ): Promise<OrderBookData> {
+    try {
+      const symbol = "BTC/USD";
+      const response = await this.alpaca.getCryptoOrderbooks([symbol]);
+      console.log("Order book response:", response.get(symbol));
+      const orderBookData = response.get(symbol) as AlpacaOrderBook;
+      this.lastOrderBook = this.formatOrderBookData(orderBookData);
+      return this.lastOrderBook;
+    } catch (error) {
+      console.error("Error fetching order book data:", error);
+      throw error;
+    }
+  }
 
-  // async fetchBalance(): Promise<AccountBalances> {}
+  formatOrderBookData(orderBookData: AlpacaOrderBook): OrderBookData {
+    const mapper = ({ Price, Size }: AlpacaOrderBookRow) => ({
+      price: Price,
+      volume: Size,
+    });
+    const result: OrderBookData = {
+      asks: orderBookData.Asks.map(mapper),
+      bids: orderBookData.Bids.map(mapper),
+    };
+
+    return result;
+  }
+
+  async fetchBalance(): Promise<AccountBalances | any> {
+    const response: AlpacaPosition[] = await this.alpaca.getPositions();
+    const balances = response.find(
+      (alpacaPosition: AlpacaPosition) => alpacaPosition.symbol === "BTCUSD"
+    );
+
+    if (balances) {
+      this.lastAccountBalance.BTCUSD = {
+        balance: parseFloat(balances.qty),
+        holdTrade:
+          parseFloat(balances.qty) - parseFloat(balances.qty_available),
+        averageEntryPrice: parseFloat(balances.avg_entry_price),
+      };
+    }
+    console.log("Positions:", this.lastAccountBalance);
+    return this.lastAccountBalance;
+  }
 }

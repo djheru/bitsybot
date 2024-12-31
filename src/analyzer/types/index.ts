@@ -4,10 +4,14 @@ import { z } from "zod";
 
 export type Signal = "BUY" | "SELL" | "HOLD";
 
-type AccountBalanceAssets = "USDT" | "XXBT";
+type AccountBalanceAssets = "BTCUSD";
 
 export type AccountBalances = {
-  [key in AccountBalanceAssets]: { balance: number; holdTrade: number };
+  [key in AccountBalanceAssets]: {
+    balance: number;
+    holdTrade: number;
+    averageEntryPrice?: number;
+  };
 };
 
 export interface AppSecret {
@@ -31,10 +35,18 @@ export interface AppSecret {
 
 export const OrderBookSchema = z.object({
   asks: z.array(
-    z.object({ price: z.number(), volume: z.number(), timestamp: z.number() })
+    z.object({
+      price: z.number(),
+      volume: z.number(),
+      timestamp: z.number().optional(),
+    })
   ),
   bids: z.array(
-    z.object({ price: z.number(), volume: z.number(), timestamp: z.number() })
+    z.object({
+      price: z.number(),
+      volume: z.number(),
+      timestamp: z.number().optional(),
+    })
   ),
 });
 // Zod schema for runtime validation
@@ -232,6 +244,26 @@ export type KrakenOrderBookRow = [
 export type KrakenOrderBook = {
   asks: KrakenOrderBookRow[];
   bids: KrakenOrderBookRow[];
+};
+
+export type AlpacaPosition = {
+  asset_id: string;
+  symbol: string;
+  exchange: "CRYPTO";
+  asset_class: "crypto";
+  qty: string; // float as string
+  avg_entry_price: string; // float as string
+  qty_available: string; // float as string
+};
+
+export type AlpacaOrderBookRow = {
+  Price: number;
+  Size: number;
+};
+
+export type AlpacaOrderBook = {
+  Asks: AlpacaOrderBookRow[];
+  Bids: AlpacaOrderBookRow[];
 };
 
 // Types for agent outputs

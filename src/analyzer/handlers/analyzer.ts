@@ -6,7 +6,6 @@ import { AlpacaService } from "../services/alpaca";
 import { AnalysisService } from "../services/analyze-market";
 import { AnalysisRepository } from "../services/db";
 import { TechnicalIndicatorService } from "../services/indicators";
-import { KrakenService } from "../services/kraken";
 import { SlackService } from "../services/slack";
 import {
   AppSecret,
@@ -56,7 +55,7 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
       });
 
       logger.info("Getting price data");
-      const marketService = new KrakenService({
+      const marketService = new AlpacaService({
         pair: symbol,
         interval,
         logger,
@@ -64,24 +63,13 @@ export const analyzer = (_logger: Logger, _metrics: Metrics) => {
         totalPeriods: secret.TOTAL_PERIODS,
         secret,
       });
-      const alpacaService = new AlpacaService({
-        pair: symbol,
-        interval,
-        logger,
-        metrics,
-        totalPeriods: secret.TOTAL_PERIODS,
-        secret,
-      });
-      const priceData = await alpacaService.fetchPriceData();
+      const priceData = await marketService.fetchPriceData();
 
       logger.info("priceData", {
         priceData: `${priceData.close.length} records returned`,
       });
 
-      const accountBalances = await marketService.fetchBalance(
-        secret.MARKET_API_KEY,
-        secret.MARKET_SECRET_KEY
-      );
+      const accountBalances = await marketService.fetchBalance();
 
       logger.info("accountBalances", { accountBalances });
 
